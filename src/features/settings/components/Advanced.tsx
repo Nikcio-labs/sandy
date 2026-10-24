@@ -72,9 +72,13 @@ export default function Advanced() {
     () => (filter === "errors" ? entries.filter((entry) => entry.outcome === "error" || entry.kind === "error") : entries),
     [entries, filter],
   );
-  // Newest entries first in the DOM; older ones are behind "Show older".
+  // The log file is appended oldest first, so reverse for a newest-first view;
+  // older entries are behind "Show older".
   const rendered = useMemo(
-    () => (showAll ? visible : visible.slice(Math.max(0, visible.length - RENDER_LIMIT))),
+    () => {
+      const newestFirst = [...visible].reverse();
+      return showAll ? newestFirst : newestFirst.slice(0, RENDER_LIMIT);
+    },
     [visible, showAll],
   );
   const errorCount = useMemo(
