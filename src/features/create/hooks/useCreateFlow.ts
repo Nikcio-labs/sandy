@@ -14,20 +14,31 @@ import {
   isCompatibleMixin,
   resolvedArguments,
 } from "../../../lib/kit";
-import { launchTemplate, saveTemplate } from "../../../lib/templates";
-import type { SavedTemplate, SaveTemplateRequest } from "../../../lib/templates";
+import {
+  launchTemplate,
+  readTemplateDetails,
+  saveTemplate,
+  updateTemplate,
+} from "../../../lib/templates";
+import type {
+  SavedTemplate,
+  SaveTemplateRequest,
+  UpdateTemplateRequest,
+} from "../../../lib/templates";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import { useBusyReporting } from "../../../common/hooks/useBusyReporting";
 
 export interface CreateFlowOptions {
   onBusyChange?: (busy: boolean) => void;
+  /** Present when the wizard edits an existing template instead of creating one. */
+  templateId?: string;
 }
 
 /**
  * The create-wizard state machine: kit discovery, agent/mixin selection,
  * template saving, and launching. The page component only renders steps.
  */
-export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
+export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
   const mounted = useMountedRef();
   const [step, setStep] = useState(0);
   const [providers, setProviders] = useState<Provider[] | null>(null);
@@ -43,13 +54,18 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
   const [workspace, setWorkspace] = useState("");
   const [mountless, setMountless] = useState(false);
   const [savePath, setSavePath] = useState("");
-  const [busy, setBusy] = useState<"discover" | "save" | "launch" | "workspace" | "path" | null>(null);
+  const [busy, setBusy] = useState<
+    "discover" | "save" | "launch" | "workspace" | "path" | "load" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<SavedTemplate | null>(null);
   const [launched, setLaunched] = useState(false);
   const [launchOutput, setLaunchOutput] = useState("");
   const [copyNotice, setCopyNotice] = useState("");
   const lock = useRef(false);
+  // The id stays for the whole visit, so a provider reset (which drops the
+  // saved kit metadata) still saves back to the same template.
+  const [editingId] = useState(templateId ?? null);
 
   // Load the saved provider configuration up front. The Providers editor still
   // reports changes back; this only guarantees step 0 can render (with a
@@ -67,6 +83,37 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
       active = false;
     };
   }, []);
+
+  // Edit mode: prefill everything from the saved template. The saved kit
+  // metadata forms the catalog snapshot, so the wizard skips providers and
+  // discovery unless the user changes provider settings.
+  useEffect(() => {
+    if (!templateId) return;
+    let active = true;
+    setBusy("load");
+    readTemplateDetails(templateId)
+      .then((details) => {
+        if (!active) return;
+        const kits = [details.agent, ...details.mixins];
+        setCatalog({ kits, warnings: [] });
+        setAgent(details.agent);
+        setMixins(details.mixins);
+        setValues(details.arguments);
+        setName(details.template.name);
+        setWorkspace(details.template.workspace);
+        setMountless(!details.template.workspace);
+        setStep(1);
+      })
+      .catch((failure) => {
+        if (active) setError(String(failure));
+      })
+      .finally(() => {
+        if (active) setBusy(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [templateId]);
 
   useBusyReporting(busy !== null, onBusyChange);
 
@@ -102,6 +149,16 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
         ...(savePath.trim() ? { save_path: savePath.trim() } : {}),
       }
     : null;
+  const updateRequest: UpdateTemplateRequest | null =
+    editingId && agent
+      ? {
+          name: name.trim(),
+          workspace: mountless ? "" : workspace.trim(),
+          agent,
+          mixins,
+          arguments: resolvedArguments(selectedKits, values),
+        }
+      : null;
 
   const moveTo = (next: number) => {
     setError(null);
@@ -223,13 +280,15 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     setError(null);
     let persisted = false;
     try {
-      const template = await saveTemplate(request);
+      const result = editingId
+        ? await updateTemplate(editingId, updateRequest!)
+        : await saveTemplate(request);
       persisted = true;
       if (!mounted.current) return;
-      setSaved(template);
+      setSaved(result);
       if (shouldLaunch) {
         setBusy("launch");
-        await launch(template);
+        await launch(result);
       }
     } catch (failure) {
       if (mounted.current) {
@@ -277,9 +336,21 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     if (changed && catalog) {
       setCatalog(null);
       setStep(0);
-      setError(
-        "Provider changes need a new discovery. Review your sources and discover kits again.",
-      );
+      if (editingId) {
+        // The edited template's catalog is the saved kit metadata; a real
+        // discovery is the only way to verify alternative kits. The id stays:
+        // re-selecting kits after discovery updates the same template.
+        setAgent(null);
+        setMixins([]);
+        setValues({});
+        setError(
+          "Provider changes need a new discovery. This template stays in edit mode: re-select its kits and save to update it.",
+        );
+      } else {
+        setError(
+          "Provider changes need a new discovery. Review your sources and discover kits again.",
+        );
+      }
     }
   };
 
@@ -308,7 +379,11 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     }));
   };
 
+  const editing = editingId !== null;
+
   return {
+    /** True when the wizard edits an existing template instead of creating one. */
+    editing,
     // Wizard position and shared feedback state.
     step,
     moveTo,
@@ -346,6 +421,7 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     // Step 3: project details and review.
     inputValid,
     request,
+    updateRequest,
     name,
     setName,
     workspace,

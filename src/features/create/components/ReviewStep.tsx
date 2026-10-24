@@ -17,6 +17,7 @@ export function ReviewStep({
   onMountless,
   savePath,
   onSavePath,
+  editing,
   busy,
   request,
   onSubmit,
@@ -34,6 +35,8 @@ export function ReviewStep({
   onMountless: (value: boolean) => void;
   savePath: string;
   onSavePath: (value: string) => void;
+  /** Editing overwrites the saved file in place; no save location is offered. */
+  editing: boolean;
   busy: boolean;
   request: SaveTemplateRequest;
   onSubmit: (launch: boolean) => void;
@@ -52,8 +55,10 @@ export function ReviewStep({
     >
       <h2>Bring your project</h2>
       <p className="catalog-muted">
-        Choose the project folder to mount, then review the exact kit references. Your configuration
-        is saved as a reusable template.
+        Choose the project folder to mount, then review the exact kit references.{" "}
+        {editing
+          ? "Saving updates this template where it is saved today."
+          : "Your configuration is saved as a reusable template."}
       </p>
       <fieldset className="catalog-unframed" disabled={busy}>
         <legend className="catalog-sr-only">Project details</legend>
@@ -110,28 +115,32 @@ export function ReviewStep({
             </p>
           </>
         )}
-        <label className="catalog-field" htmlFor={`${id}-path`}>
-          Save file location (optional)
-        </label>
-        <div className="catalog-path-row">
-          <input
-            id={`${id}-path`}
-            value={savePath}
-            placeholder="Use managed template storage"
-            aria-describedby={`${id}-path-help`}
-            onChange={(event) => onSavePath(event.target.value)}
-          />
-          <button type="button" className="ghost" onClick={() => onBrowse("path")}>
-            Choose file…
-          </button>
-        </div>
-        <p className="catalog-help" id={`${id}-path-help`}>
-          Leave blank to use Sandy’s managed templates outside your workspace.
-        </p>
-        {savePath && (
-          <button type="button" className="text-button" onClick={() => onSavePath("")}>
-            Use managed storage
-          </button>
+        {!editing && (
+          <>
+            <label className="catalog-field" htmlFor={`${id}-path`}>
+              Save file location (optional)
+            </label>
+            <div className="catalog-path-row">
+              <input
+                id={`${id}-path`}
+                value={savePath}
+                placeholder="Use managed template storage"
+                aria-describedby={`${id}-path-help`}
+                onChange={(event) => onSavePath(event.target.value)}
+              />
+              <button type="button" className="ghost" onClick={() => onBrowse("path")}>
+                Choose file…
+              </button>
+            </div>
+            <p className="catalog-help" id={`${id}-path-help`}>
+              Leave blank to use Sandy’s managed templates outside your workspace.
+            </p>
+            {savePath && (
+              <button type="button" className="text-button" onClick={() => onSavePath("")}>
+                Use managed storage
+              </button>
+            )}
+          </>
         )}
         <div className="catalog-review">
           <h3>Review your environment</h3>
@@ -147,7 +156,11 @@ export function ReviewStep({
             <dt>Workspace</dt>
             <dd>{mountless ? "None (mountless, isolated)" : workspace.trim() || "Not set"}</dd>
             <dt>File location</dt>
-            <dd>{savePath.trim() || "Sandy managed templates (outside the workspace)"}</dd>
+            <dd>
+              {editing
+                ? "This template's saved file (unchanged)"
+                : savePath.trim() || "Sandy managed templates (outside the workspace)"}
+            </dd>
           </dl>
           <ul className="catalog-reference-list">
             {selectedKits.map((kit) => (
@@ -176,7 +189,7 @@ export function ReviewStep({
             className="ghost"
             disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
-            Save template
+            {editing ? "Update template" : "Save template"}
           </button>
           <button
             type="submit"
@@ -185,7 +198,14 @@ export function ReviewStep({
             className="primary"
             disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
-            {busy ? "Saving template…" : "Save & launch"} <Icon name="arrow" size={16} />
+            {busy
+              ? editing
+                ? "Updating template…"
+                : "Saving template…"
+              : editing
+                ? "Update & launch"
+                : "Save & launch"}{" "}
+            <Icon name="arrow" size={16} />
           </button>
         </div>
       </fieldset>

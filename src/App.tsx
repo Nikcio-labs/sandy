@@ -18,6 +18,8 @@ const revealMainWindow = async () => {
 
 export default function App() {
   const [view, setView] = useState<View>("home");
+  // The wizard's edit mode targets one saved template per visit.
+  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
   const [guideDialogOpen, setGuideDialogOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupSession, setSetupSession] = useState(0);
@@ -64,7 +66,7 @@ export default function App() {
     setView("home");
   };
 
-  const navigate = (next: Exclude<View, "create">) => {
+  const navigate = (next: Exclude<View, "create" | "edit-template">) => {
     setView(next);
   };
 
@@ -101,6 +103,10 @@ export default function App() {
           {view === "templates" && (
             <TemplatesPage
               onCreate={() => setView("create")}
+              onEdit={(templateId) => {
+                setEditingTemplate(templateId);
+                setView("edit-template");
+              }}
               onBusyChange={setBusy}
               onLaunched={(sandbox) => {
                 setPendingSelection(sandbox);
@@ -111,6 +117,15 @@ export default function App() {
           {view === "create" && (
             <CreatePage
               onClose={() => setView("home")}
+              onTemplates={() => setView("templates")}
+              onBusyChange={setBusy}
+            />
+          )}
+          {view === "edit-template" && editingTemplate && (
+            <CreatePage
+              key={editingTemplate}
+              templateId={editingTemplate}
+              onClose={() => setView("templates")}
               onTemplates={() => setView("templates")}
               onBusyChange={setBusy}
             />

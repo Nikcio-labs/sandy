@@ -23,8 +23,8 @@ mod tests;
 
 pub use launch::launch_template;
 pub use library::{
-    SaveTemplateRequest, SavedTemplate, delete_template, list_templates, save_template,
-    template_warnings,
+    SaveTemplateRequest, SavedTemplate, TemplateDetails, UpdateTemplateRequest, delete_template,
+    list_templates, read_template_details, save_template, template_warnings, update_template,
 };
 pub use source_policy::allow_source;
 

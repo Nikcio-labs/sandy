@@ -7,7 +7,8 @@ use super::LIBRARY;
 use super::launch::launch_template;
 use super::launch::{SandboxRuntime, launch_with};
 use super::library::{
-    SaveTemplateRequest, delete_template, list_templates, save_template, template_warnings,
+    SaveTemplateRequest, UpdateTemplateRequest, delete_template, list_templates,
+    read_template_details, save_template, template_warnings, update_template,
 };
 use super::schema::Environment;
 use super::source_policy::{allow_source_with, prefix_matches};
@@ -388,7 +389,132 @@ fn create_failure_does_not_attempt_to_start() {
 }
 
 #[test]
-fn start_failure_reports_created_environment_and_retry_command() {
+fn update_template_rewrites_file_and_record_in_place() {
+    let fixture = Fixture::new();
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    let mut browser = kit("browser", "mixin", 2, "hub");
+    browser.arguments.push(KitArgument {
+        name: "region".into(),
+        description: String::new(),
+        required: false,
+        default: None,
+        choices: vec![],
+    });
+    let update = UpdateTemplateRequest {
+        name: "renamed".into(),
+        workspace: path_string(&fixture.workspace).unwrap(),
+        agent: saved_agent(),
+        mixins: vec![browser],
+        arguments: BTreeMap::from([(
+            "browser".into(),
+            BTreeMap::from([("region".into(), "eu".into())]),
+        )]),
+    };
+    let updated = update_template(&fixture.root, &saved.id, update).unwrap();
+    assert_eq!(updated.id, saved.id);
+    assert_eq!(updated.name, "renamed");
+    assert_eq!(updated.path, saved.path);
+    assert_eq!(updated.agent, "claude");
+    // Same file, rewritten content: the record and YAML stay in sync. The
+    // built-in agent contributes no kit entry; only the mixin is listed.
+    let content = std::fs::read_to_string(&saved.path).unwrap();
+    let environment: Environment = serde_yaml_ng::from_str(&content).unwrap();
+    assert_eq!(environment.name, "renamed");
+    assert_eq!(environment.kits.len(), 1);
+    assert_eq!(environment.kits[0].source(), "docker.io/team/browser:1.0");
+    assert_eq!(environment.kits[0].arguments()["region"], "eu");
+    let listed = list_templates(&fixture.root).unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].id, saved.id);
+    assert_eq!(listed[0].name, "renamed");
+    assert!(template_warnings(&fixture.root).unwrap().is_empty());
+}
+
+fn saved_agent() -> crate::catalog::KitOption {
+    kit("claude", "agent", 2, "builtin")
+}
+
+#[test]
+fn update_template_validates_like_save_and_keeps_location_on_failure() {
+    let fixture = Fixture::new();
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    // A v2 agent cannot mix with a v3 mixin.
+    let update = UpdateTemplateRequest {
+        name: "renamed".into(),
+        workspace: String::new(),
+        agent: saved_agent(),
+        mixins: vec![kit("browser", "mixin", 3, "hub")],
+        arguments: BTreeMap::new(),
+    };
+    assert!(
+        update_template(&fixture.root, &saved.id, update)
+            .unwrap_err()
+            .contains("cannot be combined")
+    );
+    // The failed update leaves the saved template untouched.
+    assert_eq!(std::fs::read_to_string(&saved.path).unwrap(), saved.content);
+    let listed = list_templates(&fixture.root).unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].name, "example");
+    // Unknown ids are rejected, mirroring delete_template.
+    let update = UpdateTemplateRequest {
+        name: "renamed".into(),
+        workspace: String::new(),
+        agent: saved_agent(),
+        mixins: vec![],
+        arguments: BTreeMap::new(),
+    };
+    assert_eq!(
+        update_template(&fixture.root, "unknown-id", update).unwrap_err(),
+        "Unknown saved template"
+    );
+}
+
+#[test]
+fn template_details_expose_kit_metadata_and_pinned_arguments() {
+    let fixture = Fixture::new();
+    let mut request = fixture.request();
+    request.agent = kit("custom", "agent", 2, "hub");
+    request.agent.arguments.push(KitArgument {
+        name: "message".into(),
+        description: String::new(),
+        required: false,
+        default: None,
+        choices: vec![],
+    });
+    let mut browser = kit("browser", "mixin", 2, "hub");
+    browser.arguments.push(KitArgument {
+        name: "region".into(),
+        description: String::new(),
+        required: false,
+        default: None,
+        choices: vec![],
+    });
+    request.mixins.push(browser);
+    request.arguments.insert(
+        "custom".into(),
+        BTreeMap::from([("message".into(), "hello".into())]),
+    );
+    request.arguments.insert(
+        "browser".into(),
+        BTreeMap::from([("region".into(), "eu".into())]),
+    );
+    let saved = save_template(&fixture.root, request).unwrap();
+    let details = read_template_details(&fixture.root, &saved.id).unwrap();
+    assert_eq!(details.template.id, saved.id);
+    assert_eq!(details.agent.id, "custom");
+    assert_eq!(details.mixins.len(), 1);
+    // Arguments are keyed by kit id, ready for the wizard's values state.
+    assert_eq!(details.arguments["custom"]["message"], "hello");
+    assert_eq!(details.arguments["browser"]["region"], "eu");
+    assert_eq!(
+        read_template_details(&fixture.root, "unknown-id").unwrap_err(),
+        "Unknown saved template"
+    );
+}
+
+#[test]
+fn launch_failure_reports_created_environment_and_retry_command() {
     let fixture = Fixture::new();
     let saved = save_template(&fixture.root, fixture.request()).unwrap();
     let mut runtime = MockRuntime {

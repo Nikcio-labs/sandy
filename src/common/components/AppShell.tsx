@@ -2,7 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IconName } from "./Icon";
 import Icon from "./Icon";
 import logo from "../../assets/logo.png";
-export type View = "home" | "sandboxes" | "templates" | "settings" | "create";
+export type View = "home" | "sandboxes" | "templates" | "settings" | "create" | "edit-template";
 
 const navigation: {
   id: Exclude<View, "create">;
@@ -82,7 +82,7 @@ export function Sidebar({
   busy: boolean;
   checkingSetup: boolean;
   count: number | null;
-  onNavigate: (view: Exclude<View, "create">) => void;
+  onNavigate: (view: Exclude<View, "create" | "edit-template">) => void;
   /** Replaces the guide link while the guide view is not built yet. */
   onViewGuide: () => void;
 }) {
@@ -93,13 +93,21 @@ export function Sidebar({
           <button
             key={item.id}
             className={`nav-item ${
-              view === item.id || (view === "create" && item.id === "home") ? "active" : ""
+              view === item.id ||
+              (view === "create" && item.id === "home") ||
+              (view === "edit-template" && item.id === "templates")
+                ? "active"
+                : ""
             }`}
             aria-current={
-              view === item.id || (view === "create" && item.id === "home") ? "page" : undefined
+              view === item.id ||
+              (view === "create" && item.id === "home") ||
+              (view === "edit-template" && item.id === "templates")
+                ? "page"
+                : undefined
             }
             disabled={busy || checkingSetup}
-            onClick={() => onNavigate(item.id)}
+            onClick={() => onNavigate(item.id as Exclude<View, "create" | "edit-template">)}
           >
             <Icon name={item.icon} />
             <span>{item.label}</span>

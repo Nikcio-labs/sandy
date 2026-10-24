@@ -43,7 +43,6 @@ async fn blocking<T: Send + 'static>(
 fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_data_dir().map_err(|error| error.to_string())
 }
-
 #[tauri::command]
 async fn check_setup() -> Result<setup::SetupStatus, String> {
     logged(
@@ -210,6 +209,31 @@ async fn template_warnings(app: tauri::AppHandle) -> Result<Vec<String>, String>
 }
 
 #[tauri::command]
+async fn read_template_details(
+    app: tauri::AppHandle,
+    id: String,
+) -> Result<environments::TemplateDetails, String> {
+    logged("read_template_details", async move {
+        let root = data_dir(&app)?;
+        blocking(move || environments::read_template_details(&root, &id)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn update_template(
+    app: tauri::AppHandle,
+    id: String,
+    request: environments::UpdateTemplateRequest,
+) -> Result<environments::SavedTemplate, String> {
+    logged("update_template", async move {
+        let root = data_dir(&app)?;
+        blocking(move || environments::update_template(&root, &id, request)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn delete_template(app: tauri::AppHandle, id: String) -> Result<(), String> {
     logged("delete_template", async move {
         let root = data_dir(&app)?;
@@ -325,6 +349,8 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         save_template,
         list_templates,
         template_warnings,
+        read_template_details,
+        update_template,
         delete_template,
         launch_template,
         allow_source,

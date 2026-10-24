@@ -44,6 +44,32 @@ pub struct SaveTemplateRequest {
     pub save_path: Option<String>,
 }
 
+/// Editing keeps the saved file where it is, so there is no save_path here.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateTemplateRequest {
+    pub name: String,
+    /// Empty for a mountless sandbox, isolated from the host file system.
+    #[serde(default)]
+    pub workspace: String,
+    pub agent: KitOption,
+    #[serde(default)]
+    pub mixins: Vec<KitOption>,
+    /// Keys are KitOption.id, never an ambiguous display name.
+    #[serde(default)]
+    pub arguments: BTreeMap<String, BTreeMap<String, String>>,
+}
+
+/// Everything the editor needs to prefill the wizard: the saved summary, the
+/// full kit metadata behind it, and the arguments already pinned in the file.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TemplateDetails {
+    pub template: SavedTemplate,
+    pub agent: KitOption,
+    pub mixins: Vec<KitOption>,
+    /// Keys are KitOption.id; the file itself keys arguments by kit source.
+    pub arguments: BTreeMap<String, BTreeMap<String, String>>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct TemplateRecord {
     pub(super) id: String,
@@ -194,6 +220,95 @@ pub(super) fn read_template(
 
 pub fn list_templates(root: &Path) -> Result<Vec<SavedTemplate>, String> {
     read_library(root).map(|(templates, _)| templates)
+}
+
+/// Everything the edit wizard needs: the template's summary plus the exact
+/// kit metadata (arguments, descriptions, compatibility) recorded at save
+/// time, matched against the YAML's kit sources. Stale files surface the
+/// same read errors as the templates list.
+pub fn read_template_details(root: &Path, id: &str) -> Result<TemplateDetails, String> {
+    let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
+    let library = records(root)?;
+    let record = library
+        .iter()
+        .find(|record| record.id == id)
+        .ok_or("Unknown saved template")?;
+    let (template, environment) = read_template(record)?;
+    let expected = selected(&record.agent, &record.mixins);
+    let mut arguments: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
+    for (kit, entry) in expected.iter().zip(&environment.kits) {
+        arguments.insert(kit.id.clone(), entry.arguments());
+    }
+    Ok(TemplateDetails {
+        template,
+        agent: record.agent.clone(),
+        mixins: record.mixins.clone(),
+        arguments,
+    })
+}
+
+/// Rewrites the saved file and its library record in place. The file location
+/// never moves: launches may have written snapshots next to it, and moving a
+/// custom-located file out from under the user would be surprising.
+pub fn update_template(
+    root: &Path,
+    id: &str,
+    request: UpdateTemplateRequest,
+) -> Result<SavedTemplate, String> {
+    let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
+    let mut library = records(root)?;
+    let index = library
+        .iter()
+        .position(|record| record.id == id)
+        .ok_or("Unknown saved template")?;
+    let record = library.remove(index);
+    let save = SaveTemplateRequest {
+        name: request.name,
+        workspace: request.workspace,
+        agent: request.agent,
+        mixins: request.mixins,
+        arguments: request.arguments,
+        // Only file placement uses save_path; updating rewrites the existing
+        // file via its record instead.
+        save_path: None,
+    };
+    let workspace = if save.workspace.trim().is_empty() {
+        None
+    } else {
+        Some(workspace_path(&save.workspace)?)
+    };
+    // A new workspace must not swallow the existing template file, exactly
+    // like saving a template into a workspace.
+    if let Some(workspace) = workspace.as_deref() {
+        ensure_outside(Path::new(&record.path), workspace)?;
+    }
+    let environment = build_environment(&save, workspace.as_deref())?;
+    let content = serde_yaml_ng::to_string(&environment)
+        .map_err(|e| format!("Cannot encode environment YAML: {e}"))?;
+    // The file is rewritten, not replaced: an interrupted write must never
+    // destroy the previous template.
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&record.path)
+        .map_err(|e| format!("Cannot update {}: {e}", record.path))?;
+    if let Err(error) = file
+        .write_all(content.as_bytes())
+        .and_then(|_| file.sync_all())
+    {
+        return Err(format!("Cannot write {}: {error}", record.path));
+    }
+    drop(file);
+    let updated = TemplateRecord {
+        id: record.id,
+        path: record.path,
+        agent: save.agent,
+        mixins: save.mixins,
+    };
+    library.insert(index, updated.clone());
+    write_json(&root.join("templates.json"), &library)
+        .map_err(|error| format!("Template library could not be saved: {error}"))?;
+    Ok(summary(&updated, &environment, content))
 }
 
 /// Removes a saved template: its file and the library record. Sandboxes
