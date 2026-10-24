@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { clearDebugLog, readDebugLog, type DebugLogEntry } from "../../../lib/catalog";
+import { openPath } from "@tauri-apps/plugin-opener";
+import { clearDebugLog, readDebugLog, debugLogDir, type DebugLogEntry } from "../../../lib/catalog";
 import { copyText } from "../../../common/lib/clipboard";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
@@ -45,6 +46,7 @@ export default function Advanced() {
   const [notice, setNotice] = useState("");
   const [filter, setFilter] = useState<LevelFilter>("all");
   const [copied, setCopied] = useState(false);
+  const [copiedDir, setCopiedDir] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -72,9 +74,13 @@ export default function Advanced() {
     () => (filter === "errors" ? entries.filter((entry) => entry.outcome === "error" || entry.kind === "error") : entries),
     [entries, filter],
   );
-  // Newest entries first in the DOM; older ones are behind "Show older".
+  // The log file is appended oldest first, so reverse for a newest-first view;
+  // older entries are behind "Show older".
   const rendered = useMemo(
-    () => (showAll ? visible : visible.slice(Math.max(0, visible.length - RENDER_LIMIT))),
+    () => {
+      const newestFirst = [...visible].reverse();
+      return showAll ? newestFirst : newestFirst.slice(0, RENDER_LIMIT);
+    },
     [visible, showAll],
   );
   const errorCount = useMemo(
@@ -99,6 +105,24 @@ export default function Advanced() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setNotice("Could not access the clipboard. Select the log text and copy it manually.");
+    }
+  };
+
+  const copyLogDir = async () => {
+    try {
+      await copyText(await debugLogDir());
+      setCopiedDir(true);
+      setTimeout(() => setCopiedDir(false), 2000);
+    } catch {
+      setNotice("Could not access the clipboard. Select the log text and copy it manually.");
+    }
+  };
+
+  const openLogDir = async () => {
+    try {
+      await openPath(await debugLogDir());
+    } catch {
+      setNotice("Could not open the log folder. Copy the folder path and open it manually.");
     }
   };
 
@@ -212,6 +236,26 @@ export default function Advanced() {
               disabled={loading || !entries.length}
             >
               {copied ? "Copied" : "Copy log"}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => void copyLogDir()}
+              disabled={loading}
+              aria-label="Copy the diagnostic log folder path"
+            >
+              <Icon name="clipboard" size={16} />
+              {copiedDir ? "Copied" : "Copy log folder"}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => void openLogDir()}
+              disabled={loading}
+              aria-label="Open the diagnostic log folder in the file manager"
+            >
+              <Icon name="folder" size={16} />
+              Open log folder
             </button>
             <button type="button" className="ghost" onClick={() => void clear()} disabled={loading || !entries.length}>
               <Icon name="trash" size={16} />

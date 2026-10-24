@@ -170,6 +170,53 @@ h4 {
   text-decoration: none;
 }
 
+.window-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.window-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #455e96;
+}
+
+.window-control:hover {
+  background: #e3e6f9;
+  color: var(--text);
+}
+
+.window-control:last-child:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+/* The minimize/maximize glyphs are plain geometry instead of icons so their
+   stroke weight matches native title bars across display densities. */
+.window-control-minimize,
+.window-control-maximize {
+  display: block;
+  width: 11px;
+  height: 11px;
+}
+
+.window-control-minimize {
+  border-bottom: 1.4px solid currentColor;
+}
+
+.window-control-maximize {
+  border: 1.4px solid currentColor;
+  border-radius: 2.5px;
+}
+
 .body {
   display: flex;
   min-height: 0;
@@ -1043,6 +1090,30 @@ select {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.8;
+}
+
+/* Settings → Updates: the in-app updater offer and download progress. */
+.update-offer p {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 14px 0 4px;
+}
+
+.update-offer .catalog-help {
+  display: inline;
+}
+
+.update-progress {
+  margin: 14px 0 4px;
+}
+
+.update-progress .setup-progress-label {
+  margin: 0 0 8px;
+}
+
+.update-progress .progress-track {
+  margin: 0;
 }
 
 /* Settings → Advanced: the diagnostic log viewer. */

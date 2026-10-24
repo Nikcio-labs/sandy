@@ -1,3 +1,4 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IconName } from "./Icon";
 import Icon from "./Icon";
 import logo from "../../assets/logo.png";
@@ -14,13 +15,57 @@ const navigation: {
   { id: "settings", icon: "settings", label: "Settings" },
 ];
 
+/**
+ * The window has no OS decorations, so the custom buttons must cover
+ * minimize, maximize-restore, and close. Without OS decorations there is
+ * no native close-requested flow to interrupt, so closing directly is the
+ * whole behavior; nothing in the app listens for close requests.
+ */
+function WindowControls() {
+  const window = getCurrentWindow();
+  // Rejections only occur if the capability grants are removed; they are
+  // swallowed to avoid unhandled rejections, matching the splash close in
+  // App.tsx.
+  const controls: { label: string; action: () => void; icon: React.ReactNode }[] = [
+    { label: "Minimize window", action: () => window.minimize().catch(() => {}), icon: <span className="window-control-minimize" /> },
+    { label: "Maximize or restore window", action: () => window.toggleMaximize().catch(() => {}), icon: <span className="window-control-maximize" /> },
+    {
+      label: "Close window",
+      action: () => window.close().catch(() => {}),
+      icon: <Icon name="close" size={16} />,
+    },
+  ];
+
+  return (
+    <div className="window-controls">
+      {controls.map((control) => (
+        <button
+          key={control.label}
+          type="button"
+          className="window-control"
+          aria-label={control.label}
+          onClick={control.action}
+        >
+          {control.icon}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Topbar() {
   return (
-    <header className="topbar">
+    // Draggable title bar. The "deep" value makes every non-interactive part
+    // of the subtree draggable; interactive children (buttons) stay clickable
+    // and double-click on the bar still toggles maximize (Tauri drag-region
+    // script). Elements carrying the attribute must remain hit-testable, so
+    // the bar itself never sets pointer-events: none.
+    <header className="topbar" data-tauri-drag-region="deep">
       <div className="brand">
         <img src={logo} alt="" />
         <span>Sandy</span>
       </div>
+      <WindowControls />
     </header>
   );
 }

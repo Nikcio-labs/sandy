@@ -13,6 +13,18 @@ use super::schema::Environment;
 use super::source_policy::{allow_source_with, prefix_matches};
 use super::validation::path_string;
 use crate::catalog::{KitArgument, KitOption, Provider, unique_id};
+use crate::progress::LaunchProgress;
+
+/// Collects the phases reported during a launch so tests can assert on the
+/// progress sequence the frontend will render.
+#[derive(Default)]
+struct ProgressLog(Vec<LaunchProgress>);
+
+impl ProgressLog {
+    fn sink(&mut self) -> impl FnMut(LaunchProgress) + '_ {
+        |progress| self.0.push(progress)
+    }
+}
 
 #[derive(Default)]
 struct MockRuntime {
@@ -62,6 +74,17 @@ impl SandboxRuntime for MockRuntime {
             return Err("start failed".into());
         }
         Ok("started".into())
+    }
+
+    fn create_streaming(
+        &mut self,
+        args: &[&str],
+        line: &mut dyn FnMut(&str),
+    ) -> Result<String, String> {
+        if !self.fail_create {
+            line("pulling docker.io/team/claude:1.0");
+        }
+        self.run(args)
     }
 }
 
@@ -278,12 +301,14 @@ fn launches_noninteractively_with_name_workspace_override_and_no_mutation() {
     let other = fixture.base.join("other workspace");
     std::fs::create_dir(&other).unwrap();
     let mut runtime = MockRuntime::default();
+    let mut progress = ProgressLog::default();
     let result = launch_with(
         &fixture.root,
         &saved.id,
         Some("second".into()),
         Some(path_string(&other).unwrap()),
         &mut runtime,
+        &mut progress.sink(),
     )
     .unwrap();
     assert!(result.contains("Created and started sandbox second"));
@@ -293,6 +318,17 @@ fn launches_noninteractively_with_name_workspace_override_and_no_mutation() {
         ["env", "create", "--force", "--name", "second"]
     );
     assert_eq!(runtime.calls[2], ["run", "--detach", "--name", "second"]);
+    assert_eq!(
+        progress.0,
+        [
+            LaunchProgress::Preparing,
+            LaunchProgress::Output {
+                line: "pulling docker.io/team/claude:1.0".into(),
+            },
+            LaunchProgress::Starting,
+            LaunchProgress::Ready,
+        ]
+    );
     let launch: Environment =
         serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
     assert_eq!(
@@ -310,7 +346,15 @@ fn existing_sandbox_is_resumed_without_recreating_environment() {
         existing: true,
         ..Default::default()
     };
-    let result = launch_with(&fixture.root, &saved.id, None, None, &mut runtime).unwrap();
+    let result = launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
     assert!(result.contains("Started existing sandbox example"));
     assert_eq!(
         runtime.calls,
@@ -330,7 +374,15 @@ fn create_failure_does_not_attempt_to_start() {
         fail_create: true,
         ..Default::default()
     };
-    let error = launch_with(&fixture.root, &saved.id, None, None, &mut runtime).unwrap_err();
+    let error = launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap_err();
     assert!(error.contains("Environment creation failed"));
     assert_eq!(runtime.calls.len(), 2);
 }
@@ -343,7 +395,15 @@ fn start_failure_reports_created_environment_and_retry_command() {
         fail_start: true,
         ..Default::default()
     };
-    let error = launch_with(&fixture.root, &saved.id, None, None, &mut runtime).unwrap_err();
+    let error = launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap_err();
     assert!(error.contains("was created, but it could not be started"));
     assert!(error.contains("sbx run --detach --name example"));
     assert_eq!(runtime.calls.len(), 3);
@@ -404,9 +464,9 @@ esac
     .unwrap();
     crate::sbx::test_env::set_var("PATH", path);
 
-    let created = launch_template(&fixture.root, &saved.id, None, None).unwrap();
+    let created = launch_template(&fixture.root, &saved.id, None, None, &mut |_| {}).unwrap();
     assert!(created.contains("Created and started sandbox example"));
-    let resumed = launch_template(&fixture.root, &saved.id, None, None).unwrap();
+    let resumed = launch_template(&fixture.root, &saved.id, None, None, &mut |_| {}).unwrap();
     assert!(resumed.contains("Started existing sandbox example"));
     let commands = std::fs::read_to_string(fixture.base.join("commands")).unwrap();
     let commands: Vec<_> = commands.lines().collect();
@@ -503,7 +563,15 @@ fn mountless_templates_save_launch_and_stay_isolated() {
     assert!(!saved.content.contains("workspace"));
 
     let mut runtime = MockRuntime::default();
-    let result = launch_with(&fixture.root, &saved.id, None, None, &mut runtime).unwrap();
+    let result = launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
     assert!(result.contains("Created and started sandbox example"));
     let launch: Environment =
         serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
@@ -533,6 +601,7 @@ fn mountless_launch_ignores_workspace_override_and_launch_files() {
         Some("second".into()),
         Some(path_string(&fixture.workspace).unwrap()),
         &mut runtime,
+        &mut |_| {},
     )
     .unwrap();
     let launch: Environment =
@@ -553,6 +622,7 @@ fn mountless_launch_of_workspace_template_drops_the_mount_when_requested() {
         None,
         Some(String::new()),
         &mut runtime,
+        &mut |_| {},
     )
     .unwrap();
     let launch: Environment =

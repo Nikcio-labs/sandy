@@ -6,6 +6,7 @@ use std::io::Write;
 use std::path::Path;
 
 use crate::catalog::{get_providers, github_repository, unique_id};
+use crate::progress::LaunchProgress;
 
 use super::LIBRARY;
 use super::library::{read_template, records};
@@ -20,14 +21,20 @@ pub fn launch_template(
     id: &str,
     name: Option<String>,
     workspace: Option<String>,
+    progress: &mut dyn FnMut(LaunchProgress),
 ) -> Result<String, String> {
-    launch_with(root, id, name, workspace, &mut SbxRuntime)
+    launch_with(root, id, name, workspace, &mut SbxRuntime, progress)
 }
 
 pub(super) trait SandboxRuntime {
     fn run(&mut self, args: &[&str]) -> Result<String, String>;
     fn exists(&mut self, name: &str) -> Result<bool, String>;
     fn start(&mut self, name: &str) -> Result<String, String>;
+    fn create_streaming(
+        &mut self,
+        args: &[&str],
+        line: &mut dyn FnMut(&str),
+    ) -> Result<String, String>;
 }
 
 struct SbxRuntime;
@@ -46,6 +53,14 @@ impl SandboxRuntime for SbxRuntime {
     fn start(&mut self, name: &str) -> Result<String, String> {
         crate::sbx::start_sandbox(name)
     }
+
+    fn create_streaming(
+        &mut self,
+        args: &[&str],
+        line: &mut dyn FnMut(&str),
+    ) -> Result<String, String> {
+        crate::sbx::run_capture_lines(args, line)
+    }
 }
 
 pub(super) fn launch_with(
@@ -54,6 +69,7 @@ pub(super) fn launch_with(
     name: Option<String>,
     workspace: Option<String>,
     runtime: &mut impl SandboxRuntime,
+    progress: &mut dyn FnMut(LaunchProgress),
 ) -> Result<String, String> {
     let (record, saved, environment) = {
         let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
@@ -72,6 +88,7 @@ pub(super) fn launch_with(
         .exists(&name)
         .map_err(|error| format!("Cannot check whether sandbox {name} already exists:\n{error}"))?
     {
+        progress(LaunchProgress::Starting);
         let output = runtime.start(&name).map_err(|error| {
             format!("Existing sandbox {name} could not be started. Retry with sbx run --detach --name {name}:\n{error}")
         })?;
@@ -91,6 +108,7 @@ pub(super) fn launch_with(
     }
     let providers = get_providers(root)?;
     let mut authorized = HashSet::new();
+    let mut authorized_any = false;
     for kit in selected(&record.agent, &record.mixins) {
         if let Some(url) = kit.source.strip_prefix("git+https://github.com/") {
             let repository = url
@@ -111,6 +129,8 @@ pub(super) fn launch_with(
                     )
                 })?;
             if authorized.insert(repository.to_string()) {
+                authorized_any = true;
+                progress(LaunchProgress::Authorizing);
                 allow_source_with(provider, &mut |args| runtime.run(args))?;
             }
         } else if !kit.source.starts_with("docker.io/") {
@@ -174,11 +194,23 @@ pub(super) fn launch_with(
         .and_then(|_| file.sync_all())
         .map_err(|e| e.to_string())?;
     let path = path_string(&path)?;
-    let created = runtime.run(&["env", "create", "--force", "--name", &name, &path])
+    progress(if authorized_any {
+        LaunchProgress::Creating
+    } else {
+        LaunchProgress::Preparing
+    });
+    let created = runtime
+        .create_streaming(&["env", "create", "--force", "--name", &name, &path], &mut |text| {
+            progress(LaunchProgress::Output {
+                line: text.to_string(),
+            });
+        })
         .map_err(|e| format!("Environment creation failed. Launch file retained at {path} for diagnostics and retry:\n{e}"))?;
+    progress(LaunchProgress::Starting);
     let started = runtime.start(&name).map_err(|error| {
         format!("Environment {name} was created, but it could not be started. Retry with sbx run --detach --name {name}; launching this name again will resume it without recreating it.\nLaunch file: {path}\nCreate output: {created}\n{error}")
     })?;
+    progress(LaunchProgress::Ready);
     Ok(format!(
         "Created and started sandbox {name} in the background without attaching an interactive session.\nLaunch file: {path}\n{created}\n{started}"
     ))

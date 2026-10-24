@@ -85,10 +85,15 @@ fn install_sbx_linux(log: &mut dyn FnMut(&str)) -> Result<(), String> {
                 .to_string(),
         );
     }
+    // The install script runs as root via `sudo sh`, so it must be
+    // downloaded to a private (mode 600) file the invoking user owns; a
+    // predictable /tmp path would let another local user swap its content.
+    // The trap removes it even when the script aborts early.
     let script = r#"set -e
-curl -fsSL https://get.docker.com -o /tmp/sandy-get-docker.sh
-sudo REPO_ONLY=1 sh /tmp/sandy-get-docker.sh
-rm -f /tmp/sandy-get-docker.sh
+tmpfile="$(mktemp)"
+trap 'rm -f "$tmpfile"' EXIT
+curl -fsSL https://get.docker.com -o "$tmpfile"
+sudo REPO_ONLY=1 sh "$tmpfile"
 sudo apt-get install -y docker-sbx
 sudo usermod -aG kvm "$(logname 2>/dev/null || id -un)" || echo "warning: could not add user to the kvm group" >&2
 "#;

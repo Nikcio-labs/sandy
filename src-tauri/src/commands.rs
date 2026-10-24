@@ -221,13 +221,20 @@ async fn delete_template(app: tauri::AppHandle, id: String) -> Result<(), String
 #[tauri::command]
 async fn launch_template(
     app: tauri::AppHandle,
+    on_progress: tauri::ipc::Channel<crate::progress::LaunchProgress>,
     id: String,
     name: Option<String>,
     workspace: Option<String>,
 ) -> Result<String, String> {
     logged("launch_template", async move {
         let root = data_dir(&app)?;
-        blocking(move || environments::launch_template(&root, &id, name, workspace)).await
+        blocking(move || {
+            environments::launch_template(&root, &id, name, workspace, &mut |progress| {
+                // A closed or slow UI must not fail or block the launch.
+                let _ = on_progress.send(progress);
+            })
+        })
+        .await
     })
     .await
 }
@@ -242,17 +249,17 @@ async fn allow_source(app: tauri::AppHandle, provider_id: String) -> Result<Stri
 }
 
 #[tauri::command]
-async fn pick_workspace() -> Result<Option<String>, String> {
+async fn pick_workspace(app: tauri::AppHandle) -> Result<Option<String>, String> {
     logged("pick_workspace", async move {
-        blocking(environments::pick_workspace).await
+        blocking(move || environments::pick_workspace(&app)).await
     })
     .await
 }
 
 #[tauri::command]
-async fn pick_template_path() -> Result<Option<String>, String> {
+async fn pick_template_path(app: tauri::AppHandle) -> Result<Option<String>, String> {
     logged("pick_template_path", async move {
-        blocking(environments::pick_template_path).await
+        blocking(move || environments::pick_template_path(&app)).await
     })
     .await
 }
@@ -272,6 +279,14 @@ async fn read_debug_log(app: tauri::AppHandle) -> Result<String, String> {
         })
     })
     .await
+}
+
+/// The directory holding the diagnostic log file, so the Settings log viewer
+/// can offer the user a way to reach it in the file manager.
+#[tauri::command]
+async fn debug_log_dir(app: tauri::AppHandle) -> Result<String, String> {
+    let root = data_dir(&app)?;
+    Ok(root.to_string_lossy().into_owned())
 }
 
 /// Delete the diagnostic log. The next write recreates it.
@@ -316,6 +331,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         pick_workspace,
         pick_template_path,
         read_debug_log,
-        clear_debug_log
+        clear_debug_log,
+        debug_log_dir
     ])
 }

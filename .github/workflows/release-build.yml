@@ -18,6 +18,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   sandy:
     name: Build Sandy — ${{ matrix.label }}
@@ -44,6 +47,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha }}
+          persist-credentials: false
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -84,8 +88,13 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      # The updater refuses unsigned bundles, so every release build must run
+      # with the signing key; the key has no password.
       - name: Build Tauri app
         run: pnpm tauri build --target ${{ matrix.target }}
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.UPDATER_SIGNING_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.UPDATER_SIGNING_KEY_PASSWORD }}
 
       # The Store build overwrites the NSIS output, so the regular
       # installers are moved aside before building the Store variant
@@ -108,6 +117,7 @@ jobs:
         run: |
           mkdir -p artifacts
           find src-tauri/target -path '*release/bundle*' -name '*.AppImage' -exec cp {} artifacts/ \;
+          find src-tauri/target -path '*release/bundle*' -name '*.AppImage.sig' -exec cp {} artifacts/ \;
           find src-tauri/target -path '*release/bundle*' -name '*.deb' -exec cp {} artifacts/ \;
 
       - name: Prepare artifacts (macOS)
@@ -115,7 +125,11 @@ jobs:
         run: |
           mkdir -p artifacts
           find src-tauri/target -path '*release/bundle*' -name '*.dmg' -exec cp {} artifacts/ \;
-          find src-tauri/target -path '*release/bundle*' -name '*.app' -maxdepth 0 -exec cp -R {} artifacts/ \;
+          # The updater installs the .app.tar.gz, not the .dmg.
+          find src-tauri/target -path '*release/bundle*' -name '*.app.tar.gz' -exec cp {} artifacts/ \;
+          find src-tauri/target -path '*release/bundle*' -name '*.app.tar.gz.sig' -exec cp {} artifacts/ \;
+          # The bare .app directory stays out on purpose: gh release upload
+          # cannot upload directories, and users install from the .dmg.
 
       - name: Prepare artifacts (Windows)
         if: runner.os == 'Windows'
@@ -124,7 +138,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           $bundle = "src-tauri/target/${{ matrix.target }}/release/bundle"
           Copy-Item "bundle-regular/msi/*.msi" artifacts
+          Copy-Item "bundle-regular/msi/*.msi.sig" artifacts
           Copy-Item "bundle-regular/nsis/*-setup.exe" artifacts
+          Copy-Item "bundle-regular/nsis/*-setup.exe.sig" artifacts
           # Suffix the Store installer so both variants fit on the same
           # release (the file names would otherwise collide).
           $store = Get-ChildItem "$bundle/nsis/*-setup.exe" | Select-Object -First 1
@@ -137,15 +153,73 @@ jobs:
         shell: bash
         run: gh release upload "${TAG_NAME}" --clobber artifacts/*
 
+  # The updater endpoint is a static JSON file next to the installers. Each
+  # entry points at the platform asset on this release together with the
+  # contents of its `.sig` file (the signature itself, not a path). The
+  # manifest must upload cleanly before publish runs: an empty signature or a
+  # missing asset would hand users an update that cannot be verified.
+  manifest:
+    name: Build updater manifest
+    needs: sandy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${TAG_NAME#v}"
+          release_url="https://github.com/${GH_REPO}/releases/download/${TAG_NAME}"
+          # Values are collected into standalone assignments: inside inline
+          # command substitutions bash would swallow their failures even with
+          # set -e, and a malformed manifest must abort before it uploads.
+          notes="$(gh release view "${TAG_NAME}" --json body --jq .body | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')"
+          # The URL must name the exact uploaded asset, so take it from the
+          # downloaded `.sig` file's real name (the bundle name plus .sig)
+          # instead of assuming the bundler's version-in-file-name scheme.
+          collect() {
+            local pattern="$1"
+            local dir signature asset
+            dir="$(mktemp -d)"
+            gh release download "${TAG_NAME}" --pattern "${pattern}.sig" --dir "$dir"
+            signature="$(tr -d '\n' < "$dir"/*.sig)"
+            if [ -z "$signature" ]; then
+              echo "No signature downloaded for ${pattern}" >&2
+              exit 1
+            fi
+            asset="$(basename "$dir"/*.sig .sig)"
+            rm -rf "$dir"
+            printf '"%s": { "signature": "%s", "url": "%s/%s" }' "$2" "$signature" "$release_url" "$asset"
+          }
+          linux="$(collect 'Sandy_*_amd64.AppImage' 'linux-x86_64')"
+          darwin="$(collect 'Sandy.app.tar.gz' 'darwin-aarch64')"
+          windows="$(collect 'Sandy_*_x64-setup.exe' 'windows-x86_64')"
+          {
+            printf '{\n  "version": "%s",\n  "notes": %s,\n  "platforms": {\n' "$version" "$notes"
+            printf '    %s,\n' "$linux"
+            printf '    %s,\n' "$darwin"
+            printf '    %s\n' "$windows"
+            printf '  }\n}\n'
+          } > latest.json
+          python3 -m json.tool latest.json >/dev/null
+          gh release upload "${TAG_NAME}" --clobber latest.json
+
   publish:
     name: Publish release
-    needs: sandy
+    needs: [sandy, manifest]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Publish draft release
         env:

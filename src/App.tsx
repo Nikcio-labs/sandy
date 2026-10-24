@@ -11,10 +11,9 @@ import CreatePage from "./features/create/components/CreatePage";
 import SettingsPage from "./features/settings/components/SettingsPage";
 
 const revealMainWindow = async () => {
-  const splash = (await Window.getAll()).find((window) => window.label === "splash");
   await getCurrentWindow().show();
   // The splash may already be gone (e.g. the user closed it); ignore failures.
-  await splash?.close().catch(() => {});
+  await (await Window.getByLabel("splash"))?.close().catch(() => {});
 };
 
 export default function App() {
@@ -23,6 +22,9 @@ export default function App() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupSession, setSetupSession] = useState(0);
   const [count, setCount] = useState<number | null>(null);
+  // A sandbox launched elsewhere (e.g. from Templates) that the dashboard
+  // should select and inspect once its list load reports it.
+  const [pendingSelection, setPendingSelection] = useState<string | null>(null);
   const setup = useSetupStatus();
   const {
     status,
@@ -87,6 +89,8 @@ export default function App() {
             <DashboardPage
               home={view === "home"}
               status={status}
+              pendingSelection={pendingSelection}
+              onPendingSelectionHandled={() => setPendingSelection(null)}
               onGoSettings={() => setView("settings")}
               onGoTemplates={() => setView("templates")}
               onCreate={() => setView("create")}
@@ -98,6 +102,10 @@ export default function App() {
             <TemplatesPage
               onCreate={() => setView("create")}
               onBusyChange={setBusy}
+              onLaunched={(sandbox) => {
+                setPendingSelection(sandbox);
+                setView("sandboxes");
+              }}
             />
           )}
           {view === "create" && (
