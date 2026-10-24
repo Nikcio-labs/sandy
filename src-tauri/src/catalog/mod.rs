@@ -145,3 +145,6 @@ const DESCRIPTOR: &str = "vnd.docker.sandbox.kit.descriptor";
 
 const MAX_BODY: u64 = 12 * 1024 * 1024;
 const METADATA_BATCH: usize = 4;
+/// Hub catalog search pages through everything up to this bound; metadata
+/// reads per repository dominate the cost beyond it.
+const MAX_SEARCH_REPOSITORIES: usize = 500;

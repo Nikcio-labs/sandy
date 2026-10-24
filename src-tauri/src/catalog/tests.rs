@@ -41,6 +41,57 @@ fn fixture(routes: Vec<(&str, &str)>) -> (Api, std::thread::JoinHandle<()>) {
     (api, worker)
 }
 
+/// Like `fixture`, but serves each request by exact-path lookup. Discovery
+/// reads metadata concurrently, so response order is not deterministic. The
+/// worker stops after serving every distinct route once.
+fn fixture_lookup(routes: Vec<(&str, &str)>) -> (Api, std::thread::JoinHandle<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let route_count = routes.len();
+    let routes: std::sync::Mutex<std::collections::HashMap<String, String>> = std::sync::Mutex::new(
+        routes
+            .into_iter()
+            .map(|(p, b)| (p.to_string(), b.to_string()))
+            .collect(),
+    );
+    let worker = std::thread::spawn(move || {
+        let mut served = std::collections::HashSet::new();
+        for stream in listener.incoming().map(Result::unwrap) {
+            let mut stream = stream;
+            let routes = routes.lock().unwrap();
+            let mut request = [0; 4096];
+            let n = stream.read(&mut request).unwrap();
+            let request = String::from_utf8_lossy(&request[..n]);
+            let requested = request.split(' ').nth(1).unwrap_or_default().to_string();
+            let Some(body) = routes.get(&requested) else {
+                panic!("unexpected request {requested}");
+            };
+            let body = body.clone();
+            served.insert(requested);
+            drop(routes);
+            write!(
+                stream,
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                body.len(),
+                body
+            )
+            .unwrap();
+            // Discovery reads concurrently; once every expected route has been
+            // served the test's assertions are all that remains.
+            if served.len() == route_count {
+                break;
+            }
+        }
+    });
+    let mut api = Api::public().unwrap();
+    api.github = base.clone();
+    api.raw = base.clone();
+    api.hub = base.clone();
+    api.registry = base.clone();
+    api.auth = format!("{base}/token");
+    (api, worker)
+}
+
 #[test]
 fn github_api_resolves_selected_tag_and_discovers_descriptor() {
     let (api, worker) = fixture(vec![
@@ -166,6 +217,61 @@ fn hub_versions_filter_plain_images_and_keep_tag_selection() {
         enabled: true,
     };
     assert_eq!(versions_with(&api, &provider).unwrap(), ["v3", "v2"]);
+    worker.join().unwrap();
+}
+
+#[test]
+fn hub_search_discovery_pages_beyond_the_first_page() {
+    // 100 entries on the first page force a second request; the total says
+    // 101. Each matching repository's tag listing follows.
+    let search = |from: u64| {
+        format!("/api/search/v3/catalog/search?type=sbx_kit&query=&from={from}&size=100")
+    };
+    let entry = |slug: &str| serde_json::json!({"slug": slug, "content_types": ["sbx_kit"]});
+    let first_entries: Vec<_> = (0..100).map(|i| entry(&format!("team/kit{i}"))).collect();
+    let second_entries = [entry("team/kit100")];
+    let mut routes: Vec<(String, String)> = vec![(
+        search(0),
+        serde_json::json!({"total": 101, "results": first_entries}).to_string(),
+    )];
+    for i in 0..101 {
+        routes.push((
+            format!("/v2/repositories/team/kit{i}/tags?page_size=100&page=1"),
+            r#"{"next":null,"results":[{"name":"1.0","content_type":"sbx_kit"}]}"#.into(),
+        ));
+        routes.push((
+            format!("/token?service=registry.docker.io&scope=repository:team%2Fkit{i}:pull"),
+            r#"{"token":"public-fixture-token"}"#.into(),
+        ));
+        routes.push((
+            format!("/v2/team/kit{i}/manifests/1.0"),
+            r#"{"config":{"mediaType":"application/vnd.docker.sandbox.kit.v2.spec+yaml","digest":"sha256:abc"}}"#.into(),
+        ));
+        routes.push((
+            format!("/v2/team/kit{i}/blobs/sha256:abc"),
+            "schemaVersion: '2'\nkind: sandbox\nname: custom\n".into(),
+        ));
+    }
+    routes.push((
+        search(100),
+        serde_json::json!({"total": 101, "results": second_entries}).to_string(),
+    ));
+    let route_refs: Vec<(&str, &str)> = routes
+        .iter()
+        .map(|(p, b)| (p.as_str(), b.as_str()))
+        .collect();
+    let (api, worker) = fixture_lookup(route_refs);
+    let provider = Provider {
+        id: "hub".into(),
+        label: "Test".into(),
+        kind: "dockerhub".into(),
+        repository: String::new(),
+        reference: String::new(),
+        enabled: true,
+    };
+    let catalog = discover_with(&api, &[provider], "").unwrap();
+    assert!(catalog.warnings.is_empty(), "{:?}", catalog.warnings);
+    assert_eq!(catalog.kits.len(), 101);
     worker.join().unwrap();
 }
 

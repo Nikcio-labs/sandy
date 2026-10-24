@@ -212,10 +212,32 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
             : []),
         ],
       });
-      // Discovery is a new snapshot. Old selections cannot carry stale source references.
-      setAgent(null);
-      setMixins([]);
-      setValues({});
+      // Discovery is a new snapshot. Keep selections whose kits are still in
+      // the catalog (matched by source); the rest cannot carry stale
+      // source references and are dropped.
+      const nextKits = verified;
+      const matchBySource = (kit: KitOption) =>
+        nextKits.find((fresh) => fresh.source === kit.source);
+      setAgent((previous) => (previous ? (matchBySource(previous) ?? null) : null));
+      setMixins((previous) =>
+        previous
+          .map((mixin) => matchBySource(mixin))
+          .filter((mixin): mixin is KitOption => mixin !== null),
+      );
+      // Kit ids embed the source, so a refreshed catalog can re-issue ids
+      // (a new GitHub commit, for example). Remap entered values onto the
+      // fresh ids instead of dropping them.
+      setValues((previous) => {
+        const previousKits = [...(agent ? [agent] : []), ...mixins];
+        if (!previousKits.length) return previous;
+        const next: KitArguments = {};
+        for (const kit of previousKits) {
+          const fresh = matchBySource(kit);
+          const entered = previous[kit.id];
+          if (fresh && entered) next[fresh.id] = entered;
+        }
+        return next;
+      });
       setProviderFilter("");
       setStep(1);
     } catch (failure) {

@@ -7,7 +7,9 @@ use super::descriptor::{is_kit_tag, option_from_descriptor};
 use super::http::Api;
 use super::store::hub_repository;
 use super::types::{Catalog, KitOption, Provider};
-use super::{DESCRIPTOR, METADATA_BATCH, encoded, encoded_path, repository_name};
+use super::{
+    DESCRIPTOR, MAX_SEARCH_REPOSITORIES, METADATA_BATCH, encoded, encoded_path, repository_name,
+};
 
 pub(super) fn is_kit_repository(value: &Value) -> bool {
     value["content_types"]
@@ -26,24 +28,45 @@ pub(super) fn discover_hub(api: &Api, provider: &Provider, query: &str) -> Resul
     let repositories = if let Some(repository) = hub_repository(&provider.repository)? {
         vec![repository]
     } else {
-        // The Hub catalog API uses from/size (not page_size). Keep browsing bounded and ask for a narrower search.
-        let value = api.json(&format!(
-            "{}/api/search/v3/catalog/search?type=sbx_kit&query={}&from=0&size=24",
-            api.hub,
-            encoded(query)
-        ))?;
-        let entries = value["results"]
-            .as_array()
-            .ok_or("Hub catalog response has no results")?;
-        if value["total"].as_u64().unwrap_or(0) > entries.len() as u64 {
-            catalog.warnings.push(format!("{}: showing the first {} matching repositories; search to narrow results or add a repository provider to choose its tags", provider.label, entries.len()));
+        // The Hub catalog API uses from/size (not page_size). Page through the
+        // results so a popular search does not hide kits behind the first page.
+        let mut repositories: Vec<String> = Vec::new();
+        let mut from = 0u64;
+        loop {
+            let value = api.json(&format!(
+                "{}/api/search/v3/catalog/search?type=sbx_kit&query={}&from={from}&size=100",
+                api.hub,
+                encoded(query)
+            ))?;
+            let total = value["total"].as_u64().unwrap_or(0);
+            let entries = value["results"]
+                .as_array()
+                .ok_or("Hub catalog response has no results")?;
+            if entries.is_empty() {
+                break;
+            }
+            repositories.extend(
+                entries
+                    .iter()
+                    .filter(|v| is_kit_repository(v))
+                    .filter_map(|v| v["slug"].as_str().or_else(|| v["id"].as_str()))
+                    .map(String::from),
+            );
+            from += entries.len() as u64;
+            if from >= total {
+                break;
+            }
+            // Bounded browsing: the metadata reads below dominate the cost, and
+            // a focused query or a repository provider reaches anything beyond.
+            if repositories.len() >= MAX_SEARCH_REPOSITORIES {
+                catalog.warnings.push(format!(
+                    "{}: showing the first {MAX_SEARCH_REPOSITORIES} matching repositories; search to narrow results or add a repository provider to choose its tags",
+                    provider.label
+                ));
+                break;
+            }
         }
-        entries
-            .iter()
-            .filter(|v| is_kit_repository(v))
-            .filter_map(|v| v["slug"].as_str().or_else(|| v["id"].as_str()))
-            .map(String::from)
-            .collect()
+        repositories
     };
     for chunk in repositories.chunks(METADATA_BATCH) {
         let jobs = std::thread::scope(|scope| {
