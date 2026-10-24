@@ -2899,7 +2899,11 @@ dependencies = [
  "serde_yaml_ng",
  "tauri",
  "tauri-build",
+<<<<<<< HEAD
  "tauri-plugin-log",
+=======
+ "tauri-plugin-window-state",
+>>>>>>> origin/main
  "which",
 ]
 
@@ -3632,6 +3636,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "tauri-plugin-log"
 version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3650,6 +3655,20 @@ dependencies = [
  "tauri-plugin",
  "thiserror 2.0.21",
  "time",
+=======
+name = "tauri-plugin-window-state"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d6815cab7b212f9cfe16a9d79d8d22f9e14159e4a9460f7dec1467167a008e3"
+dependencies = [
+ "bitflags 2.13.2",
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
+>>>>>>> origin/main
 ]
 
 [[package]]
