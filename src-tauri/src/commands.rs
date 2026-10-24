@@ -281,6 +281,14 @@ async fn read_debug_log(app: tauri::AppHandle) -> Result<String, String> {
     .await
 }
 
+/// The directory holding the diagnostic log file, so the Settings log viewer
+/// can offer the user a way to reach it in the file manager.
+#[tauri::command]
+async fn debug_log_dir(app: tauri::AppHandle) -> Result<String, String> {
+    let root = data_dir(&app)?;
+    Ok(root.to_string_lossy().into_owned())
+}
+
 /// Delete the diagnostic log. The next write recreates it.
 #[tauri::command]
 async fn clear_debug_log(app: tauri::AppHandle) -> Result<(), String> {
@@ -323,6 +331,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         pick_workspace,
         pick_template_path,
         read_debug_log,
-        clear_debug_log
+        clear_debug_log,
+        debug_log_dir
     ])
 }
