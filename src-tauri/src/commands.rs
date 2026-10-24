@@ -249,17 +249,17 @@ async fn allow_source(app: tauri::AppHandle, provider_id: String) -> Result<Stri
 }
 
 #[tauri::command]
-async fn pick_workspace() -> Result<Option<String>, String> {
+async fn pick_workspace(app: tauri::AppHandle) -> Result<Option<String>, String> {
     logged("pick_workspace", async move {
-        blocking(environments::pick_workspace).await
+        blocking(move || environments::pick_workspace(&app)).await
     })
     .await
 }
 
 #[tauri::command]
-async fn pick_template_path() -> Result<Option<String>, String> {
+async fn pick_template_path(app: tauri::AppHandle) -> Result<Option<String>, String> {
     logged("pick_template_path", async move {
-        blocking(environments::pick_template_path).await
+        blocking(move || environments::pick_template_path(&app)).await
     })
     .await
 }

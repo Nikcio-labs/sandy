@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { clearDebugLog, readDebugLog, debugLogDir, type DebugLogEntry } from "../../../lib/catalog";
 import { copyText } from "../../../common/lib/clipboard";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
@@ -114,6 +115,14 @@ export default function Advanced() {
       setTimeout(() => setCopiedDir(false), 2000);
     } catch {
       setNotice("Could not access the clipboard. Select the log text and copy it manually.");
+    }
+  };
+
+  const openLogDir = async () => {
+    try {
+      await openPath(await debugLogDir());
+    } catch {
+      setNotice("Could not open the log folder. Copy the folder path and open it manually.");
     }
   };
 
@@ -233,9 +242,20 @@ export default function Advanced() {
               className="ghost"
               onClick={() => void copyLogDir()}
               disabled={loading}
+              aria-label="Copy the diagnostic log folder path"
             >
               <Icon name="clipboard" size={16} />
               {copiedDir ? "Copied" : "Copy log folder"}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => void openLogDir()}
+              disabled={loading}
+              aria-label="Open the diagnostic log folder in the file manager"
+            >
+              <Icon name="folder" size={16} />
+              Open log folder
             </button>
             <button type="button" className="ghost" onClick={() => void clear()} disabled={loading || !entries.length}>
               <Icon name="trash" size={16} />
