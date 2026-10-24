@@ -1,7 +1,8 @@
 //! Discovery of the `sbx` executable and the shared command runner.
 
+use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 pub const SBX_COMMAND: &str = "sbx";
 pub const SSH_SETUP_COMMAND: &str = "ssh";
@@ -133,4 +134,77 @@ fn run_capture_inner(args: &[&str]) -> Result<String, String> {
         ));
     }
     Ok(text.trim().to_string())
+}
+
+/// Run `sbx` with args, streaming each output line as it is printed to a
+/// callback, and returning the full stdout like [`run_capture`] does. Lines
+/// arrive in near-real time; `sbx env create` writes progress while it pulls
+/// images and provisions containers, so this drives UI progress displays.
+/// stderr is still reserved for the error path, mirroring `run_capture`.
+pub fn run_capture_lines(args: &[&str], line: &mut dyn FnMut(&str)) -> Result<String, String> {
+    let mut child = sbx_command(args)?
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("failed to run {}: {}", SBX_COMMAND, e))?;
+    // Only stdout is streamed; stderr is drained on a thread so a chatty
+    // subprocess cannot fill its pipe and block.
+    let stderr_thread = child.stderr.take().map(|mut handle| {
+        std::thread::spawn(move || {
+            use std::io::Read;
+            let mut text = String::new();
+            let _ = handle.read_to_string(&mut text);
+            text
+        })
+    });
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| format!("{} produced no pipe handles", SBX_COMMAND))?;
+    let result = BufReader::new(stdout)
+        .lines()
+        .map(|result| result.map_err(|e| format!("failed to read {} output: {}", SBX_COMMAND, e)))
+        .try_fold(String::new(), |mut all, current| {
+            let text = current?;
+            line(&text);
+            all.push_str(&text);
+            all.push('\n');
+            Ok(all)
+        })
+        .and_then(|text| {
+            child
+                .wait()
+                .map(|status| (text, status))
+                .map_err(|e| format!("failed to wait for {}: {}", SBX_COMMAND, e))
+        });
+    // When reading failed the stderr thread may still be draining; join it
+    // before building the error so nothing is lost.
+    let stderr_tail = stderr_thread
+        .and_then(|thread| thread.join().ok())
+        .unwrap_or_default();
+    let outcome = match result {
+        Ok((text, status)) if status.success() => Ok(text.trim().to_string()),
+        Ok((text, status)) => {
+            let mut msg = stderr_tail;
+            if msg.trim().is_empty() {
+                msg = text;
+            }
+            Err(format!(
+                "{} {} failed (exit {}):\n{}",
+                SBX_COMMAND,
+                args.join(" "),
+                status.code().unwrap_or(-1),
+                msg.trim()
+            ))
+        }
+        Err(error) => Err(format!(
+            "{} {} failed:\n{}\n{}",
+            SBX_COMMAND,
+            args.join(" "),
+            error,
+            stderr_tail.trim()
+        )),
+    };
+    crate::diaglog::cli_call(args, &outcome);
+    outcome
 }

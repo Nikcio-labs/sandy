@@ -531,6 +531,25 @@ pre.catalog-yaml {
   margin: 15px 0;
 }
 
+.catalog-launch-progress {
+  margin-top: 16px;
+}
+
+.catalog-console {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #101426;
+  color: #c7d3f2;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+
 .catalog-template-list {
   display: grid;
   gap: 18px;
