@@ -4,7 +4,7 @@ import { shareInFlight } from "./inFlight";
 export interface Provider {
   id: string;
   label: string;
-  kind: "github" | "dockerhub";
+  kind: "github";
   repository: string;
   reference: string;
   enabled: boolean;
@@ -44,11 +44,8 @@ export const saveProviders = (providers: Provider[]) =>
   invoke<Provider[]>("save_providers", { providers });
 export const providerVersions = (provider: Provider) =>
   invoke<string[]>("provider_versions", { provider });
-export const discoverKits = (providers: Provider[], query?: string) =>
-  invoke<Catalog>("discover_kits", {
-    providers,
-    ...(query?.trim() ? { query: query.trim() } : {}),
-  });
+export const discoverKits = (providers: Provider[]) =>
+  invoke<Catalog>("discover_kits", { providers });
 export const pickWorkspace = () => invoke<string | null>("pick_workspace");
 export const pickTemplatePath = () => invoke<string | null>("pick_template_path");
 
@@ -67,14 +64,3 @@ export const readDebugLog = () => invoke<string>("read_debug_log");
 export const clearDebugLog = () => invoke<void>("clear_debug_log");
 /** Directory containing the diagnostic log file, for opening it in a file manager. */
 export const debugLogDir = () => invoke<string>("debug_log_dir");
-
-export function isHubSearchProvider(provider: Provider): boolean {
-  const repository = provider.repository.trim().replace(/\/+$/, "");
-  return (
-    provider.kind === "dockerhub" &&
-    (repository === "" ||
-      repository === "docker.io" ||
-      repository === "https://hub.docker.com/search" ||
-      repository === "https://hub.docker.com/search?type=sbx_kit")
-  );
-}

@@ -30,10 +30,31 @@ export interface LaunchTemplateRequest {
   workspace?: string;
 }
 
+export interface UpdateTemplateRequest {
+  name: string;
+  /** Empty for a mountless sandbox, isolated from the host file system. */
+  workspace: string;
+  agent: KitOption;
+  mixins: KitOption[];
+  arguments: KitArguments;
+}
+
+/** A template plus the kit metadata and arguments recorded at save time. */
+export interface TemplateDetails {
+  template: SavedTemplate;
+  agent: KitOption;
+  mixins: KitOption[];
+  arguments: KitArguments;
+}
+
 export const saveTemplate = (request: SaveTemplateRequest) =>
   invoke<SavedTemplate>("save_template", { request });
 export const listTemplates = () => invoke<SavedTemplate[]>("list_templates");
 export const templateWarnings = () => invoke<string[]>("template_warnings");
+export const readTemplateDetails = (id: string) =>
+  invoke<TemplateDetails>("read_template_details", { id });
+export const updateTemplate = (id: string, request: UpdateTemplateRequest) =>
+  invoke<SavedTemplate>("update_template", { id, request });
 export const deleteTemplate = (id: string) => invoke<void>("delete_template", { id });
 export const launchTemplate = (
   request: LaunchTemplateRequest,

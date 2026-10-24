@@ -11,12 +11,14 @@ import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
 
 export interface TemplatesPageProps {
   onCreate: () => void;
+  /** Opens the edit wizard for the template with this id. */
+  onEdit?: (templateId: string) => void;
   onBusyChange?: (busy: boolean) => void;
   /** Called with the new sandbox's name after a successful launch. */
   onLaunched?: (sandbox: string) => void;
 }
 
-export default function TemplatesPage({ onCreate, onBusyChange, onLaunched }: TemplatesPageProps) {
+export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunched }: TemplatesPageProps) {
   const id = useId();
   const mounted = useMountedRef();
   const [templates, setTemplates] = useState<SavedTemplate[] | null>(null);
@@ -180,6 +182,16 @@ export default function TemplatesPage({ onCreate, onBusyChange, onLaunched }: Te
                       </p>
                     </div>
                     <div className="catalog-template-actions">
+                      {onEdit && (
+                        <button
+                          type="button"
+                          className="ghost"
+                          aria-label={`Edit ${template.name}`}
+                          onClick={() => onEdit(template.id)}
+                        >
+                          <Icon name="edit" size={16} /> Edit
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="ghost"

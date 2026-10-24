@@ -1,15 +1,13 @@
 use std::io::{Read, Write};
 use std::net::TcpListener;
 
-use super::descriptor::{is_kit_tag, option_from_descriptor};
+use super::descriptor::option_from_descriptor;
 use super::http::Api;
-use super::hub::is_kit_repository;
-use super::hub::{hub_descriptor, selected_hub_kit};
 use super::types::Provider;
 use super::{
-    BUILTIN_AGENTS, DESCRIPTOR, discover_with, encoded_path, get_providers, save_providers,
-    unique_id, versions_with,
+    BUILTIN_AGENTS, discover_with, encoded_path, get_providers, save_providers, unique_id,
 };
+
 fn fixture(routes: Vec<(&str, &str)>) -> (Api, std::thread::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let base = format!("http://{}", listener.local_addr().unwrap());
@@ -35,9 +33,6 @@ fn fixture(routes: Vec<(&str, &str)>) -> (Api, std::thread::JoinHandle<()>) {
     let mut api = Api::public().unwrap();
     api.github = base.clone();
     api.raw = base.clone();
-    api.hub = base.clone();
-    api.registry = base.clone();
-    api.auth = format!("{base}/token");
     (api, worker)
 }
 
@@ -62,7 +57,7 @@ fn github_api_resolves_selected_tag_and_discovers_descriptor() {
         reference: "v1.0".into(),
         enabled: true,
     };
-    let result = discover_with(&api, &[provider], "").unwrap();
+    let result = discover_with(&api, &[provider]).unwrap();
     assert!(result.warnings.is_empty(), "{:?}", result.warnings);
     assert_eq!(result.kits.len(), 1);
     assert_eq!(
@@ -99,7 +94,7 @@ fn manual_github_branch_and_commit_do_not_list_tags() {
             reference: reference.into(),
             enabled: true,
         };
-        let catalog = discover_with(&api, &[provider], "").unwrap();
+        let catalog = discover_with(&api, &[provider]).unwrap();
         assert!(catalog.warnings.is_empty(), "{:?}", catalog.warnings);
         assert_eq!(catalog.kits.len(), 1);
         assert!(catalog.kits[0].source.contains("#ref=abc123&dir=tool"));
@@ -128,18 +123,6 @@ fn normalized_v3_and_typed_filtering() {
             .name,
         "alpine"
     );
-    assert!(!is_kit_repository(
-        &serde_json::json!({"content_types":["image"]})
-    ));
-    assert!(is_kit_repository(
-        &serde_json::json!({"content_types":["image","sbx_kit"]})
-    ));
-    assert!(!is_kit_tag(
-        &serde_json::json!({"name":"latest","content_type":"image"})
-    ));
-    assert!(is_kit_tag(
-        &serde_json::json!({"media_type":"application/vnd.docker.sandbox.kit.v2"})
-    ));
     assert!(
         option_from_descriptor(
             &serde_json::json!({"schemaVersion":"1","kind":"mixin"}),
@@ -149,107 +132,6 @@ fn normalized_v3_and_typed_filtering() {
         )
         .is_err()
     );
-}
-
-#[test]
-fn hub_versions_filter_plain_images_and_keep_tag_selection() {
-    let (api, worker) = fixture(vec![(
-        "/v2/repositories/team/kit/tags?page_size=100&page=1",
-        r#"{"next":null,"results":[{"name":"plain","content_type":"image"},{"name":"v3","content_type":"sbx_kit"},{"name":"v2","media_type":"application/vnd.docker.sandbox.kit.v2"}]}"#,
-    )]);
-    let provider = Provider {
-        id: "hub".into(),
-        label: "Test".into(),
-        kind: "dockerhub".into(),
-        repository: "team/kit".into(),
-        reference: String::new(),
-        enabled: true,
-    };
-    assert_eq!(versions_with(&api, &provider).unwrap(), ["v3", "v2"]);
-    worker.join().unwrap();
-}
-
-#[test]
-fn oci_v2_reads_spec_config_without_cli_or_image_layers() {
-    let (api, worker) = fixture(vec![
-        (
-            "/token?service=registry.docker.io&scope=repository:team%2Fkit:pull",
-            r#"{"token":"public-fixture-token"}"#,
-        ),
-        (
-            "/v2/team/kit/manifests/1.0",
-            r#"{"artifactType":"application/vnd.docker.sandbox.kit.v2","config":{"mediaType":"application/vnd.docker.sandbox.kit.v2.spec+yaml","digest":"sha256:abc"},"layers":[{"mediaType":"application/vnd.oci.empty.v1+json"}]}"#,
-        ),
-        (
-            "/v2/team/kit/blobs/sha256:abc",
-            "schemaVersion: '2'\nkind: sandbox\nname: custom\n",
-        ),
-    ]);
-    let descriptor = hub_descriptor(&api, "team/kit", "1.0").unwrap();
-    assert_eq!(
-        option_from_descriptor(&descriptor, "source", "hub", "kit")
-            .unwrap()
-            .kind,
-        "agent"
-    );
-    worker.join().unwrap();
-}
-
-#[test]
-fn immutable_hub_reference_skips_tag_lookup_and_preserves_digest() {
-    let digest = format!("sha256:{}", "a".repeat(64));
-    let path = format!("/v2/team/kit/manifests/{}", encoded_path(&digest));
-    let descriptor = serde_json::json!({"schemaVersion":"3","kind":"workload"});
-    let manifest =
-        serde_json::json!({"annotations": {DESCRIPTOR: descriptor.to_string()}}).to_string();
-    let (api, worker) = fixture(vec![
-        (
-            "/token?service=registry.docker.io&scope=repository:team%2Fkit:pull",
-            r#"{"token":"public-fixture-token"}"#,
-        ),
-        (&path, &manifest),
-    ]);
-    let mut provider = Provider {
-        id: "hub".into(),
-        label: "Test".into(),
-        kind: "dockerhub".into(),
-        repository: "team/kit".into(),
-        reference: digest.clone(),
-        enabled: true,
-    };
-    let kit = selected_hub_kit(&api, &provider, "team/kit").unwrap();
-    assert_eq!(kit.source, format!("docker.io/team/kit@{digest}"));
-    assert_eq!(kit.kind, "workload");
-    worker.join().unwrap();
-    provider.reference = "sha256:invalid".into();
-    assert!(
-        selected_hub_kit(&api, &provider, "team/kit")
-            .unwrap_err()
-            .contains("64 hexadecimal")
-    );
-}
-
-#[test]
-fn oci_v3_index_reads_annotated_descriptor_without_layers() {
-    let descriptor = serde_json::json!({"schemaVersion":"3","kind":"workload","args":{"team":{"required":true,"enum":["alpha","beta"]}}});
-    let manifest = serde_json::json!({"annotations": {DESCRIPTOR: descriptor.to_string()}, "layers":[{"digest":"never-download"}]}).to_string();
-    let (api, worker) = fixture(vec![
-        (
-            "/token?service=registry.docker.io&scope=repository:team%2Fkit:pull",
-            r#"{"token":"public-fixture-token"}"#,
-        ),
-        (
-            "/v2/team/kit/manifests/3.0",
-            r#"{"manifests":[{"digest":"sha256:child","platform":{"os":"linux"}}]}"#,
-        ),
-        ("/v2/team/kit/manifests/sha256%3Achild", &manifest),
-    ]);
-    let descriptor = hub_descriptor(&api, "team/kit", "3.0").unwrap();
-    let kit = option_from_descriptor(&descriptor, "source", "hub", "kit").unwrap();
-    assert_eq!(kit.kind, "workload");
-    assert!(kit.arguments[0].required);
-    assert_eq!(kit.arguments[0].choices, ["alpha", "beta"]);
-    worker.join().unwrap();
 }
 
 #[test]
@@ -280,7 +162,7 @@ fn provider_failure_preserves_other_provider_results() {
         reference: String::new(),
         enabled: true,
     });
-    let catalog = discover_with(&api, &providers, "").unwrap();
+    let catalog = discover_with(&api, &providers).unwrap();
     assert_eq!(catalog.kits.len(), 1);
     assert_eq!(catalog.warnings.len(), 1);
     assert!(catalog.warnings[0].contains("broken/kits"));
@@ -295,6 +177,29 @@ fn providers_round_trip_and_report_corruption() {
     assert_eq!(get_providers(&root).unwrap(), providers);
     std::fs::write(root.join("providers.json"), "not json").unwrap();
     assert!(get_providers(&root).unwrap_err().contains("providers.json"));
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn default_providers_exclude_removed_hub_and_saved_entries_are_dropped() {
+    let root = std::env::temp_dir().join(format!("sandy-catalog-{}", unique_id()));
+    // The shipped defaults are GitHub-only.
+    let defaults = get_providers(&root).unwrap();
+    assert_eq!(defaults.len(), 1);
+    assert_eq!(defaults[0].kind, "github");
+    // An older configuration's Docker Hub entries are dropped, not fatal.
+    std::fs::create_dir_all(&root).unwrap();
+    std::fs::write(
+        root.join("providers.json"),
+        r#"[
+            {"id":"hub","label":"Hub","kind":"dockerhub","repository":"https://hub.docker.com/search?type=sbx_kit","reference":"","enabled":true},
+            {"id":"gh","label":"GH","kind":"github","repository":"team/kits","reference":"","enabled":true}
+        ]"#,
+    )
+    .unwrap();
+    let providers = get_providers(&root).unwrap();
+    assert_eq!(providers.len(), 1);
+    assert_eq!(providers[0].id, "gh");
     std::fs::remove_dir_all(root).unwrap();
 }
 

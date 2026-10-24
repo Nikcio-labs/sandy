@@ -13,21 +13,22 @@ export interface CreatePageProps {
   onClose: () => void;
   onTemplates?: () => void;
   onBusyChange?: (busy: boolean) => void;
+  /** Present when the wizard edits an existing template instead of creating one. */
+  templateId?: string;
 }
 
 const STEPS = ["Providers", "Agent or workload", "Mixins & inputs", "Project & review"];
 
-export default function CreatePage({ onClose, onTemplates, onBusyChange }: CreatePageProps) {
+export default function CreatePage({ onClose, onTemplates, onBusyChange, templateId }: CreatePageProps) {
   const id = useId();
-  const flow = useCreateFlow({ onBusyChange });
+  const flow = useCreateFlow({ onBusyChange, templateId });
   const {
+    editing,
     step,
     moveTo,
     busy,
     error,
     providers,
-    hubQuery,
-    setHubQuery,
     catalog,
     onProvidersChange,
     discover,
@@ -72,14 +73,18 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
     <section className="standalone-page catalog-page" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
       <header className="page-head catalog-page-heading">
         <div>
-          <span className="eyebrow">YOUR NEXT WORKSPACE</span>
+          <span className="eyebrow">
+            {editing ? "EDIT SAVED TEMPLATE" : "YOUR NEXT WORKSPACE"}
+          </span>
           <h1 id={`${id}-title`}>
-            {saved ? "Your template is ready" : "Create a sandbox"}
+            {saved ? "Your template is ready" : editing ? "Edit template" : "Create a sandbox"}
           </h1>
           <p className="page-sub">
             {saved
               ? "A reusable starting point, saved on your computer."
-              : "Choose your tools. Bring your project. Make it yours."}
+              : editing
+                ? "Change the kits, inputs, or project, then save the same template again."
+                : "Choose your tools. Bring your project. Make it yours."}
           </p>
         </div>
         <button type="button" className="ghost" disabled={busy !== null} onClick={onClose}>
@@ -124,6 +129,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
           busy={busy !== null}
           error={error}
           copyNotice={copyNotice}
+          edited={editing}
           onRetryLaunch={() => void retryLaunch()}
           onCopy={() => void copy()}
           onTemplates={onTemplates}
@@ -145,8 +151,6 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
               {providers && (
                 <DiscoveryStep
                   providers={providers}
-                  hubQuery={hubQuery}
-                  onHubQuery={setHubQuery}
                   busy={busy !== null}
                   onDiscover={() => void discover()}
                 />
@@ -233,6 +237,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
                   onMountless={setMountless}
                   savePath={savePath}
                   onSavePath={setSavePath}
+                  editing={editing}
                   busy={busy !== null}
                   request={request}
                   onSubmit={(launch) => void submit(launch)}

@@ -133,9 +133,9 @@ pub(super) fn launch_with(
                 progress(LaunchProgress::Authorizing);
                 allow_source_with(provider, &mut |args| runtime.run(args))?;
             }
-        } else if !kit.source.starts_with("docker.io/") {
+        } else {
             return Err(format!(
-                "Unsupported saved source: {}. Select a kit from an enabled GitHub or Docker Hub provider",
+                "Unsupported saved source: {}. Select a kit from an enabled GitHub provider",
                 kit.source
             ));
         }
