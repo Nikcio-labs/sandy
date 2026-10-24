@@ -509,9 +509,11 @@ fn mountless_templates_save_launch_and_stay_isolated() {
         serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
     // The launch file stays mountless: no workspace field is written.
     assert!(launch.workspace.is_none());
-    assert!(!std::fs::read_to_string(&runtime.calls[1][5])
-        .unwrap()
-        .contains("workspace"));
+    assert!(
+        !std::fs::read_to_string(&runtime.calls[1][5])
+            .unwrap()
+            .contains("workspace")
+    );
     // The saved template is never mutated.
     assert_eq!(std::fs::read_to_string(saved.path).unwrap(), saved.content);
 }
