@@ -4,6 +4,18 @@
   "draft": true,
   "force-tag-creation": true,
   "packages": {
-    ".": {}
+    ".": {
+      "extra-files": [
+        {
+          "type": "jsonpath",
+          "path": "src-tauri/tauri.conf.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "generic",
+          "path": "src-tauri/Cargo.toml"
+        }
+      ]
+    }
   }
 }
