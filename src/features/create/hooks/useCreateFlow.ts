@@ -83,18 +83,22 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     };
   }, []);
 
-  // Edit mode: prefill everything from the saved template. The saved kit
-  // metadata forms the catalog snapshot, so the wizard skips providers and
-  // discovery unless the user changes provider settings.
+  // Edit mode: prefill everything from the saved template, then refresh the
+  // catalog in the background so the selection menus show all discovered
+  // kits, not only the template's saved ones. The saved kit metadata is
+  // merged into the discovery result so the current selections survive even
+  // when the provider now resolves to a newer revision.
   useEffect(() => {
     if (!templateId) return;
     let active = true;
     setBusy("load");
     readTemplateDetails(templateId)
-      .then((details) => {
+      .then(async (details) => {
         if (!active) return;
-        const kits = [details.agent, ...details.mixins];
-        setCatalog({ kits, warnings: [] });
+        const savedKits = [details.agent, ...details.mixins];
+        // The saved kits are immediately usable as the catalog; the
+        // background discovery below replaces it with the full snapshot.
+        setCatalog({ kits: savedKits, warnings: [] });
         setAgent(details.agent);
         setMixins(details.mixins);
         setValues(details.arguments);
@@ -102,6 +106,25 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
         setWorkspace(details.template.workspace);
         setMountless(!details.template.workspace);
         setStep(1);
+        try {
+          // The edit wizard never edits providers: discovery uses the saved
+          // configuration as-is, with no persistence round-trip.
+          const persisted = await getProviders();
+          const result = await discoverKits(persisted);
+          if (!active) return;
+          const { kits, warnings } = verifiedFrom(result);
+          for (const kit of savedKits) {
+            if (!kits.some((fresh) => fresh.source === kit.source)) kits.push(kit);
+          }
+          setCatalog({ kits, warnings });
+        } catch (failure) {
+          if (!active) return;
+          // Discovery failed: the saved kits seeded above remain the catalog.
+          setCatalog({
+            kits: savedKits,
+            warnings: [`Discovery failed: ${String(failure)}`],
+          });
+        }
       })
       .catch((failure) => {
         if (active) setError(String(failure));
@@ -170,6 +193,67 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     setStep(next);
   };
 
+  // Shared verification of a discovery result: drop kits without usable
+  // metadata, report them, and add the documented built-ins when the CLI did
+  // not report its own.
+  const verifiedFrom = (result: Catalog): { kits: KitOption[]; warnings: string[] } => {
+    const seen = new Set<string>();
+    const verified = result.kits.filter((kit) => {
+      if (!hasKitMetadata(kit) || seen.has(kit.id)) return false;
+      seen.add(kit.id);
+      return true;
+    });
+    const skipped = result.kits.length - verified.length;
+    const usedBuiltinFallback = !verified.some(
+      (kit) => kit.provider_id === "builtin" && kit.kind === "agent",
+    );
+    if (usedBuiltinFallback) {
+      verified.push(...BUILTIN_AGENTS);
+    }
+    return {
+      kits: verified,
+      warnings: [
+        ...result.warnings,
+        ...(usedBuiltinFallback
+          ? [
+              "Built-in agent shortcuts are from Docker’s documentation because the CLI did not report its available agents. These v2 shortcuts have not been verified against this installation.",
+            ]
+          : []),
+        ...(skipped
+          ? [
+              `${skipped} entries with incomplete, unsupported, or duplicate kit metadata were excluded.`,
+            ]
+          : []),
+      ],
+    };
+  };
+
+  // Discovery is a new snapshot. Keep selections whose kits are still in the
+  // catalog (matched by source); the rest cannot carry stale source
+  // references and are dropped. Kit ids embed the source, so a refreshed
+  // catalog can re-issue ids (a new GitHub commit, for example); entered
+  // values are remapped onto the fresh ids instead of being dropped.
+  const mergeSelections = (nextKits: KitOption[]) => {
+    const matchBySource = (kit: KitOption) => nextKits.find((fresh) => fresh.source === kit.source);
+    setAgent((previous) => (previous ? (matchBySource(previous) ?? null) : null));
+    setMixins((previous) =>
+      previous
+        .map((mixin) => matchBySource(mixin))
+        .filter((mixin): mixin is KitOption => mixin !== null),
+    );
+    setValues((previous) => {
+      const previousKits = [...(agent ? [agent] : []), ...mixins];
+      if (!previousKits.length) return previous;
+      const next: KitArguments = {};
+      for (const kit of previousKits) {
+        const fresh = matchBySource(kit);
+        const entered = previous[kit.id];
+        if (fresh && entered) next[fresh.id] = entered;
+      }
+      return next;
+    });
+  };
+
   const discover = async () => {
     // Provider edits are persisted by saveProviders below, so unsaved changes
     // do not need to block discovery.
@@ -182,61 +266,9 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
       const persistedProviders = await saveProviders(providers);
       const result = await discoverKits(persistedProviders);
       if (!mounted.current) return;
-      const seen = new Set<string>();
-      const verified = result.kits.filter((kit) => {
-        if (!hasKitMetadata(kit) || seen.has(kit.id)) return false;
-        seen.add(kit.id);
-        return true;
-      });
-      const skipped = result.kits.length - verified.length;
-      const usedBuiltinFallback = !verified.some(
-        (kit) => kit.provider_id === "builtin" && kit.kind === "agent",
-      );
-      if (usedBuiltinFallback) {
-        verified.push(...BUILTIN_AGENTS);
-      }
-      setCatalog({
-        kits: verified,
-        warnings: [
-          ...result.warnings,
-          ...(usedBuiltinFallback
-            ? [
-                "Built-in agent shortcuts are from Docker’s documentation because the CLI did not report its available agents. These v2 shortcuts have not been verified against this installation.",
-              ]
-            : []),
-          ...(skipped
-            ? [
-                `${skipped} entries with incomplete, unsupported, or duplicate kit metadata were excluded.`,
-              ]
-            : []),
-        ],
-      });
-      // Discovery is a new snapshot. Keep selections whose kits are still in
-      // the catalog (matched by source); the rest cannot carry stale
-      // source references and are dropped.
-      const nextKits = verified;
-      const matchBySource = (kit: KitOption) =>
-        nextKits.find((fresh) => fresh.source === kit.source);
-      setAgent((previous) => (previous ? (matchBySource(previous) ?? null) : null));
-      setMixins((previous) =>
-        previous
-          .map((mixin) => matchBySource(mixin))
-          .filter((mixin): mixin is KitOption => mixin !== null),
-      );
-      // Kit ids embed the source, so a refreshed catalog can re-issue ids
-      // (a new GitHub commit, for example). Remap entered values onto the
-      // fresh ids instead of dropping them.
-      setValues((previous) => {
-        const previousKits = [...(agent ? [agent] : []), ...mixins];
-        if (!previousKits.length) return previous;
-        const next: KitArguments = {};
-        for (const kit of previousKits) {
-          const fresh = matchBySource(kit);
-          const entered = previous[kit.id];
-          if (fresh && entered) next[fresh.id] = entered;
-        }
-        return next;
-      });
+      const { kits, warnings } = verifiedFrom(result);
+      setCatalog({ kits, warnings });
+      mergeSelections(kits);
       setProviderFilter("");
       setStep(1);
     } catch (failure) {
