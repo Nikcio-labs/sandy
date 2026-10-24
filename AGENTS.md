@@ -15,6 +15,7 @@ git fetch origin main
 Use based on your task:
 
 - `README.md` covers what Sandy does, the installers, and building from source. Read for an overview of the app and its features.
+- [Commit Messages](agent-guidance/commit-messages.md) defines the Conventional Commits style, types, scopes, and examples. Read when writing commit messages.
 - `.github/workflows/ci.yml` defines what CI runs: a frontend typecheck + build, and `rustfmt` + `clippy` + `cargo check` for the Rust code. Every change to `src/**` or `src-tauri/**` must pass both.
 
 ## Code comments
