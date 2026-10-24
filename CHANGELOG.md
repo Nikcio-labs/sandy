@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Nikcio-labs/sandy/compare/v0.2.0...v0.2.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* **release:** Fix pub key ([#43](https://github.com/Nikcio-labs/sandy/issues/43)) ([98ec6b3](https://github.com/Nikcio-labs/sandy/commit/98ec6b326ba479a05c18222801dbcf74b001103f))
+
 ## [0.2.0](https://github.com/Nikcio-labs/sandy/compare/v0.1.0...v0.2.0) (2026-10-24)
 
 
