@@ -22,6 +22,7 @@ pub struct SavedTemplate {
     pub name: String,
     pub path: String,
     pub agent: String,
+    /// Empty for mountless templates: the sandbox has no host workspace.
     pub workspace: String,
     pub kit_version: u8,
     pub content: String,
@@ -30,6 +31,8 @@ pub struct SavedTemplate {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveTemplateRequest {
     pub name: String,
+    /// Empty for a mountless sandbox, isolated from the host file system.
+    #[serde(default)]
     pub workspace: String,
     pub agent: KitOption,
     #[serde(default)]
@@ -64,8 +67,15 @@ pub(super) fn records(root: &Path) -> Result<Vec<TemplateRecord>, String> {
 
 pub fn save_template(root: &Path, request: SaveTemplateRequest) -> Result<SavedTemplate, String> {
     let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
-    let workspace = workspace_path(&request.workspace)?;
-    let environment = build_environment(&request, &workspace)?;
+    // An empty workspace means a mountless sandbox, isolated from the host
+    // file system. Library-owned files live in Sandy's app-data directory, so
+    // the outside-workspace checks only apply to a real workspace mount.
+    let workspace = if request.workspace.trim().is_empty() {
+        None
+    } else {
+        Some(workspace_path(&request.workspace)?)
+    };
+    let environment = build_environment(&request, workspace.as_deref())?;
     let content = serde_yaml_ng::to_string(&environment)
         .map_err(|e| format!("Cannot encode environment YAML: {e}"))?;
     let id = unique_id();
@@ -91,11 +101,15 @@ pub fn save_template(root: &Path, request: SaveTemplateRequest) -> Result<SavedT
                 .parent()
                 .ok_or("Template directory has no existing parent")?;
         }
-        ensure_outside(&canonicalize(ancestor)?, &workspace)?;
+        if let Some(workspace) = workspace.as_deref() {
+            ensure_outside(&canonicalize(ancestor)?, workspace)?;
+        }
         std::fs::create_dir_all(&directory).map_err(|e| format!("{}: {e}", directory.display()))?;
         canonicalize(directory)?.join("sbxenv.yaml")
     };
-    ensure_outside(&path, &workspace)?;
+    if let Some(workspace) = workspace.as_deref() {
+        ensure_outside(&path, workspace)?;
+    }
     // Even a library-owned path isn't overwritten: each Save creates a new reusable template.
     let mut file = std::fs::OpenOptions::new()
         .create_new(true)
@@ -135,7 +149,11 @@ fn summary(record: &TemplateRecord, environment: &Environment, content: String) 
         name: environment.name.clone(),
         path: record.path.clone(),
         agent: environment.agent.clone(),
-        workspace: environment.workspace.path(),
+        workspace: environment
+            .workspace
+            .as_ref()
+            .map(Workspace::path)
+            .unwrap_or_default(),
         kit_version: record.agent.schema_version,
         content,
     }
@@ -227,7 +245,7 @@ fn read_library(root: &Path) -> Result<(Vec<SavedTemplate>, Vec<String>), String
 
 fn build_environment(
     request: &SaveTemplateRequest,
-    workspace: &Path,
+    workspace: Option<&Path>,
 ) -> Result<Environment, String> {
     validate_name(&request.name)?;
     validate_selection(&request.agent, &request.mixins)?;
@@ -268,11 +286,16 @@ fn build_environment(
         })
         .collect();
     // Custom v2 agents register their descriptor name from kits, just like v3 workloads.
+    // An absent workspace creates a mountless sandbox, isolated from the host.
+    let workspace = match workspace {
+        Some(workspace) => Some(Workspace::Path(escape(&path_string(workspace)?))),
+        None => None,
+    };
     Ok(Environment {
         schema_version: "1".into(),
         name: request.name.clone(),
         agent: request.agent.name.clone(),
-        workspace: Workspace::Path(escape(&path_string(workspace)?)),
+        workspace,
         kits,
     })
 }

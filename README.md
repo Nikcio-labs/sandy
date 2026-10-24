@@ -16,10 +16,10 @@ A desktop app (experimental) for [Docker Sandboxes](https://docs.docker.com/ai/s
 
 1. Choose **Create a sandbox**. Enable kit providers: GitHub repositories, Docker Hub kit search, or specific Docker Hub repositories. Fetch versions or enter a reference, save provider changes, then choose **Discover kits**.
 2. Select a **v2 agent** (including built-in agents) or a **v3 workload**. Sandy offers compatible mixins from enabled providers, matching the kit generation and any required agent. V2 and v3 kits cannot be combined.
-3. Complete kit inputs, choose an existing workspace folder, and name the sandbox. Review the selected references and YAML preview.
+3. Complete kit inputs, choose an existing workspace folder, and name the sandbox. To run isolated from the host file system, enable **Run without a workspace (mountless)** — the sandbox then gets no host folder at all. Review the selected references and YAML preview.
 4. Choose **Save template** or **Save & launch**. Templates are real `sbxenv.yaml` files in Sandy's per-user application-data directory by default, or at a file location you choose **outside the workspace**. Both kit generations use environment schema v1. The saved file path and YAML are shown after saving.
 
-Open **Templates** to review saved YAML and launch it with a different name or workspace. Each new launch keeps the saved template intact and creates a separate launch file outside the workspace. Reusing an existing sandbox name resumes that sandbox's saved configuration; use a new name to create a sandbox with different tools or a different workspace. **Delete** on a saved template asks for confirmation, then permanently removes the saved `sbxenv.yaml` file and its library entry. Sandboxes already launched from the template are unaffected.
+Open **Templates** to review saved YAML and launch it with a different name or workspace. Each new launch keeps the saved template intact and creates a separate launch file outside the workspace. Reusing an existing sandbox name resumes that sandbox's saved configuration; use a new name to create a sandbox with different tools or a different workspace. Mountless templates launch without a host folder, and any template can be launched mountless for a sandbox isolated from the host file system. **Delete** on a saved template asks for confirmation, then permanently removes the saved `sbxenv.yaml` file and its library entry. Sandboxes already launched from the template are unaffected.
 
 ### Connect your terminal or editor
 

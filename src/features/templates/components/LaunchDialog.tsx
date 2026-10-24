@@ -23,6 +23,7 @@ export function LaunchDialog({
   const returnFocus = useRef<HTMLButtonElement | null>(null);
   const [name, setName] = useState(template.name);
   const [workspace, setWorkspace] = useState(template.workspace);
+  const [mountless, setMountless] = useState(!template.workspace);
   const [busy, setBusy] = useState<"launch" | "workspace" | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
@@ -57,7 +58,7 @@ export function LaunchDialog({
   const launch = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (actionLock.current) return;
-    if (!name.trim() || !workspace.trim()) {
+    if (!name.trim() || (!mountless && !workspace.trim())) {
       setLaunchError("Enter a sandbox name and a workspace folder.");
       return;
     }
@@ -68,8 +69,9 @@ export function LaunchDialog({
       const result = await launchTemplate({
         id: template.id,
         name: name.trim(),
-        workspace: workspace.trim(),
-      });      if (!mounted.current) return;
+        workspace: mountless ? "" : workspace.trim(),
+      });
+      if (!mounted.current) return;
       onLaunched(`${name.trim()} launched from ${template.name}.`, result);
     } catch (failure) {
       if (mounted.current) setLaunchError(String(failure));
@@ -110,8 +112,7 @@ export function LaunchDialog({
         <p className="catalog-muted" id={`${id}-launch-description`}>
           Choose a new name or workspace to reuse this environment. These choices apply to this
           launch.
-        </p>
-        {launchError && (
+        </p>        {launchError && (
           <ErrorBanner title="Couldn’t launch this sandbox.">
             <p>{launchError}</p>
             <span>Edit the details or try launching again.</span>
@@ -136,26 +137,46 @@ export function LaunchDialog({
               letters, numbers, dots, underscores, or hyphens.
             </span>
           </label>
-          <label className="catalog-field" htmlFor={`${id}-launch-workspace`}>
-            Workspace folder
-          </label>
-          <div className="catalog-path-row">
+          <label className="catalog-check" htmlFor={`${id}-launch-mountless`}>
             <input
-              id={`${id}-launch-workspace`}
-              required
-              value={workspace}
-              placeholder="Absolute project path"
-              onChange={(event) => setWorkspace(event.target.value)}
+              id={`${id}-launch-mountless`}
+              type="checkbox"
+              checked={mountless}
+              onChange={(event) => setMountless(event.target.checked)}
             />
-            <button type="button" className="ghost" onClick={browse}>
-              Browse…
-            </button>
-          </div>
+            Run without a workspace (mountless)
+          </label>
+          <p className="catalog-help" id={`${id}-launch-mountless-help`}>
+            The sandbox gets no folder from this computer, isolating it from the host file system.
+          </p>
+          {!mountless && (
+            <>
+              <label className="catalog-field" htmlFor={`${id}-launch-workspace`}>
+                Workspace folder
+              </label>
+              <div className="catalog-path-row">
+                <input
+                  id={`${id}-launch-workspace`}
+                  required
+                  value={workspace}
+                  placeholder="Absolute project path"
+                  onChange={(event) => setWorkspace(event.target.value)}
+                />
+                <button type="button" className="ghost" onClick={browse}>
+                  Browse…
+                </button>
+              </div>
+            </>
+          )}
           <div className="catalog-actions">
             <button type="button" className="ghost" onClick={close}>
               Cancel
             </button>
-            <button type="submit" className="primary" disabled={!name.trim() || !workspace.trim()}>
+            <button
+              type="submit"
+              className="primary"
+              disabled={!name.trim() || (!mountless && !workspace.trim())}
+            >
               {busy === "launch" ? (
                 <>
                   <span className="spinner" /> Launching…

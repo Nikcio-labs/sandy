@@ -3,6 +3,7 @@ import type { KitOption, KitArguments } from "./catalog";
 
 export interface SaveTemplateRequest {
   name: string;
+  /** Empty for a mountless sandbox, isolated from the host file system. */
   workspace: string;
   agent: KitOption;
   mixins: KitOption[];
@@ -15,6 +16,7 @@ export interface SavedTemplate {
   name: string;
   path: string;
   agent: string;
+  /** Empty for mountless templates: the sandbox has no host workspace. */
   workspace: string;
   kit_version: number;
   content: string;
