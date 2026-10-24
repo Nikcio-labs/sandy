@@ -5,8 +5,10 @@ import { launchTemplate } from "../../../lib/templates";
 import { launchPhaseLabel } from "../../../lib/sandbox";
 import type { LaunchProgress } from "../../../lib/sandbox";
 import { pickWorkspace } from "../../../lib/catalog";
+import type { LaunchSecret } from "../../../lib/templates";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
+import { SecretFields } from "../../../common/components/SecretFields";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 
 export function LaunchDialog({
@@ -27,6 +29,7 @@ export function LaunchDialog({
   const [name, setName] = useState(template.name);
   const [workspace, setWorkspace] = useState(template.workspace);
   const [mountless, setMountless] = useState(!template.workspace);
+  const [secrets, setSecrets] = useState<Record<string, LaunchSecret | undefined>>({});
   const [busy, setBusy] = useState<"launch" | "workspace" | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [phase, setPhase] = useState<LaunchProgress | null>(null);
@@ -82,6 +85,9 @@ export function LaunchDialog({
           id: template.id,
           name: name.trim(),
           workspace: mountless ? "" : workspace.trim(),
+          secrets: Object.values(secrets).filter(
+            (secret): secret is LaunchSecret => !!secret && !!secret.value.trim(),
+          ),
         },
         (progress) => {
           if (!mounted.current) return;
@@ -194,6 +200,14 @@ export function LaunchDialog({
               </div>
             </>
           )}
+          <SecretFields
+            credentials={template.credentials}
+            values={secrets}
+            onChange={(service, secret) =>
+              setSecrets((current) => ({ ...current, [service]: secret }))
+            }
+            disabled={busy !== null}
+          />
           <div className="catalog-actions">
             <button type="button" className="ghost" onClick={close}>
               Cancel

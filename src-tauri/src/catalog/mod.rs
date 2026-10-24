@@ -25,7 +25,7 @@ pub use store::{get_providers, save_providers};
 pub(crate) use store::{github_repository, unique_id, write_json};
 #[cfg(test)]
 pub use types::KitArgument;
-pub use types::{Catalog, KitOption, Provider};
+pub use types::{Catalog, KitCredential, KitOption, Provider};
 
 use std::path::Path;
 
@@ -109,6 +109,7 @@ pub fn discover_kits(
             provider_id: "builtin".into(),
             required_agent: None,
             arguments: Vec::new(),
+            credentials: Vec::new(),
         });
     }
     Ok(catalog)

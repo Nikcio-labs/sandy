@@ -21,7 +21,7 @@ mod validation;
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests;
 
-pub use launch::launch_template;
+pub use launch::{LaunchTemplateRequest, launch_template};
 pub use library::{
     SaveTemplateRequest, SavedTemplate, TemplateDetails, UpdateTemplateRequest, delete_template,
     list_templates, read_template_details, save_template, template_warnings, update_template,

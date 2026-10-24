@@ -10,7 +10,8 @@ A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with
 
 - **Sandboxes** — see your local sandboxes with their state, agent, and workspace. Search, start, stop, and restart them, and refresh manually or let the list refresh itself every 5 seconds.
 - **Open** — connect a running sandbox to your terminal (`sbx exec`) or editor (VS Code and OpenCode Desktop over SSH), with copyable connection details and setup checks. Hosts are `<name>.sbx` — see Docker's [editor and app integrations](https://docs.docker.com/ai/sandboxes/integrations/).
-- **Create** — enable kit providers (GitHub repositories), discover kits, and pick a **v2 agent** or **v3 workload**. Complete the kit inputs, choose a workspace folder (or run mountless, with no host folder at all), and name the sandbox.
+- **Create** — enable kit providers (GitHub repositories), discover kits, and pick a **v2 agent** or **v3 workload**. Complete the kit inputs, choose a workspace folder (or run mountless, with no host folder at all), and name the sandbox. If the selected kits declare credentials, you can store their secrets during launch — globally, or scoped to the new sandbox only.
+- **Secrets** — store and remove the API keys your kits authenticate with, straight from a sandbox's details (`sbx secret set` under the hood; values never enter the sandbox).
 - **Templates** — save any environment as a real `sbxenv.yaml` file and relaunch it later with a different name or workspace. Edit a saved template to change its kits, inputs, or project in place, or delete it when you're done. Each launch creates its own file outside the workspace; saved templates stay intact until you edit or delete them.
 - **Setup** — Settings walks you through installing the `sbx` CLI, signing in to Docker, enabling image pasting, and setting up SSH. Each step shows what it runs, can be skipped, and can be revisited later.
 

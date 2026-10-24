@@ -7,6 +7,7 @@ use crate::sbx::lifecycle::{
     connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
 };
 use crate::sbx::listing::list_sandboxes;
+use crate::sbx::secrets::{delete_secret, list_secrets, set_custom_secret, set_secret};
 use crate::sbx::status::{
     diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,
 };
@@ -56,6 +57,7 @@ impl MockCli {
             "SBX_MOCK_DAEMON",
             "SBX_MOCK_DAEMON_TEXT",
             "SBX_MOCK_PASTE",
+            "SBX_MOCK_SECRETS",
             "SBX_MOCK_FAIL_JSON",
             "SBX_MOCK_LS_EMPTY",
             "SBX_MOCK_JSON",
@@ -162,6 +164,15 @@ settings)
 if [ "$2" = get ]; then
     printf '%s\n' "${SBX_MOCK_PASTE:-false}"
 fi
+;;
+secret)
+case "$2" in
+ls)
+if [ -n "$SBX_MOCK_SECRETS" ]; then printf '%s\n' "$SBX_MOCK_SECRETS"; fi
+;;
+rm) printf '%s\n' 'Removed' ;;
+*) printf '%s\n' 'Enter secret: Saved' ;;
+esac
 ;;
 ls)
 if [ "$SBX_MOCK_LS_EMPTY" = 1 ]; then printf '%s\n' '[]'; exit 0; fi
@@ -920,5 +931,87 @@ fn platform_terminal_string_escaping_covers_path_metacharacters() {
     assert_eq!(
         powershell_quote("C:\\Tools & SDK's\\sbx.exe"),
         "'C:\\Tools & SDK''s\\sbx.exe'"
+    );
+}
+
+/// Secrets flow through the mock CLI: list parses both record kinds, set
+/// reads the value on stdin (never argv), and rm targets the right scope.
+/// Sequential + env-locked.
+#[test]
+#[cfg(unix)]
+fn secrets_flow_through_the_cli_with_stdin_values() {
+    let _guard = env_lock();
+    let mock = MockCli::new();
+    crate::sbx::test_env::set_var("SBX_MOCK_DAEMON", "running");
+    crate::sbx::test_env::set_var(
+        "SBX_MOCK_SECRETS",
+        r#"{"secrets":[{"scope":"global","type":"service","name":"github","secret":"gho_x****"},{"scope":"demo","type":"service","name":"openai","secret":"(stored)"}],"custom_secrets":[{"scope":"demo","type":"custom","name":"api.example.com","targets":["api.example.com"],"env":"API_KEY","placeholder":"sbx-cs-x","secret":"te****"}],"shadowed_services":[],"env_only_count":2}"#,
+    );
+    let all = list_secrets(None).unwrap();
+    assert_eq!(all.len(), 3);
+    assert_eq!(all[0].name, "github");
+    assert_eq!(all[2].placeholder, "sbx-cs-x");
+
+    crate::sbx::test_env::set_var(
+        "SBX_MOCK_SECRETS",
+        r#"{"secrets":[{"scope":"global","type":"service","name":"github","secret":"x"}],"custom_secrets":[]}"#,
+    );
+    let global = list_secrets(Some("")).unwrap();
+    assert!(mock.commands().contains("secret ls --json -g\n"));
+    assert_eq!(global.len(), 1);
+    mock.clear_commands();
+    let sandbox = list_secrets(Some("demo")).unwrap();
+    assert!(
+        mock.commands()
+            .contains("secret ls --json --sandbox demo\n")
+    );
+    assert_eq!(sandbox.len(), 1);
+
+    // Untrusted sandbox names never become CLI operands.
+    assert!(list_secrets(Some("--all")).is_err());
+    assert!(set_secret("github", "value", Some("demo;rm"), false).is_err());
+    // Service names and values are validated before any CLI call.
+    mock.clear_commands();
+    assert!(set_secret("--registry", "value", None, false).is_err());
+    assert!(set_secret("github", "", None, false).is_err());
+    assert!(set_custom_secret(&[], "KEY", "value", None).is_err());
+    assert!(set_custom_secret(&["api.example.com"], "1KEY", "value", None).is_err());
+    assert!(set_custom_secret(&["api example.com"], "KEY", "value", None).is_err());
+    assert!(mock.commands().is_empty());
+
+    crate::sbx::test_env::remove_var("SBX_MOCK_SECRETS");
+    mock.clear_commands();
+    assert!(set_secret("github", "token", Some("demo"), true).is_ok());
+    let recorded = mock.commands();
+    assert!(
+        recorded.contains("secret set --sandbox demo -f github\n"),
+        "unexpected: {recorded}"
+    );
+    assert!(
+        !recorded.contains("token"),
+        "secret value reached argv: {recorded}"
+    );
+    mock.clear_commands();
+    assert!(set_custom_secret(&["api.example.com", "*.other.io"], "API_KEY", "v", None).is_ok());
+    assert!(mock.commands().contains(
+        "secret set-custom --host api.example.com --host *.other.io --env API_KEY --value v\n"
+    ));
+    mock.clear_commands();
+    assert!(delete_secret("github", Some("demo"), None, false).is_ok());
+    assert!(
+        mock.commands()
+            .contains("secret rm -f github --sandbox demo\n")
+    );
+    mock.clear_commands();
+    assert!(delete_secret("", None, Some("sbx-cs-x"), false).is_ok());
+    assert!(
+        mock.commands()
+            .contains("secret rm -f --placeholder sbx-cs-x\n")
+    );
+    mock.clear_commands();
+    assert!(delete_secret("ghcr.io", None, None, true).is_ok());
+    assert!(
+        mock.commands()
+            .contains("secret rm -f --registry ghcr.io\n")
     );
 }

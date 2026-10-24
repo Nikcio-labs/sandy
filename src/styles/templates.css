@@ -687,3 +687,56 @@ pre.catalog-yaml {
     padding: 16px;
   }
 }
+
+.secret-fields {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 17px;
+}
+
+.secret-fields > .catalog-help {
+  margin-bottom: 14px;
+}
+
+.secret-field {
+  margin-bottom: 14px;
+}
+
+.secret-field > .catalog-field {
+  margin-bottom: 8px;
+}
+
+.secret-field .catalog-badge {
+  margin-left: 8px;
+}
+
+.secret-input input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.secret-list {
+  margin: 15px 0;
+}
+
+.secret-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.secret-table th,
+.secret-table td {
+  text-align: left;
+  padding: 7px 10px 7px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+.secret-table th {
+  color: var(--muted);
+  font-weight: 550;
+}
+
+.secret-table code {
+  font-size: 12px;
+}

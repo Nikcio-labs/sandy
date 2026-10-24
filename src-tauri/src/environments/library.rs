@@ -26,6 +26,8 @@ pub struct SavedTemplate {
     pub workspace: String,
     pub kit_version: u8,
     pub content: String,
+    /// Credential services the selected kits ask the proxy to authenticate.
+    pub credentials: Vec<crate::catalog::KitCredential>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -170,6 +172,15 @@ pub fn save_template(root: &Path, request: SaveTemplateRequest) -> Result<SavedT
 }
 
 fn summary(record: &TemplateRecord, environment: &Environment, content: String) -> SavedTemplate {
+    // The union of every selected kit's credential services, agent first.
+    let mut services = std::collections::BTreeMap::new();
+    for kit in selected(&record.agent, &record.mixins) {
+        for credential in &kit.credentials {
+            let required =
+                credential.required || services.get(&credential.service).copied() != Some(true);
+            services.insert(credential.service.clone(), required);
+        }
+    }
     SavedTemplate {
         id: record.id.clone(),
         name: environment.name.clone(),
@@ -182,6 +193,10 @@ fn summary(record: &TemplateRecord, environment: &Environment, content: String) 
             .unwrap_or_default(),
         kit_version: record.agent.schema_version,
         content,
+        credentials: services
+            .into_iter()
+            .map(|(service, required)| crate::catalog::KitCredential { service, required })
+            .collect(),
     }
 }
 

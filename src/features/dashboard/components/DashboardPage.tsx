@@ -9,6 +9,7 @@ import type { SandboxAction } from "../sandboxActions";
 import { stateKind } from "../../../common/lib/sandboxState";
 import { summarize, useSandboxDashboard } from "../hooks/useSandboxDashboard";
 import ConnectDialog from "../../connect/components/ConnectDialog";
+import { SecretsDialog } from "./SecretsDialog";
 import { ComingSoonDialog } from "../../../common/components/ComingSoonDialog";
 
 export interface DashboardPageProps {
@@ -45,6 +46,7 @@ export default function DashboardPage({
   const [selected, setSelected] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [connecting, setConnecting] = useState<SandboxInfo | null>(null);
+  const [secretsOpen, setSecretsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const installed = !!status?.sbx_installed;
@@ -169,6 +171,7 @@ export default function DashboardPage({
           installed={installed}
           onAction={(action) => detail && void runAction(detail.name, action).catch(() => {})}
           onOpen={() => detail && runPrimaryAction(detail)}
+          onSecrets={() => setSecretsOpen(true)}
           onClose={() => setInspectorOpen(false)}
           actionLabels={actionLabels}
         />
@@ -184,6 +187,13 @@ export default function DashboardPage({
           onCheckSetup={onCheckSetup}
           onOpenTerminal={() => runAction(connecting.name, "terminal")}
           onClose={() => setConnecting(null)}
+        />
+      )}
+      {secretsOpen && detail && (
+        <SecretsDialog
+          key={detail.name}
+          sandbox={detail}
+          onClose={() => setSecretsOpen(false)}
         />
       )}
       {comingSoonOpen && (
