@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
 import { launchTemplate } from "../../../lib/templates";
+import { launchPhaseLabel } from "../../../lib/sandbox";
+import type { LaunchProgress } from "../../../lib/sandbox";
 import { pickWorkspace } from "../../../lib/catalog";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
@@ -13,7 +15,7 @@ export function LaunchDialog({
   onClose,
 }: {
   template: SavedTemplate;
-  onLaunched: (notice: string, output: string) => void;
+  onLaunched: (notice: string, sandbox: string) => void;
   onClose: () => void;
 }) {
   const id = useId();
@@ -21,11 +23,14 @@ export function LaunchDialog({
   const mounted = useMountedRef();
   const actionLock = useRef(false);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
+  const consoleEnd = useRef<HTMLDivElement>(null);
   const [name, setName] = useState(template.name);
   const [workspace, setWorkspace] = useState(template.workspace);
   const [mountless, setMountless] = useState(!template.workspace);
   const [busy, setBusy] = useState<"launch" | "workspace" | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<LaunchProgress | null>(null);
+  const [consoleLines, setConsoleLines] = useState<string[]>([]);
 
   useEffect(() => {
     if (!dialog.current?.open) {
@@ -33,6 +38,10 @@ export function LaunchDialog({
       dialog.current?.querySelector<HTMLInputElement>("input")?.focus();
     }
   }, []);
+
+  useEffect(() => {
+    consoleEnd.current?.scrollIntoView({ block: "end" });
+  }, [consoleLines]);
 
   const close = () => {
     if (actionLock.current) return;
@@ -65,19 +74,36 @@ export function LaunchDialog({
     actionLock.current = true;
     setBusy("launch");
     setLaunchError(null);
+    setPhase({ kind: "preparing" });
+    setConsoleLines([]);
     try {
-      const result = await launchTemplate({
-        id: template.id,
-        name: name.trim(),
-        workspace: mountless ? "" : workspace.trim(),
-      });
+      await launchTemplate(
+        {
+          id: template.id,
+          name: name.trim(),
+          workspace: mountless ? "" : workspace.trim(),
+        },
+        (progress) => {
+          if (!mounted.current) return;
+          if (progress.kind === "output") {
+            setConsoleLines((lines) => [...lines, progress.text]);
+          } else {
+            setPhase(progress);
+          }
+        },
+      );
       if (!mounted.current) return;
-      onLaunched(`${name.trim()} launched from ${template.name}.`, result);
+      onLaunched(`${name.trim()} launched from ${template.name}.`, name.trim());      // The sandbox exists: the dialog's job is done and the dashboard takes
+      // over. Close without waiting for the user to dismiss it.
+      dialog.current?.close();
     } catch (failure) {
       if (mounted.current) setLaunchError(String(failure));
     } finally {
       actionLock.current = false;
-      if (mounted.current) setBusy(null);
+      if (mounted.current) {
+        setBusy(null);
+        setPhase(null);
+      }
     }
   };
 
@@ -194,10 +220,18 @@ export function LaunchDialog({
             Choose a workspace in the folder picker…
           </p>
         )}
-        {busy === "launch" && (
-          <p className="catalog-status" role="status">
-            Creating and starting your sandbox. This may take a little while.
-          </p>
+        {busy === "launch" && phase && (
+          <div className="catalog-launch-progress">
+            <p className="catalog-status" role="status">
+              <span className="spinner" /> {launchPhaseLabel(phase)}
+            </p>
+            {consoleLines.length > 0 && (
+              <pre className="catalog-console" role="log" aria-label="Sandbox creation console output">
+                {consoleLines.join("\n")}
+                <span ref={consoleEnd} />
+              </pre>
+            )}
+          </div>
         )}
       </form>
     </dialog>

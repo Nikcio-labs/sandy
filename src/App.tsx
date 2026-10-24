@@ -23,6 +23,9 @@ export default function App() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupSession, setSetupSession] = useState(0);
   const [count, setCount] = useState<number | null>(null);
+  // A sandbox launched elsewhere (e.g. from Templates) that the dashboard
+  // should select and inspect once its list load reports it.
+  const [pendingSelection, setPendingSelection] = useState<string | null>(null);
   const setup = useSetupStatus();
   const {
     status,
@@ -87,6 +90,8 @@ export default function App() {
             <DashboardPage
               home={view === "home"}
               status={status}
+              pendingSelection={pendingSelection}
+              onPendingSelectionHandled={() => setPendingSelection(null)}
               onGoSettings={() => setView("settings")}
               onGoTemplates={() => setView("templates")}
               onCreate={() => setView("create")}
@@ -98,6 +103,10 @@ export default function App() {
             <TemplatesPage
               onCreate={() => setView("create")}
               onBusyChange={setBusy}
+              onLaunched={(sandbox) => {
+                setPendingSelection(sandbox);
+                setView("sandboxes");
+              }}
             />
           )}
           {view === "create" && (
