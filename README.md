@@ -22,6 +22,7 @@ Download the installer for your platform from the [releases page](https://github
 | -------- | ---- |
 | macOS (Apple silicon) | `.dmg` |
 | Windows | `.msi` (or the NSIS `.exe` setup) |
+| Windows (Microsoft Store) | `*-microsoft-store.exe` — NSIS setup with Webview2 bundled, as the Store requires |
 | Linux | `.AppImage` or `.deb` |
 
 ## Building from source
@@ -38,6 +39,16 @@ pnpm install
 pnpm tauri dev    # run in development
 pnpm tauri build  # produce installers
 ```
+
+### Building for the Microsoft Store
+
+The Microsoft Store requires the installer to bundle Webview2 (offline install mode) and to support silent installation. A separate config supplies the Store-specific bundle settings:
+
+```bash
+pnpm tauri build --config src-tauri/tauri.microsoftstore.conf.json
+```
+
+When submitting in [Partner Center](https://partner.microsoft.com/en-us/dashboard/apps-and-games/overview), enter `/S` as the silent install argument for the NSIS `*-setup.exe` installer.
 
 Packages are pinned exactly and installs reject anything published in the last 24 hours (`pnpm-workspace.yaml`) as supply-chain protection.
 

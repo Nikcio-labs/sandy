@@ -29,6 +29,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    // The Microsoft Store rejects products whose publisher matches the app
+    // name; left unset Tauri would derive "sandy" from the identifier.
+    "publisher": "Nikcio Labs",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
