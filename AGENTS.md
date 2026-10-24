@@ -14,9 +14,7 @@ git fetch origin main
 
 Use based on your task:
 
-- `README.md` covers what Sandy does, the installers, and building from source. Read for an overview of the app and its features.
 - [Commit Messages](agent-guidance/commit-messages.md) defines the Conventional Commits style, types, scopes, and examples. Read when writing commit messages.
-- `.github/workflows/ci.yml` defines what CI runs: a frontend typecheck + build, and `rustfmt` + `clippy` + `cargo check` for the Rust code. Every change to `src/**` or `src-tauri/**` must pass both.
 
 ## Code comments
 
@@ -24,16 +22,8 @@ Every comment must be relevant to a developer landing on the code 6 months later
 
 If a comment fails that test, omit it; when touching code with such comments, remove them. Temporary or conversational comments (e.g. "TODO: revisit after the migration", "this is a workaround for the bug I introduced above") do not belong in the repo.
 
-## Artifacts
-
-- `src/**` — Frontend (React + TypeScript). Features live in `src/features/<feature>` with their components and hooks; shared code lives in `src/common` and `src/lib`. The `sbx` CLI is invoked from the Rust side, not from the frontend.
-- `src-tauri/**` — Tauri backend (Rust). Commands exposed to the frontend live in `commands.rs`; the `sbx` CLI integration lives in `sbx`, template/environment handling in `environments`.
-- `src-tauri/tauri.conf.json` + `src-tauri/capabilities` — Tauri app configuration and permission capabilities. Frontend access to a Tauri command or plugin requires the matching capability entry.
-- `.github/workflows` — CI (typecheck/build + Rust checks) and release automation.
-
 ## Development
 
-- Install dependencies with `pnpm install`, run the app with `pnpm tauri dev`, and build installers with `pnpm tauri build`. `pnpm build` typechecks and builds the frontend only; Rust changes are checked with `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, and `cargo check` in `src-tauri`.
 - Packages are pinned exactly, and installs reject anything published in the last 24 hours (`pnpm-workspace.yaml`, `minimumReleaseAge`) as supply-chain protection. Do not relax these settings or introduce loose version ranges.
 - Releases use release-please (`.release-please-config.json`): Conventional Commit messages determine the next version and changelog, and published releases are built and attached automatically by the release workflows.
 - The app talks to the local `sbx` CLI and Docker Sandboxes; sandbox names, states, agents, and workspaces always come from the CLI — never assume state the CLI has not reported.
