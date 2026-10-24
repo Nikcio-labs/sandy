@@ -52,6 +52,17 @@ export const discoverKits = (providers: Provider[], refresh?: boolean) =>
 export const pickWorkspace = () => invoke<string | null>("pick_workspace");
 export const pickTemplatePath = () => invoke<string | null>("pick_template_path");
 
+/** The stored GitHub token, or null when none is saved. The token itself is
+ * never sent back to the UI; callers only learn that one exists. */
+export interface GithubTokenStatus {
+  saved: boolean;
+}
+
+export const getGithubToken = () =>
+  invoke<GithubTokenStatus>("get_github_token");
+export const saveGithubToken = (token: string) =>
+  invoke<void>("save_github_token", { token });
+
 /** One structured entry from the Sandy diagnostic log (JSON Lines on disk). */
 export interface DebugLogEntry {
   timestamp: string;

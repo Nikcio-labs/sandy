@@ -5,22 +5,64 @@ use super::descriptor::option_from_descriptor;
 use super::http::Api;
 use super::types::{Catalog, Provider};
 use super::{
-    BUILTIN_AGENTS, discover_with, encoded_path, get_providers, save_providers, unique_id,
+    BUILTIN_AGENTS, discover_with, encoded_path, get_github_token, get_providers,
+    save_github_token, save_providers, unique_id,
 };
 
+fn read_request(stream: &mut std::net::TcpStream) -> String {
+    // Requests can split across TCP segments, so read until the header block
+    // is complete; the cap keeps a broken client from hanging the worker.
+    let mut request = Vec::new();
+    let mut chunk = [0; 1024];
+    loop {
+        let n = stream.read(&mut chunk).unwrap();
+        assert!(n > 0, "connection closed before the request was complete");
+        request.extend_from_slice(&chunk[..n]);
+        if request.ends_with(b"\r\n\r\n") || request.len() > 8192 {
+            break;
+        }
+    }
+    String::from_utf8_lossy(&request).into_owned()
+}
+
 fn fixture(routes: Vec<(&str, &str)>) -> (Api, std::thread::JoinHandle<()>) {
+    fixture_with_auth(routes, "")
+}
+
+/// `authorization` is the exact Authorization header value every request in
+/// this fixture must carry (empty string: no header). It is moved into the
+/// worker thread, so parallel tests cannot observe each other's expectation.
+fn fixture_with_auth(
+    routes: Vec<(&str, &str)>,
+    authorization: &str,
+) -> (Api, std::thread::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let base = format!("http://{}", listener.local_addr().unwrap());
     let routes: Vec<_> = routes
         .into_iter()
         .map(|(p, b)| (p.to_string(), b.to_string()))
         .collect();
+    let authorization = authorization.to_string();
     let worker = std::thread::spawn(move || {
         for (path, body) in routes {
             let (mut stream, _) = listener.accept().unwrap();
-            let mut request = [0; 4096];
-            let n = stream.read(&mut request).unwrap();
-            assert!(String::from_utf8_lossy(&request[..n]).starts_with(&format!("GET {path} ")));
+            let request = read_request(&mut stream);
+            assert!(request.starts_with(&format!("GET {path} ")));
+            // The Authorization header is the credential boundary under test:
+            // GitHub requests carry the token, everything else must not.
+            let sent = request
+                .lines()
+                .skip(1)
+                .find_map(|line| {
+                    let (name, value) = line.split_once(':')?;
+                    name.eq_ignore_ascii_case("authorization")
+                        .then(|| value.trim().to_string())
+                })
+                .unwrap_or_default();
+            assert_eq!(
+                sent, authorization,
+                "unexpected Authorization header for {path}"
+            );
             write!(
                 stream,
                 "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
@@ -32,7 +74,7 @@ fn fixture(routes: Vec<(&str, &str)>) -> (Api, std::thread::JoinHandle<()>) {
     });
     let mut api = Api::public().unwrap();
     api.github = base.clone();
-    api.raw = base.clone();
+    api.raw = base;
     (api, worker)
 }
 
@@ -301,5 +343,160 @@ fn version_cache_keeps_entries_per_provider_and_misses_on_change() {
     );
     let bytes = std::fs::read_to_string(root.join("cache").join("versions.json")).unwrap();
     assert_eq!(bytes.matches("\"key\"").count(), 2, "{bytes}");
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn token_is_sent_to_github_endpoints_as_bearer() {
+    let (mut api, worker) = fixture_with_auth(
+        vec![
+            (
+                "/repos/team/kits/tags?per_page=100&page=1",
+                r#"[{"name":"v1","commit":{"sha":"abc123"}}]"#,
+            ),
+            (
+                "/repos/team/kits/git/trees/abc123?recursive=1",
+                r#"{"tree":[{"type":"blob","path":"tool/spec.yaml"}]}"#,
+            ),
+            (
+                "/team/kits/abc123/tool/spec.yaml",
+                "schemaVersion: '2'\nkind: mixin\nname: tool\n",
+            ),
+        ],
+        "Bearer ghp_test123",
+    );
+    api.token = Some("ghp_test123".into());
+    let provider = Provider {
+        id: "custom".into(),
+        label: "Test".into(),
+        kind: "github".into(),
+        repository: "team/kits".into(),
+        reference: String::new(),
+        enabled: true,
+    };
+    let result = discover_with(&api, &[provider]).unwrap();
+    assert!(result.warnings.is_empty(), "{:?}", result.warnings);
+    worker.join().unwrap();
+}
+#[test]
+fn token_is_never_sent_without_configuration() {
+    let (api, worker) = fixture(vec![
+        (
+            "/repos/team/kits/tags?per_page=100&page=1",
+            r#"[{"name":"v1","commit":{"sha":"abc123"}}]"#,
+        ),
+        (
+            "/repos/team/kits/git/trees/abc123?recursive=1",
+            r#"{"tree":[{"type":"blob","path":"tool/spec.yaml"}]}"#,
+        ),
+        (
+            "/team/kits/abc123/tool/spec.yaml",
+            "schemaVersion: '2'\nkind: mixin\nname: tool\n",
+        ),
+    ]);
+    let provider = Provider {
+        id: "custom".into(),
+        label: "Test".into(),
+        kind: "github".into(),
+        repository: "team/kits".into(),
+        reference: String::new(),
+        enabled: true,
+    };
+    let result = discover_with(&api, &[provider]).unwrap();
+    assert!(result.warnings.is_empty(), "{:?}", result.warnings);
+    worker.join().unwrap();
+}
+
+#[test]
+fn github_rejection_of_the_token_is_reported_as_such() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let worker = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let request = read_request(&mut stream);
+        assert!(request.starts_with("GET /repos/team/kits/tags?"));
+        assert!(
+            request.contains("authorization: Bearer expired"),
+            "the token must be sent as a Bearer header: {request}"
+        );
+        // The credential must stay in the header; the request line (and thus
+        // any log of it) can never carry the token.
+        assert!(!request.starts_with("GET /repos/team/kits/tags?expired"));
+        write!(
+            stream,
+            "HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        )
+        .unwrap();
+    });
+    let mut api = Api::public().unwrap();
+    api.github = base;
+    api.token = Some("expired".into());
+    let error = api
+        .github_tags("team/kits")
+        .expect_err("a 401 must be an error");
+    assert!(
+        error.contains("GitHub rejected the token"),
+        "unexpected error: {error}"
+    );
+    worker.join().unwrap();
+}
+
+#[test]
+fn github_rate_limit_with_a_token_names_the_token() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let worker = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        assert!(read_request(&mut stream).starts_with("GET /repos/team/kits/tags?"));
+        write!(
+            stream,
+            "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        )
+        .unwrap();
+    });
+    let mut api = Api::public().unwrap();
+    api.github = base;
+    api.token = Some("limited".into());
+    let error = api
+        .github_tags("team/kits")
+        .expect_err("a 403 must be an error");
+    assert!(
+        error.contains("despite the token"),
+        "unexpected error: {error}"
+    );
+    worker.join().unwrap();
+}
+
+#[test]
+fn token_round_trips_and_defaults_to_absent() {
+    let root = std::env::temp_dir().join(format!("sandy-token-{}", unique_id()));
+    assert_eq!(get_github_token(&root).unwrap(), None);
+    save_github_token(&root, "  ghp_saved  ").unwrap();
+    assert_eq!(
+        get_github_token(&root).unwrap().as_deref(),
+        Some("ghp_saved")
+    );
+    // Empty or whitespace clears rather than storing a useless value.
+    save_github_token(&root, "   ").unwrap();
+    assert_eq!(get_github_token(&root).unwrap(), None);
+    // Control characters can never form a valid header value, so the save
+    // rejects them instead of storing a token that cannot be sent.
+    assert!(save_github_token(&root, "ghp_bad\nsecond").is_err());
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn token_file_is_owner_only_on_unix() {
+    let root = std::env::temp_dir().join(format!("sandy-token-{}", unique_id()));
+    save_github_token(&root, "ghp_saved").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(root.join("settings.json"))
+            .unwrap()
+            .permissions()
+            .mode();
+        assert_eq!(mode & 0o777, 0o600, "token file must be owner-only");
+    }
     std::fs::remove_dir_all(root).unwrap();
 }

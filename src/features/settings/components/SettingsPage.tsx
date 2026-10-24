@@ -1,6 +1,7 @@
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import Providers from "./Providers";
+import GithubToken from "./GithubToken";
 import Advanced from "./Advanced";
 import Updates from "./Updates";
 import SetupWizard from "../../setup/components/SetupWizard";
@@ -133,6 +134,9 @@ export default function SettingsPage({
           </div>
           <div className="card settings-info">
             <Providers disabled={busy || checkingSetup} />
+          </div>
+          <div className="card settings-info">
+            <GithubToken disabled={busy || checkingSetup} />
           </div>
           <div className="card settings-info">
             <Advanced />

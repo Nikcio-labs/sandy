@@ -54,6 +54,7 @@ The VS Build Tools installer must include the **Desktop development with C++** w
 
 - Sandbox names, states, agents, and workspaces come from the local `sbx` CLI. Sandy checks PATH and standard Homebrew/Windows installer locations for it; custom installations should put the native CLI on PATH.
 - Local sandbox launches require your platform's virtualization support; see Docker's [installation prerequisites](https://docs.docker.com/ai/sandboxes/install/).
+- Kit discovery talks to GitHub anonymously, which allows 60 requests per hour. In Settings you can connect your GitHub account with a personal access token to raise the limit to 5,000 per hour. The token stays on your computer, is never shown again after saving, and is only ever sent to GitHub.
 - For a CLI-first workflow, use the [`sbxenv.yaml` examples](https://github.com/nikcio/docker-sandboxing#use-it-in-your-project) and run `sbx env run` in your project.
 
 ## License

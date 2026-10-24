@@ -9,6 +9,13 @@ use tauri::Manager;
 
 use crate::{catalog, environments, logging, sbx, setup};
 
+/// The stored-token answer for the UI: a presence flag only, so the token
+/// value can never cross back over the IPC bridge.
+#[derive(serde::Serialize)]
+struct GithubTokenStatus {
+    saved: bool,
+}
+
 /// Log every Tauri command outcome (command name, ok/error, and the error
 /// text on failure). Successes carry no detail; the domain loggers already
 /// recorded the underlying CLI/HTTP work.
@@ -175,6 +182,29 @@ async fn discover_kits(
         let root = data_dir(&app)?;
         let refresh = refresh.unwrap_or(false);
         blocking(move || catalog::discover_kits(&root, providers, refresh)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn get_github_token(app: tauri::AppHandle) -> Result<GithubTokenStatus, String> {
+    logged("get_github_token", async move {
+        let root = data_dir(&app)?;
+        blocking(move || {
+            catalog::get_github_token(&root).map(|token| GithubTokenStatus {
+                saved: token.is_some(),
+            })
+        })
+        .await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn save_github_token(app: tauri::AppHandle, token: String) -> Result<(), String> {
+    logged("save_github_token", async move {
+        let root = data_dir(&app)?;
+        blocking(move || catalog::save_github_token(&root, &token)).await
     })
     .await
 }
@@ -347,6 +377,8 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         save_providers,
         provider_versions,
         discover_kits,
+        get_github_token,
+        save_github_token,
         save_template,
         list_templates,
         template_warnings,
