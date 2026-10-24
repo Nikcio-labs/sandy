@@ -1187,15 +1187,9 @@ select {
   color: #2b7a5b;
 }
 
-.debug-log-kind-error,
 .debug-log-kind-command {
   background: #fdf0f2;
   color: #a43c4d;
-}
-
-.debug-log-kind-info {
-  background: #eef2fb;
-  color: #657cae;
 }
 
 .debug-log-entry > span,

@@ -11,7 +11,9 @@ function parseEntry(line: string): DebugLogEntry | null {
   if (!line.trim()) return null;
   try {
     const value = JSON.parse(line) as DebugLogEntry;
-    if (typeof value.timestamp === "string" && typeof value.summary === "string") return value;
+    if (typeof value.timestamp === "string" && typeof value.summary === "string" && typeof value.kind === "string") {
+      return value;
+    }
     return null;
   } catch {
     return null;
@@ -24,12 +26,14 @@ function formatTimestamp(timestamp: string): string {
   return date.toLocaleString();
 }
 
-const KIND_LABELS: Record<DebugLogEntry["kind"], string> = {
+/** Friendly labels for the app's own log targets; dependency crates fall
+ * back to their target name verbatim. */
+const KIND_LABELS: Record<string, string> = {
   cli: "CLI",
   http: "HTTP",
   command: "Command",
-  error: "Error",
-  info: "Info",
+  app: "App",
+  sandy: "App",
 };
 
 const RENDER_LIMIT = 300;
@@ -71,7 +75,7 @@ export default function Advanced() {
     [log],
   );
   const visible = useMemo(
-    () => (filter === "errors" ? entries.filter((entry) => entry.outcome === "error" || entry.kind === "error") : entries),
+    () => (filter === "errors" ? entries.filter((entry) => entry.outcome === "error") : entries),
     [entries, filter],
   );
   // The log file is appended oldest first, so reverse for a newest-first view;
@@ -84,7 +88,7 @@ export default function Advanced() {
     [visible, showAll],
   );
   const errorCount = useMemo(
-    () => entries.filter((entry) => entry.outcome === "error" || entry.kind === "error").length,
+    () => entries.filter((entry) => entry.outcome === "error").length,
     [entries],
   );
   // The backend caps the file at 10 MiB; show how close it is. Encoding the
@@ -192,7 +196,7 @@ export default function Advanced() {
                   <details key={`${entry.timestamp}-${index}`} className="debug-log-entry">
                     <summary>
                       <span className={`debug-log-kind debug-log-kind-${entry.kind}`}>
-                        {KIND_LABELS[entry.kind]}
+                        {KIND_LABELS[entry.kind] ?? entry.kind}
                       </span>
                       <span className={entry.outcome === "error" ? "debug-log-failed" : undefined}>
                         {entry.summary}

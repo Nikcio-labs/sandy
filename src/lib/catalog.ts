@@ -55,7 +55,8 @@ export const pickTemplatePath = () => invoke<string | null>("pick_template_path"
 /** One structured entry from the Sandy diagnostic log (JSON Lines on disk). */
 export interface DebugLogEntry {
   timestamp: string;
-  kind: "cli" | "http" | "command" | "error" | "info";
+  /** Log target: `cli`, `http`, `command`, `app`, or a dependency crate name. */
+  kind: string;
   summary: string;
   detail?: string;
   outcome?: "ok" | "error";
