@@ -11,10 +11,9 @@ import CreatePage from "./features/create/components/CreatePage";
 import SettingsPage from "./features/settings/components/SettingsPage";
 
 const revealMainWindow = async () => {
-  const splash = (await Window.getAll()).find((window) => window.label === "splash");
   await getCurrentWindow().show();
   // The splash may already be gone (e.g. the user closed it); ignore failures.
-  await splash?.close().catch(() => {});
+  await (await Window.getByLabel("splash"))?.close().catch(() => {});
 };
 
 export default function App() {

@@ -7,7 +7,7 @@ import "./styles/styles.css";
 import "./styles/templates.css";
 import "./styles/dashboard.css";
 
-// The dedicated splash window (created by the Rust setup hook with the label
+// The dedicated splash window (declared in tauri.conf.json with the label
 // `splash`) renders only the boot splash: a transparent, frameless window
 // with the logo, a spinner, and a label.
 const isSplashWindow = getCurrentWindow().label === "splash";
