@@ -19,11 +19,16 @@
         "minWidth": 780,
         "minHeight": 560,
         "center": true,
-        "visible": false
+        "visible": false,
+        "decorations": false
       }
     ],
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:",
+      "assetProtocol": {
+        "enable": false,
+        "scope": []
+      },
       "pattern": {
         "use": "isolation",
         "options": {
@@ -35,6 +40,14 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "DeveloperTool",
+    "copyright": "Copyright © 2026 Nikolaj Brask-Nielsen",
+    "homepage": "https://github.com/Nikcio-labs/sandy",
+    "license": "MIT",
+    "licenseFile": "../LICENSE",
+    "publisher": "Nikcio-labs",
+    "shortDescription": "A desktop app for Docker Sandboxes, powered by the sbx CLI.",
+    "longDescription": "Sandy is a desktop app for Docker Sandboxes with guided setup, reusable environment templates, and local sandbox management, powered by the sbx CLI.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
