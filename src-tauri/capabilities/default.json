@@ -13,6 +13,33 @@
     {
       "identifier": "opener:allow-open-path",
       "allow": [{ "path": "$APPDATA" }]
-    }
+    },
+    "allow-check-setup",
+    "allow-install-sbx",
+    "allow-enable-image-paste",
+    "allow-setup-ssh",
+    "allow-login",
+    "allow-sandboxes",
+    "allow-start-sandbox",
+    "allow-stop-sandbox",
+    "allow-restart-sandbox",
+    "allow-remove-sandbox",
+    "allow-open-terminal",
+    "allow-connection-info",
+    "allow-get-providers",
+    "allow-save-providers",
+    "allow-provider-versions",
+    "allow-discover-kits",
+    "allow-save-template",
+    "allow-list-templates",
+    "allow-template-warnings",
+    "allow-delete-template",
+    "allow-launch-template",
+    "allow-allow-source",
+    "allow-pick-workspace",
+    "allow-pick-template-path",
+    "allow-read-debug-log",
+    "allow-clear-debug-log",
+    "allow-debug-log-dir"
   ]
 }
