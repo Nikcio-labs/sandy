@@ -3249,6 +3249,7 @@ name = "sandy"
 version = "0.1.0"
 dependencies = [
  "dunce",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

@@ -2,6 +2,9 @@
 //! directory recording every CLI invocation, HTTP API call, Tauri command
 //! result, and error, for debugging from Settings → Advanced.
 //!
+//! Credential masking is applied to every record before it is written, so
+//! the log file never stores token-like secrets in the first place.
+//!
 //! The file is capped at 10 MiB on disk. Every write measures the file and
 //! truncates the oldest half when the cap is reached, so the cap is enforced
 //! even across restarts without a separate rotation job.
@@ -15,6 +18,9 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+
+mod redact;
+
 
 /// Hard on-disk ceiling for the log file.
 pub(crate) const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
@@ -252,8 +258,11 @@ pub(crate) fn write_record(
     let record = LogRecord {
         timestamp: rfc3339_now(),
         kind,
-        summary: sanitize(summary, 400),
-        detail: detail.map(|detail| sanitize(detail, 4000)),
+        // Redaction happens here, at the single choke point every record
+        // flows through, so secrets never reach the log file in the first
+        // place rather than being cleaned up in whatever reads it later.
+        summary: redact::redact(&sanitize(summary, 400)),
+        detail: detail.map(|detail| redact::redact(&sanitize(detail, 4000))),
         outcome,
     };
     // A record that cannot serialize (impossible in practice) is dropped.

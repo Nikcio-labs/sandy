@@ -143,6 +143,28 @@ fn oversize_log_is_truncated_but_keeps_newest_entries() {
 }
 
 #[test]
+fn recorded_secrets_are_redacted_before_they_reach_the_file() {
+    let _guard = lock();
+    let fixture = Fixture::new();
+    super::record_with_detail(
+        "cli",
+        "sbx login --token ghp_0123456789abcdefghij",
+        "error: token=0123456789abcdef rejected",
+        Some("error"),
+    );
+    let log = fixture.log();
+    assert!(!log.contains("ghp_0123456789abcdefghij"), "{log}");
+    assert!(!log.contains("0123456789abcdef"), "{log}");
+    assert!(log.contains("[redacted]"), "{log}");
+    // The line stays valid JSON after redaction.
+    let value: serde_json::Value = serde_json::from_str(log.trim()).unwrap();
+    assert_eq!(
+        value["summary"],
+        "sbx login --token [redacted]"
+    );
+}
+
+#[test]
 fn rename_over_replaces_the_destination() {
     // The fixture re-points the process-global writer; serialize against the
     // other diaglog tests like every other fixture user.
