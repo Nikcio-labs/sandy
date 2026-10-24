@@ -44,6 +44,14 @@ fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_data_dir().map_err(|error| error.to_string())
 }
 
+/// The bundled mixin snapshot directory inside the app resources. Must match
+/// `bundle.resources` in tauri.conf.json.
+pub(crate) fn bundled_mixins_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .resolve("resources/mixins", tauri::path::BaseDirectory::Resource)
+        .map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 async fn check_setup() -> Result<setup::SetupStatus, String> {
     logged(
@@ -175,6 +183,18 @@ async fn discover_kits(
 ) -> Result<catalog::Catalog, String> {
     logged("discover_kits", async move {
         blocking(move || catalog::discover_kits(providers, query)).await
+    })
+    .await
+}
+
+/// Load the bundled mixin snapshot from the app resources. Called once at
+/// startup and by the refresh action; later discoveries read the reloaded
+/// snapshot without an app restart.
+#[tauri::command]
+async fn refresh_bundled_mixins(app: tauri::AppHandle) -> Result<usize, String> {
+    logged("refresh_bundled_mixins", async move {
+        let bundle = bundled_mixins_dir(&app)?;
+        blocking(move || catalog::load_bundled_mixins(&bundle)).await
     })
     .await
 }
@@ -322,6 +342,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         save_providers,
         provider_versions,
         discover_kits,
+        refresh_bundled_mixins,
         save_template,
         list_templates,
         template_warnings,

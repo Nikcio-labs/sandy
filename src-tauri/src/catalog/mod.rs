@@ -14,6 +14,10 @@
 //! - sbx kit inspect REFERENCE --json currently normalizes v3 workload to
 //!   kind=sandbox; raw authored v3 descriptors have kind=workload and no name.
 
+pub(crate) mod bundled;
+#[cfg(test)]
+mod bundled_tests;
+
 mod descriptor;
 mod github;
 mod http;
@@ -26,12 +30,14 @@ mod types;
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests;
 
+pub use bundled::load_bundled_mixins;
 pub use store::{get_providers, save_providers};
 pub(crate) use store::{github_repository, unique_id, write_json};
 #[cfg(test)]
 pub use types::KitArgument;
 pub use types::{Catalog, KitOption, Provider};
 
+use self::bundled::bundled_catalog;
 use self::github::discover_github;
 use self::http::Api;
 use self::hub::discover_hub;
@@ -76,6 +82,7 @@ fn versions_with(api: &Api, provider: &Provider) -> Result<Vec<String>, String> 
 /// built-ins remain available; the frontend can filter their complete metadata.
 pub fn discover_kits(providers: Vec<Provider>, query: Option<String>) -> Result<Catalog, String> {
     let mut catalog = discover_with(&Api::public()?, &providers, query.as_deref().unwrap_or(""))?;
+    merge_bundled_mixins(&mut catalog, &providers);
     // The built-ins are documented v2 shortcuts, not guessed registry repositories.
     for name in BUILTIN_AGENTS {
         let description = format!("Built-in {name} agent (v2)");
@@ -117,6 +124,49 @@ fn discover_with(api: &Api, providers: &[Provider], query: &str) -> Result<Catal
         .sort_by(|a, b| (&a.kind, &a.name, &a.source).cmp(&(&b.kind, &b.name, &b.source)));
     catalog.kits.dedup_by(|a, b| a.id == b.id);
     Ok(catalog)
+}
+
+/// Add the bundled mixin snapshot as a fallback for the default provider when
+/// its live discovery found no mixins. The mixin guard below keeps live and
+/// bundled results from ever coexisting, so selection stays unambiguous; the
+/// re-keyed ids additionally cannot collide with a live result.
+fn merge_bundled_mixins(catalog: &mut Catalog, providers: &[Provider]) {
+    let Some(provider) = providers.iter().find(|p| {
+        // A disabled provider's sources cannot be authorized at launch, so
+        // its bundled mixins must not be offered either.
+        p.enabled
+            && p.kind == "github"
+            && github_repository(&p.repository).as_deref() == Ok(bundled::REPOSITORY)
+    }) else {
+        return;
+    };
+    if catalog
+        .kits
+        .iter()
+        .any(|kit| kit.provider_id == provider.id && kit.kind == "mixin")
+    {
+        return;
+    }
+    for kit in bundled_catalog().kits {
+        catalog.kits.push(KitOption {
+            id: format!("bundled:{}:{}", provider.id, kit.name),
+            description: if kit.description.is_empty() {
+                format!("Bundled {} mixin (offline snapshot)", kit.name)
+            } else {
+                format!("{} (bundled offline snapshot)", kit.description)
+            },
+            ..kit
+        });
+    }
+    // discover_with already sorted its own results; the appended fallback kits
+    // must land in the same order for stable rendering and dedupe.
+    catalog
+        .kits
+        .sort_by(|a, b| (&a.kind, &a.name, &a.source).cmp(&(&b.kind, &b.name, &b.source)));
+    catalog.warnings.push(format!(
+        "{}: no live mixins were discovered; offering the bundled offline snapshot instead",
+        provider.label
+    ));
 }
 
 fn repository_name(repository: &str) -> Option<&str> {

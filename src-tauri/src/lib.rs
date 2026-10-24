@@ -38,6 +38,19 @@ pub fn run() {
                 diaglog::init(diaglog::log_path(&root));
                 diaglog::info("Sandy started");
             }
+            // Load the offline mixin snapshot once up front; discovery falls
+            // back to it when GitHub is unreachable. A missing bundle only
+            // disables the fallback, so failures here are not fatal.
+            if let Ok(bundle) = commands::bundled_mixins_dir(app.handle()) {
+                match catalog::load_bundled_mixins(&bundle) {
+                    Ok(count) => {
+                        diaglog::info(&format!("Bundled mixin snapshot loaded ({count} kits)"))
+                    }
+                    Err(error) => {
+                        diaglog::info(&format!("Bundled mixin snapshot unavailable: {error}"))
+                    }
+                }
+            }
             Ok(())
         })
         // `run()` returns () and there is nowhere left to report a fatal

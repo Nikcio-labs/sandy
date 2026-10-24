@@ -103,3 +103,10 @@ jobs:
       - name: cargo check
         working-directory: src-tauri
         run: cargo check --all-targets
+
+      # Tests run after clippy/check, which have already triggered build.rs
+      # and its snapshot fetch. Snapshot-dependent tests skip themselves when
+      # the fetch was skipped (SANDY_SKIP_SNAPSHOT_FETCH).
+      - name: cargo test
+        working-directory: src-tauri
+        run: cargo test

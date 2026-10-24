@@ -51,6 +51,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": {
+      "target/snapshot/mixins": "resources/mixins"
+    },
     "createUpdaterArtifacts": true,
     "category": "DeveloperTool",
     "copyright": "Copyright © 2026 Nikolaj Brask-Nielsen",

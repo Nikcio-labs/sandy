@@ -49,6 +49,8 @@ export const discoverKits = (providers: Provider[], query?: string) =>
     providers,
     ...(query?.trim() ? { query: query.trim() } : {}),
   });
+/** Reload the bundled offline mixin snapshot from the app resources. */
+export const refreshBundledMixins = () => invoke<number>("refresh_bundled_mixins");
 export const pickWorkspace = () => invoke<string | null>("pick_workspace");
 export const pickTemplatePath = () => invoke<string | null>("pick_template_path");
 
