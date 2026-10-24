@@ -87,8 +87,12 @@
   min-width: 0;
 }
 
+/* Absolutely positioned sr-only content inside a static-ancestor page (e.g. a
+   form legend) takes the viewport as its containing block, so it escapes the
+   .content scroll clip and grows the document scrollHeight — the Settings page
+   ended up with a scrollbar on the window itself next to the content one. */
 .catalog-sr-only {
-  position: absolute;
+  position: fixed;
   width: 1px;
   height: 1px;
   padding: 0;
