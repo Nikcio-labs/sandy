@@ -23,6 +23,15 @@ pub struct KitArgument {
     pub choices: Vec<String>,
 }
 
+/// A credential service a kit asks the proxy to authenticate (e.g. "github").
+/// The user supplies the value with `sbx secret set`; the kit never stores it.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct KitCredential {
+    pub service: String,
+    #[serde(default)]
+    pub required: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KitOption {
     pub id: String,
@@ -35,6 +44,8 @@ pub struct KitOption {
     pub required_agent: Option<String>,
     #[serde(default)]
     pub arguments: Vec<KitArgument>,
+    #[serde(default)]
+    pub credentials: Vec<KitCredential>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

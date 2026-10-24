@@ -231,6 +231,9 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
                   onWorkspace={setWorkspace}
                   mountless={mountless}
                   onMountless={setMountless}
+                  credentials={flow.credentials}
+                  secrets={flow.secrets}
+                  onSecretChange={flow.changeSecret}
                   savePath={savePath}
                   onSavePath={setSavePath}
                   busy={busy !== null}

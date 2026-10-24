@@ -5,6 +5,8 @@ use std::collections::HashSet;
 use std::io::Write;
 use std::path::Path;
 
+use serde::Deserialize;
+
 use crate::catalog::{get_providers, github_repository, unique_id};
 use crate::progress::LaunchProgress;
 
@@ -16,20 +18,54 @@ use super::validation::{
     canonicalize, ensure_outside, path_string, selected, validate_name, workspace_path,
 };
 
+/// A secret the frontend collects during launch and Sandy stores with
+/// `sbx secret set` before creating the sandbox. Scoping to the new sandbox
+/// keeps the value out of every other sandbox; stored values are overwritten
+/// so relaunching always applies what the user just typed.
+#[derive(Debug, Clone, Deserialize)]
+pub struct LaunchSecret {
+    pub service: String,
+    pub value: String,
+    #[serde(default)]
+    pub sandbox_scoped: bool,
+}
+
+/// A template launch request: the saved template plus optional overrides and
+/// the secrets collected in the launch dialog.
+#[derive(Debug, Clone, Deserialize)]
+pub struct LaunchTemplateRequest {
+    pub id: String,
+    pub name: Option<String>,
+    pub workspace: Option<String>,
+    #[serde(default)]
+    pub secrets: Vec<LaunchSecret>,
+}
+
 pub fn launch_template(
     root: &Path,
     id: &str,
     name: Option<String>,
     workspace: Option<String>,
+    secrets: Vec<LaunchSecret>,
     progress: &mut dyn FnMut(LaunchProgress),
 ) -> Result<String, String> {
-    launch_with(root, id, name, workspace, &mut SbxRuntime, progress)
+    launch_with(
+        root,
+        id,
+        name,
+        workspace,
+        secrets,
+        &mut SbxRuntime,
+        progress,
+    )
 }
 
 pub(super) trait SandboxRuntime {
     fn run(&mut self, args: &[&str]) -> Result<String, String>;
     fn exists(&mut self, name: &str) -> Result<bool, String>;
     fn start(&mut self, name: &str) -> Result<String, String>;
+    fn set_secret(&mut self, service: &str, value: &str, scope: Option<&str>)
+    -> Result<(), String>;
     fn create_streaming(
         &mut self,
         args: &[&str],
@@ -54,6 +90,15 @@ impl SandboxRuntime for SbxRuntime {
         crate::sbx::start_sandbox(name)
     }
 
+    fn set_secret(
+        &mut self,
+        service: &str,
+        value: &str,
+        scope: Option<&str>,
+    ) -> Result<(), String> {
+        crate::sbx::set_secret(service, value, scope, true).map(|_| ())
+    }
+
     fn create_streaming(
         &mut self,
         args: &[&str],
@@ -68,6 +113,7 @@ pub(super) fn launch_with(
     id: &str,
     name: Option<String>,
     workspace: Option<String>,
+    secrets: Vec<LaunchSecret>,
     runtime: &mut impl SandboxRuntime,
     progress: &mut dyn FnMut(LaunchProgress),
 ) -> Result<String, String> {
@@ -138,6 +184,25 @@ pub(super) fn launch_with(
                 "Unsupported saved source: {}. Select a kit from an enabled GitHub or Docker Hub provider",
                 kit.source
             ));
+        }
+    }
+    // Secrets are stored before environment creation so the first start of
+    // the new sandbox already authenticates through the proxy. Values are
+    // overwritten (-f) so relaunching applies exactly what the user typed;
+    // sandbox scoping keeps them out of every other sandbox.
+    if !secrets.is_empty() {
+        progress(LaunchProgress::Authorizing);
+        for secret in &secrets {
+            let scope = if secret.sandbox_scoped {
+                Some(name.as_str())
+            } else {
+                None
+            };
+            runtime
+                .set_secret(&secret.service, &secret.value, scope)
+                .map_err(|error| {
+                    format!("Could not store the {} secret:\n{error}", secret.service)
+                })?;
         }
     }
     // Use an immutable per-launch snapshot, preserving the original file and the

@@ -32,6 +32,7 @@ struct MockRuntime {
     existing: bool,
     fail_create: bool,
     fail_start: bool,
+    fail_secret: bool,
 }
 
 fn assert_library_available() {
@@ -74,6 +75,26 @@ impl SandboxRuntime for MockRuntime {
             return Err("start failed".into());
         }
         Ok("started".into())
+    }
+
+    fn set_secret(
+        &mut self,
+        service: &str,
+        value: &str,
+        scope: Option<&str>,
+    ) -> Result<(), String> {
+        assert_library_available();
+        self.calls.push(vec![
+            "secret".into(),
+            "set".into(),
+            service.into(),
+            value.into(),
+            scope.unwrap_or("global").into(),
+        ]);
+        if self.fail_secret {
+            return Err("secret set failed".into());
+        }
+        Ok(())
     }
 
     fn create_streaming(
@@ -137,6 +158,7 @@ fn kit(name: &str, kind: &str, version: u8, provider: &str) -> KitOption {
         provider_id: provider.into(),
         required_agent: None,
         arguments: vec![],
+        credentials: vec![],
     }
 }
 
@@ -307,6 +329,7 @@ fn launches_noninteractively_with_name_workspace_override_and_no_mutation() {
         &saved.id,
         Some("second".into()),
         Some(path_string(&other).unwrap()),
+        Vec::new(),
         &mut runtime,
         &mut progress.sink(),
     )
@@ -351,6 +374,7 @@ fn existing_sandbox_is_resumed_without_recreating_environment() {
         &saved.id,
         None,
         None,
+        Vec::new(),
         &mut runtime,
         &mut |_| {},
     )
@@ -379,6 +403,7 @@ fn create_failure_does_not_attempt_to_start() {
         &saved.id,
         None,
         None,
+        Vec::new(),
         &mut runtime,
         &mut |_| {},
     )
@@ -400,6 +425,7 @@ fn start_failure_reports_created_environment_and_retry_command() {
         &saved.id,
         None,
         None,
+        Vec::new(),
         &mut runtime,
         &mut |_| {},
     )
@@ -451,6 +477,10 @@ fi
 printf '%s\n' 'created'
 ;;
   run) printf '%s\n' 'started' ;;
+  secret)
+[ "$2" = set ] || exit 1
+printf '%s\n' "saved"
+;;
   *) exit 1 ;;
 esac
 "#,
@@ -464,9 +494,25 @@ esac
     .unwrap();
     crate::sbx::test_env::set_var("PATH", path);
 
-    let created = launch_template(&fixture.root, &saved.id, None, None, &mut |_| {}).unwrap();
+    let created = launch_template(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        Vec::new(),
+        &mut |_| {},
+    )
+    .unwrap();
     assert!(created.contains("Created and started sandbox example"));
-    let resumed = launch_template(&fixture.root, &saved.id, None, None, &mut |_| {}).unwrap();
+    let resumed = launch_template(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        Vec::new(),
+        &mut |_| {},
+    )
+    .unwrap();
     assert!(resumed.contains("Started existing sandbox example"));
     let commands = std::fs::read_to_string(fixture.base.join("commands")).unwrap();
     let commands: Vec<_> = commands.lines().collect();
@@ -524,6 +570,131 @@ fn source_authorization_merges_and_rejects_managed_policy() {
 }
 
 #[test]
+fn templates_report_the_union_of_kit_credentials() {
+    let fixture = Fixture::new();
+    let mut request = fixture.request();
+    request.agent = kit("custom", "agent", 2, "hub");
+    request.agent.credentials = vec![crate::catalog::KitCredential {
+        service: "github".into(),
+        required: false,
+    }];
+    request.mixins.push(kit("tools", "mixin", 2, "hub"));
+    request.mixins[0].credentials = vec![
+        crate::catalog::KitCredential {
+            service: "github".into(),
+            required: true,
+        },
+        crate::catalog::KitCredential {
+            service: "linear".into(),
+            required: false,
+        },
+    ];
+    let saved = save_template(&fixture.root, request).unwrap();
+    assert_eq!(
+        saved.credentials,
+        vec![
+            crate::catalog::KitCredential {
+                service: "github".into(),
+                required: true,
+            },
+            crate::catalog::KitCredential {
+                service: "linear".into(),
+                required: true,
+            },
+        ]
+    );
+}
+
+/// Launch secrets reach the runtime before environment creation, scoped to
+/// the new sandbox name when requested.
+#[test]
+fn launch_secrets_are_stored_before_environment_creation() {
+    let fixture = Fixture::new();
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    let mut runtime = MockRuntime::default();
+    let mut progress = ProgressLog::default();
+    launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        vec![
+            super::launch::LaunchSecret {
+                service: "github".into(),
+                value: "token".into(),
+                sandbox_scoped: true,
+            },
+            super::launch::LaunchSecret {
+                service: "openai".into(),
+                value: "key".into(),
+                sandbox_scoped: false,
+            },
+        ],
+        &mut runtime,
+        &mut progress.sink(),
+    )
+    .unwrap();
+    // The Authorizing phase is reused for the secret step; the launch still
+    // completes with the standard create/start sequence after it.
+    assert!(progress.0.contains(&LaunchProgress::Authorizing));
+    assert!(progress.0.contains(&LaunchProgress::Ready));
+    let calls: Vec<_> = runtime.calls.iter().map(|call| call.join(" ")).collect();
+    let secret_calls: Vec<_> = calls
+        .iter()
+        .filter(|call| call.starts_with("secret set "))
+        .collect();
+    assert_eq!(
+        secret_calls,
+        [
+            "secret set github token example",
+            "secret set openai key global"
+        ]
+    );
+    let create_index = calls
+        .iter()
+        .position(|call| call.starts_with("env create "))
+        .unwrap();
+    let github_index = calls
+        .iter()
+        .position(|call| call.starts_with("secret set github"))
+        .unwrap();
+    assert!(github_index < create_index);
+}
+
+#[test]
+fn failed_secret_storage_aborts_the_launch_before_creating() {
+    let fixture = Fixture::new();
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    let mut runtime = MockRuntime {
+        fail_secret: true,
+        ..Default::default()
+    };
+    let error = launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        None,
+        vec![super::launch::LaunchSecret {
+            service: "github".into(),
+            value: "token".into(),
+            sandbox_scoped: true,
+        }],
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap_err();
+    assert!(error.contains("Could not store the github secret"));
+    // No environment was created and the saved template is untouched.
+    assert!(
+        runtime
+            .calls
+            .iter()
+            .all(|call| !call.first().is_some_and(|arg| arg == "env"))
+    );
+    assert_eq!(std::fs::read_to_string(saved.path).unwrap(), saved.content);
+}
+
+#[test]
 fn canonicalized_paths_simplify_windows_verbatim_prefixes() {
     // Windows file pickers and std::fs::canonicalize produce verbatim paths
     // like \\?\C:\Users\name, which the sbx CLI rejects. Saving and launching
@@ -568,6 +739,7 @@ fn mountless_templates_save_launch_and_stay_isolated() {
         &saved.id,
         None,
         None,
+        Vec::new(),
         &mut runtime,
         &mut |_| {},
     )
@@ -600,6 +772,7 @@ fn mountless_launch_ignores_workspace_override_and_launch_files() {
         &saved.id,
         Some("second".into()),
         Some(path_string(&fixture.workspace).unwrap()),
+        Vec::new(),
         &mut runtime,
         &mut |_| {},
     )
@@ -621,6 +794,7 @@ fn mountless_launch_of_workspace_template_drops_the_mount_when_requested() {
         &saved.id,
         None,
         Some(String::new()),
+        Vec::new(),
         &mut runtime,
         &mut |_| {},
     )

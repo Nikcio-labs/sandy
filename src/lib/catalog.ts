@@ -18,6 +18,12 @@ export interface KitArgument {
   choices: string[];
 }
 
+/** A credential service a kit asks the proxy to authenticate (e.g. "github"). */
+export interface KitCredential {
+  service: string;
+  required: boolean;
+}
+
 export interface KitOption {
   id: string;
   name: string;
@@ -28,6 +34,7 @@ export interface KitOption {
   provider_id: string;
   required_agent: string | null;
   arguments: KitArgument[];
+  credentials: KitCredential[];
 }
 
 export interface Catalog {

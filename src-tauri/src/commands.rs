@@ -140,6 +140,60 @@ async fn connection_info(name: String) -> Result<sbx::ConnectionInfo, String> {
 }
 
 #[tauri::command]
+async fn list_secrets(scope: Option<String>) -> Result<Vec<sbx::SecretEntry>, String> {
+    logged("list_secrets", async move {
+        blocking(move || sbx::list_secrets(scope.as_deref())).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn set_secret(
+    service: String,
+    value: String,
+    scope: Option<String>,
+    force: bool,
+) -> Result<String, String> {
+    logged("set_secret", async move {
+        blocking(move || sbx::set_secret(&service, &value, scope.as_deref(), force)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn set_custom_secret(
+    hosts: Vec<String>,
+    env: String,
+    value: String,
+    scope: Option<String>,
+) -> Result<String, String> {
+    logged("set_custom_secret", async move {
+        blocking(move || {
+            let hosts: Vec<&str> = hosts.iter().map(String::as_str).collect();
+            sbx::set_custom_secret(&hosts, &env, &value, scope.as_deref())
+        })
+        .await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn delete_secret(
+    service: String,
+    scope: Option<String>,
+    placeholder: Option<String>,
+    registry: bool,
+) -> Result<String, String> {
+    logged("delete_secret", async move {
+        blocking(move || {
+            sbx::delete_secret(&service, scope.as_deref(), placeholder.as_deref(), registry)
+        })
+        .await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn get_providers(app: tauri::AppHandle) -> Result<Vec<catalog::Provider>, String> {
     logged("get_providers", async move {
         let root = data_dir(&app)?;
@@ -222,14 +276,18 @@ async fn delete_template(app: tauri::AppHandle, id: String) -> Result<(), String
 async fn launch_template(
     app: tauri::AppHandle,
     on_progress: tauri::ipc::Channel<crate::progress::LaunchProgress>,
-    id: String,
-    name: Option<String>,
-    workspace: Option<String>,
+    request: environments::LaunchTemplateRequest,
 ) -> Result<String, String> {
     logged("launch_template", async move {
         let root = data_dir(&app)?;
+        let environments::LaunchTemplateRequest {
+            id,
+            name,
+            workspace,
+            secrets,
+        } = request;
         blocking(move || {
-            environments::launch_template(&root, &id, name, workspace, &mut |progress| {
+            environments::launch_template(&root, &id, name, workspace, secrets, &mut |progress| {
                 // A closed or slow UI must not fail or block the launch.
                 let _ = on_progress.send(progress);
             })
@@ -318,6 +376,10 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         remove_sandbox,
         open_terminal,
         connection_info,
+        list_secrets,
+        set_secret,
+        set_custom_secret,
+        delete_secret,
         get_providers,
         save_providers,
         provider_versions,

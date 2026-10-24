@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use super::types::{KitArgument, KitOption};
+use super::types::{KitArgument, KitCredential, KitOption};
 
 pub(super) fn comment_descriptor(text: &str) -> Option<String> {
     let mut in_block = false;
@@ -91,6 +91,45 @@ pub(super) fn option_from_descriptor(
                 .unwrap_or_default(),
         })
         .collect();
+    // V2 declares credentials as a top-level list; v3 hides them inside the
+    // capabilities array. Both only ever name a service — the value always
+    // comes from the user's `sbx secret set` store.
+    let mut credentials = value["credentials"]
+        .as_array()
+        .map(|list| {
+            list.iter()
+                .filter_map(|entry| {
+                    let service = entry["service"].as_str()?.trim();
+                    (!service.is_empty()).then(|| KitCredential {
+                        service: service.to_string(),
+                        required: entry["required"].as_bool().unwrap_or(false),
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    if let Some(capabilities) = value["capabilities"].as_array() {
+        for capability in capabilities {
+            if capability["type"].as_str() != Some("com.docker.sandbox/credential@1") {
+                continue;
+            }
+            let config = &capability["config"];
+            let service = match config["service"].as_str() {
+                Some(service) => service.trim(),
+                None => continue,
+            };
+            if service.is_empty() {
+                continue;
+            }
+            let required = credentials.iter().any(|c| c.service == service);
+            credentials.push(KitCredential {
+                service: service.to_string(),
+                required,
+            });
+        }
+    }
+    credentials.sort_by(|a, b| (&b.required, &a.service).cmp(&(&a.required, &b.service)));
+    credentials.dedup_by(|a, b| a.service == b.service);
     Ok(KitOption {
         id: format!("{provider_id}:{source}"),
         name,
@@ -105,6 +144,7 @@ pub(super) fn option_from_descriptor(
             .into(),
         required_agent: value["requires"]["agent"].as_str().map(String::from),
         arguments,
+        credentials,
     })
 }
 

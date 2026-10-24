@@ -13,9 +13,10 @@ import {
   hasKitMetadata,
   isCompatibleMixin,
   resolvedArguments,
+  selectedCredentials,
 } from "../../../lib/kit";
 import { launchTemplate, saveTemplate } from "../../../lib/templates";
-import type { SavedTemplate, SaveTemplateRequest } from "../../../lib/templates";
+import type { LaunchSecret, SavedTemplate, SaveTemplateRequest } from "../../../lib/templates";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import { useBusyReporting } from "../../../common/hooks/useBusyReporting";
 
@@ -42,6 +43,7 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
   const [name, setName] = useState("");
   const [workspace, setWorkspace] = useState("");
   const [mountless, setMountless] = useState(false);
+  const [secrets, setSecrets] = useState<Record<string, LaunchSecret | undefined>>({});
   const [savePath, setSavePath] = useState("");
   const [busy, setBusy] = useState<"discover" | "save" | "launch" | "workspace" | "path" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +94,7 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     providers?.find((provider) => provider.id === providerId)?.label ??
     (providerId === "builtin" ? "Built-in agents" : providerId);
   const inputValid = argumentsAreValid(selectedKits, values);
+  const credentials = selectedCredentials(selectedKits);
   const request: SaveTemplateRequest | null = agent
     ? {
         name: name.trim(),
@@ -197,6 +200,9 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
       id: template.id,
       name: template.name,
       workspace: template.workspace,
+      secrets: Object.values(secrets).filter(
+        (secret): secret is LaunchSecret => !!secret && !!secret.value.trim(),
+      ),
     });
     if (!mounted.current) return;
     setLaunchOutput(output);
@@ -346,12 +352,16 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     // Step 3: project details and review.
     inputValid,
     request,
+    credentials,
     name,
     setName,
     workspace,
     setWorkspace,
     mountless,
     setMountless,
+    secrets,
+    changeSecret: (service: string, secret: LaunchSecret | undefined) =>
+      setSecrets((previous) => ({ ...previous, [service]: secret })),
     savePath,
     setSavePath,
     submit,

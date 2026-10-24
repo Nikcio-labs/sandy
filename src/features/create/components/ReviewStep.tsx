@@ -2,8 +2,10 @@ import { useId } from "react";
 import type { FormEvent } from "react";
 import type { KitOption } from "../../../lib/kit";
 import { previewTemplate } from "../../../lib/kit";
-import type { SaveTemplateRequest } from "../../../lib/templates";
+import type { KitCredential } from "../../../lib/catalog";
+import type { LaunchSecret, SaveTemplateRequest } from "../../../lib/templates";
 import Icon from "../../../common/components/Icon";
+import { SecretFields } from "../../../common/components/SecretFields";
 
 export function ReviewStep({
   agent,
@@ -15,6 +17,9 @@ export function ReviewStep({
   onWorkspace,
   mountless,
   onMountless,
+  credentials,
+  secrets,
+  onSecretChange,
   savePath,
   onSavePath,
   busy,
@@ -32,6 +37,9 @@ export function ReviewStep({
   onWorkspace: (value: string) => void;
   mountless: boolean;
   onMountless: (value: boolean) => void;
+  credentials: KitCredential[];
+  secrets: Record<string, LaunchSecret | undefined>;
+  onSecretChange: (service: string, secret: LaunchSecret | undefined) => void;
   savePath: string;
   onSavePath: (value: string) => void;
   busy: boolean;
@@ -133,6 +141,12 @@ export function ReviewStep({
             Use managed storage
           </button>
         )}
+        <SecretFields
+          credentials={credentials}
+          values={secrets}
+          onChange={onSecretChange}
+          disabled={busy}
+        />
         <div className="catalog-review">
           <h3>Review your environment</h3>
           <dl className="catalog-review-grid">

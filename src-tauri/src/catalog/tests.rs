@@ -149,6 +149,85 @@ fn normalized_v3_and_typed_filtering() {
         )
         .is_err()
     );
+    // V2 credentials arrive as a top-level list; v3 as capability configs.
+    // Required wins over optional across entries, duplicates are dropped.
+    let kit = option_from_descriptor(
+        &serde_json::json!({"schemaVersion":"2","kind":"mixin","name":"kit",
+            "credentials":[{"service":"linear"},{"service":"github","required":true}]}),
+        "s",
+        "p",
+        "n",
+    )
+    .unwrap();
+    assert_eq!(
+        kit.credentials,
+        [
+            crate::catalog::KitCredential {
+                service: "github".into(),
+                required: true
+            },
+            crate::catalog::KitCredential {
+                service: "linear".into(),
+                required: false
+            },
+        ]
+    );
+    let kit = option_from_descriptor(
+        &serde_json::json!({"schemaVersion":"2","kind":"mixin","name":"kit",
+            "credentials":[{"service":"openai","required":true}]}),
+        "s",
+        "p",
+        "n",
+    )
+    .unwrap();
+    assert_eq!(kit.credentials.len(), 1);
+    let kit = option_from_descriptor(
+        &serde_json::json!({"schemaVersion":"2","kind":"mixin","name":"kit",
+            "credentials":[{"service":"github"},{"service":"openai","required":true}]}),
+        "s",
+        "p",
+        "n",
+    )
+    .unwrap();
+    assert_eq!(kit.credentials.len(), 2);
+    // V3: the credential capability names the service; an existing v2 entry
+    // with the same service is never duplicated.
+    let kit = option_from_descriptor(
+        &serde_json::json!({"schemaVersion":"2","kind":"mixin","name":"kit",
+        "credentials":[{"service":"github","required":true}],
+        "capabilities":[
+            {"type":"com.docker.sandbox/network-policy@1"},
+            {"type":"com.docker.sandbox/credential@1","config":{"service":"github"}},
+            {"type":"com.docker.sandbox/credential@1","config":{"service":"linear"}}
+        ]}),
+        "s",
+        "p",
+        "n",
+    )
+    .unwrap();
+    assert_eq!(
+        kit.credentials,
+        [
+            crate::catalog::KitCredential {
+                service: "github".into(),
+                required: true
+            },
+            crate::catalog::KitCredential {
+                service: "linear".into(),
+                required: false
+            },
+        ]
+    );
+    // Entries without a service name are skipped, not fatal.
+    let kit = option_from_descriptor(
+        &serde_json::json!({"schemaVersion":"2","kind":"mixin","name":"kit",
+            "credentials":[{"required":true},{"service":"linear"}]}),
+        "s",
+        "p",
+        "n",
+    )
+    .unwrap();
+    assert_eq!(kit.credentials.len(), 1);
 }
 
 #[test]

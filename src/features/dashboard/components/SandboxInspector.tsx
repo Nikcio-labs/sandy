@@ -11,6 +11,7 @@ export function SandboxInspector({
   installed,
   onAction,
   onOpen,
+  onSecrets,
   onClose,
   actionLabels,
 }: {
@@ -20,6 +21,7 @@ export function SandboxInspector({
   installed: boolean;
   onAction: (action: SandboxAction) => void;
   onOpen: () => void;
+  onSecrets: () => void;
   onClose: () => void;
   actionLabels: Record<SandboxAction, string>;
 }) {
@@ -60,6 +62,14 @@ export function SandboxInspector({
                       Start
                     </>
                   )}
+                </button>
+                <button
+                  className="ghost"
+                  disabled={!!pending || !installed}
+                  onClick={onSecrets}
+                >
+                  <Icon name="key" size={18} />
+                  Secrets
                 </button>
                 <button
                   className="ghost"

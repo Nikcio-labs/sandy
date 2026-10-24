@@ -16,6 +16,7 @@ mod cli;
 mod install;
 mod lifecycle;
 mod listing;
+mod secrets;
 mod status;
 mod terminal;
 
@@ -33,6 +34,7 @@ pub use lifecycle::{
     ConnectionInfo, connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
 };
 pub use listing::{SandboxInfo, list_sandboxes};
+pub use secrets::{SecretEntry, delete_secret, list_secrets, set_custom_secret, set_secret};
 pub use status::{
     CheckExplanation, diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,
 };

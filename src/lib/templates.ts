@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { KitOption, KitArguments } from "./catalog";
+import type { KitArguments, KitCredential, KitOption } from "./catalog";
 import { launchTemplate as launchTemplateSandbox } from "./sandbox";
 import type { LaunchProgress } from "./sandbox";
+
+export type { KitCredential };
 
 export interface SaveTemplateRequest {
   name: string;
@@ -22,12 +24,22 @@ export interface SavedTemplate {
   workspace: string;
   kit_version: number;
   content: string;
+  /** Credential services the selected kits ask the proxy to authenticate. */
+  credentials: KitCredential[];
+}
+
+/** A secret value collected during launch and stored with `sbx secret set`. */
+export interface LaunchSecret {
+  service: string;
+  value: string;
+  sandbox_scoped: boolean;
 }
 
 export interface LaunchTemplateRequest {
   id: string;
   name?: string;
   workspace?: string;
+  secrets?: LaunchSecret[];
 }
 
 export const saveTemplate = (request: SaveTemplateRequest) =>

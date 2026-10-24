@@ -1,4 +1,4 @@
-import type { KitArgument, KitArguments, KitOption } from "./catalog";
+import type { KitArgument, KitArguments, KitCredential, KitOption } from "./catalog";
 import type { SaveTemplateRequest } from "./templates";
 
 export type { KitArgument, KitArguments, KitOption, SaveTemplateRequest };
@@ -27,10 +27,28 @@ export const BUILTIN_AGENTS: KitOption[] = [
   provider_id: "builtin",
   required_agent: null,
   arguments: [],
+  credentials: [],
 }));
 
-/** Unknown or incomplete metadata must never turn into a selectable kit. */
-export function hasKitMetadata(kit: KitOption): boolean {
+/**
+ * The union of the selected kits' credential services, agent first. Required
+ * wins over optional, and duplicates are dropped.
+ */
+export function selectedCredentials(kits: KitOption[]): KitCredential[] {
+  const required = new Map<string, boolean>();
+  for (const kit of kits) {
+    for (const credential of kit.credentials ?? []) {
+      const current = required.get(credential.service);
+      required.set(credential.service, (current ?? false) || credential.required);
+    }
+  }
+  return [...required].map(([service, isRequired]) => ({
+    service,
+    required: isRequired,
+  }));
+}
+
+/** Unknown or incomplete metadata must never turn into a selectable kit. */export function hasKitMetadata(kit: KitOption): boolean {
   return !!(
     kit &&
     typeof kit.id === "string" &&
@@ -58,6 +76,14 @@ export function hasKitMetadata(kit: KitOption): boolean {
         (argument.default === null || typeof argument.default === "string") &&
         Array.isArray(argument.choices) &&
         argument.choices.every((choice) => typeof choice === "string"),
+    ) &&
+    Array.isArray(kit.credentials) &&
+    kit.credentials.every(
+      (credential) =>
+        credential &&
+        typeof credential.service === "string" &&
+        credential.service.trim() &&
+        typeof credential.required === "boolean",
     )
   );
 }
