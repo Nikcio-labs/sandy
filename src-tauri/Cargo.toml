@@ -11,7 +11,7 @@ name = "sandy_lib"
 crate-type = ["rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2", features = ["isolation"] }
 
 [dependencies]
 tauri = { version = "2", default-features = false, features = [
@@ -19,6 +19,7 @@ tauri = { version = "2", default-features = false, features = [
   "compression",
   "common-controls-v6",
   "dynamic-acl",
+  "isolation",
   "macos-private-api",
   "x11",
 ] }
