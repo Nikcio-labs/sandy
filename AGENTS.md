@@ -10,11 +10,7 @@ Always pull the latest version of `main` before starting any work, and base your
 git fetch origin main
 ```
 
-Work in a git worktree placed under `.worktrees/`, and keep the base directory checked out on an up-to-date `main`:
-
-```bash
-git worktree add .worktrees/my-branch -b my-branch origin/main
-```
+Work in a git worktree placed under `.worktrees/`, and keep the base directory checked out on an up-to-date `main`.
 
 ## Documentation
 
