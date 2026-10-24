@@ -34,6 +34,9 @@ fn main() {
     // Without an app ACL manifest tauri skips command authorization for local
     // windows entirely, so every window could invoke every command. Declaring
     // the commands here makes the capability files the only gate for IPC.
+    // A build script must abort the build on failure; the crate-wide lint
+    // targets runtime code, not this conventional panic.
+    #[allow(clippy::expect_used)]
     tauri_build::try_build(Attributes::new().app_manifest(AppManifest::new().commands(COMMANDS)))
         .expect("failed to run tauri-build");
 }
