@@ -2,6 +2,7 @@ import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import Providers from "./Providers";
 import Advanced from "./Advanced";
+import Updates from "./Updates";
 import SetupWizard from "../../setup/components/SetupWizard";
 import { isSetupComplete } from "../../setup/setupSteps";
 export interface SettingsPageProps {
@@ -127,6 +128,9 @@ export default function SettingsPage({
       )}
       {active && (
         <>
+          <div className="card settings-info">
+            <Updates />
+          </div>
           <div className="card settings-info">
             <Providers disabled={busy || checkingSetup} />
           </div>
