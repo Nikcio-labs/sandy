@@ -6,7 +6,7 @@ mod progress;
 mod sbx;
 mod setup;
 
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind, log};
 use tauri_plugin_window_state::{Builder as WindowStateBuilder, StateFlags};
 
@@ -70,23 +70,6 @@ pub fn run() {
                 // is only visible on other platforms or in dev runs.
                 log::warn!("app data dir unavailable; diagnostic log disabled");
             }
-            // Boot splash: a small transparent window with just the logo, a
-            // spinner, and a label, shown while the hidden main window loads.
-            // The main window's frontend reveals itself and closes this splash
-            // once the first setup check settles.
-            WebviewWindowBuilder::new(app, "splash", WebviewUrl::App("index.html".into()))
-                .title("Sandy")
-                .inner_size(320.0, 200.0)
-                .center()
-                .decorations(false)
-                .transparent(true)
-                .resizable(false)
-                .maximizable(false)
-                .minimizable(false)
-                .always_on_top(true)
-                .skip_taskbar(true)
-                .focused(false)
-                .build()?;
             Ok(())
         })
         // `run()` returns () and there is nowhere left to report a fatal
