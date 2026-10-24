@@ -75,7 +75,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVCRDcyNEE2MzNCNTYwQTQKUldTa1lMVXpwaVRYVzF2NVo5MHhJZXhxNjJYaDRCWkQzczV1Z1RIM1h0eDBwaUs3L0RIRFhrTEMK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzMDVEOTVGQTczQ0FBMjgKUldRb3FqeW5YOWtGNDUyWUdsd2lidmVBbitJZVptdzlUWmRkOExmbTNxVm5EOGpOWkR6NThEOVYK",
       "endpoints": [
         "https://github.com/Nikcio-labs/sandy/releases/latest/download/latest.json"
       ]
