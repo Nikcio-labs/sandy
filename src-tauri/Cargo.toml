@@ -1,6 +1,8 @@
 [package]
 name = "sandy"
+# x-release-please-version
 version = "0.1.0"
+# x-release-please-end
 description = "Sandy — a friendly command center for Docker Sandboxes"
 authors = ["nikcio"]
 edition = "2024"

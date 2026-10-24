@@ -151,6 +151,10 @@ jobs:
           set -euo pipefail
           version="${TAG_NAME#v}"
           release_url="https://github.com/${GH_REPO}/releases/download/${TAG_NAME}"
+          # Values are collected into standalone assignments: inside inline
+          # command substitutions bash would swallow their failures even with
+          # set -e, and a malformed manifest must abort before it uploads.
+          notes="$(gh release view "${TAG_NAME}" --json body --jq .body | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')"
           # The URL must name the exact uploaded asset, so take it from the
           # downloaded `.sig` file's real name (the bundle name plus .sig)
           # instead of assuming the bundler's version-in-file-name scheme.
@@ -168,13 +172,14 @@ jobs:
             rm -rf "$dir"
             printf '"%s": { "signature": "%s", "url": "%s/%s" }' "$2" "$signature" "$release_url" "$asset"
           }
+          linux="$(collect 'Sandy_*_amd64.AppImage' 'linux-x86_64')"
+          darwin="$(collect 'Sandy.app.tar.gz' 'darwin-aarch64')"
+          windows="$(collect 'Sandy_*_x64-setup.exe' 'windows-x86_64')"
           {
-            printf '{\n  "version": "%s",\n  "notes": %s,\n  "platforms": {\n' \
-              "$version" \
-              "$(gh release view "${TAG_NAME}" --json body --jq .body | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')"
-            printf '    %s,\n' "$(collect 'Sandy_*_amd64.AppImage' 'linux-x86_64')"
-            printf '    %s,\n' "$(collect 'Sandy.app.tar.gz' 'darwin-aarch64')"
-            printf '    %s\n' "$(collect 'Sandy_*_x64-setup.exe' 'windows-x86_64')"
+            printf '{\n  "version": "%s",\n  "notes": %s,\n  "platforms": {\n' "$version" "$notes"
+            printf '    %s,\n' "$linux"
+            printf '    %s,\n' "$darwin"
+            printf '    %s\n' "$windows"
             printf '  }\n}\n'
           } > latest.json
           python3 -m json.tool latest.json >/dev/null
