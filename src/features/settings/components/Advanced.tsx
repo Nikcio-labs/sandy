@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { clearDebugLog, readDebugLog, type DebugLogEntry } from "../../../lib/catalog";
+import { clearDebugLog, readDebugLog, debugLogDir, type DebugLogEntry } from "../../../lib/catalog";
 import { copyText } from "../../../common/lib/clipboard";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
@@ -45,6 +45,7 @@ export default function Advanced() {
   const [notice, setNotice] = useState("");
   const [filter, setFilter] = useState<LevelFilter>("all");
   const [copied, setCopied] = useState(false);
+  const [copiedDir, setCopiedDir] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -101,6 +102,16 @@ export default function Advanced() {
       await copyText(log);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setNotice("Could not access the clipboard. Select the log text and copy it manually.");
+    }
+  };
+
+  const copyLogDir = async () => {
+    try {
+      await copyText(await debugLogDir());
+      setCopiedDir(true);
+      setTimeout(() => setCopiedDir(false), 2000);
     } catch {
       setNotice("Could not access the clipboard. Select the log text and copy it manually.");
     }
@@ -216,6 +227,15 @@ export default function Advanced() {
               disabled={loading || !entries.length}
             >
               {copied ? "Copied" : "Copy log"}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => void copyLogDir()}
+              disabled={loading}
+            >
+              <Icon name="clipboard" size={16} />
+              {copiedDir ? "Copied" : "Copy log folder"}
             </button>
             <button type="button" className="ghost" onClick={() => void clear()} disabled={loading || !entries.length}>
               <Icon name="trash" size={16} />
