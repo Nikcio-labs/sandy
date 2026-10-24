@@ -21,7 +21,6 @@ use std::sync::Mutex;
 
 mod redact;
 
-
 /// Hard on-disk ceiling for the log file.
 pub(crate) const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
 
@@ -258,9 +257,6 @@ pub(crate) fn write_record(
     let record = LogRecord {
         timestamp: rfc3339_now(),
         kind,
-        // Redaction happens here, at the single choke point every record
-        // flows through, so secrets never reach the log file in the first
-        // place rather than being cleaned up in whatever reads it later.
         summary: redact::redact(&sanitize(summary, 400)),
         detail: detail.map(|detail| redact::redact(&sanitize(detail, 4000))),
         outcome,

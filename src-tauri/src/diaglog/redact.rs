@@ -1,6 +1,7 @@
 //! Credential masking applied to every record before it reaches the log
-//! file, so no read surface — the in-app viewer, the on-disk file, or a
-//! copy of either — can leak a secret the app logged.
+//! file: because redaction happens at write time, no read surface — the
+//! in-app viewer, the on-disk file, or a copy of either — can see a secret
+//! the app logged.
 //!
 //! Each pattern is kept narrow (long, prefix-anchored, or key-labelled) so
 //! ordinary CLI output — URLs, hashes, image digests — is not mangled.
@@ -22,7 +23,10 @@ const RULE_PATTERNS: &[(&str, &str)] = &[
     // by the key=value rule when they appear labelled).
     (r"\bAKIA[0-9A-Z]{16}\b", REDACTED),
     // JWTs: three base64url segments starting with the standard header prefix.
-    (r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", REDACTED),
+    (
+        r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+",
+        REDACTED,
+    ),
     // Authorization header values, including "Bearer <token>" and
     // "Basic <creds>" scheme+token pairs; redact the whole header value.
     (r"(?i)\b(authorization)\s*:\s*[^\r\n]*", "$1: [redacted]"),
@@ -43,18 +47,16 @@ fn rules() -> &'static Vec<Rule> {
     RULES.get_or_init(|| {
         RULE_PATTERNS
             .iter()
-            // A malformed static pattern is caught by the unit tests; dropping
-            // it here keeps logging alive rather than panicking mid-record.
             .filter_map(|(pattern, replacement)| {
+                // A malformed static pattern is caught by the unit tests;
+                // dropping it keeps logging alive rather than panicking
+                // mid-record.
                 Regex::new(pattern).ok().map(|regex| (regex, *replacement))
             })
             .collect()
     })
 }
 
-/// Masks token-like substrings (credential prefixes, JWTs, auth headers,
-/// labelled secrets) with a fixed placeholder while leaving the rest of the
-/// text — and its line structure — intact.
 pub(super) fn redact(text: &str) -> String {
     let mut result = text.to_string();
     for (regex, replacement) in rules() {
@@ -88,14 +90,16 @@ mod tests {
 
     #[test]
     fn jwt_and_auth_headers_are_masked() {
-        let jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+        let jwt =
+            "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
         assert_eq!(redact(jwt), "[redacted]");
         assert_eq!(
             redact("Authorization: Bearer abcdefghijklmnop"),
             "Authorization: [redacted]"
         );
         assert_eq!(redact("Bearer abcdefghij"), "Bearer [redacted]");
-        // The header rule wins over whatever follows on the same line.
+        // The header rule consumes the rest of the line, so a following
+        // line's labelled secret is only masked by its own rule.
         assert_eq!(
             redact("authorization: Basic dXNlcjpwYXNz\ntoken=abcdefgh"),
             "authorization: [redacted]\ntoken=[redacted]"
@@ -105,8 +109,14 @@ mod tests {
     #[test]
     fn labelled_secrets_are_masked_including_compound_labels() {
         assert_eq!(redact("token=abcdefgh"), "token=[redacted]");
-        assert_eq!(redact("client_secret: hunter22"), "client_secret: [redacted]");
-        assert_eq!(redact("access_token = \"abcdefgh\""), "access_token = \"[redacted]\"");
+        assert_eq!(
+            redact("client_secret: hunter22"),
+            "client_secret: [redacted]"
+        );
+        assert_eq!(
+            redact("access_token = \"abcdefgh\""),
+            "access_token = \"[redacted]\""
+        );
         assert_eq!(
             redact("https://registry.example/v2/?token=abcdefgh&scope=repo"),
             "https://registry.example/v2/?token=[redacted]&scope=repo"
@@ -124,7 +134,7 @@ mod tests {
             redact("GET https://hub.docker.com/v2/repositories/library/nginx"),
             "GET https://hub.docker.com/v2/repositories/library/nginx"
         );
-        // Short values stay: the minimum length avoids mangling ordinary words.
+        // The minimum length keeps short ordinary words intact.
         assert_eq!(redact("token=abc"), "token=abc");
     }
 }

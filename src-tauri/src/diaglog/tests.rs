@@ -158,10 +158,7 @@ fn recorded_secrets_are_redacted_before_they_reach_the_file() {
     assert!(log.contains("[redacted]"), "{log}");
     // The line stays valid JSON after redaction.
     let value: serde_json::Value = serde_json::from_str(log.trim()).unwrap();
-    assert_eq!(
-        value["summary"],
-        "sbx login --token [redacted]"
-    );
+    assert_eq!(value["summary"], "sbx login --token [redacted]");
 }
 
 #[test]
