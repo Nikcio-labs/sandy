@@ -15,6 +15,8 @@ use tauri_plugin_window_state::{Builder as WindowStateBuilder, StateFlags};
 #[allow(clippy::expect_used, clippy::panic)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .invoke_handler(commands::handlers())
         // The main window is created hidden and revealed from React after the
         // splash is dismissed; the plugin's VISIBLE flag would show() it as

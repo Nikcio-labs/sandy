@@ -30,25 +30,37 @@ pub use source_policy::allow_source;
 
 use std::sync::Mutex;
 
+use tauri_plugin_dialog::DialogExt;
+
 use self::validation::{path_string, strip_verbatim};
 
 static LIBRARY: Mutex<()> = Mutex::new(());
 static SOURCE_POLICY: Mutex<()> = Mutex::new(());
 
-pub fn pick_workspace() -> Result<Option<String>, String> {
-    rfd::FileDialog::new()
+pub fn pick_workspace(app: &tauri::AppHandle) -> Result<Option<String>, String> {
+    let path = app
+        .dialog()
+        .file()
         .set_title("Choose the sandbox workspace")
-        .pick_folder()
-        .map(|path| path_string(&strip_verbatim(&path)))
-        .transpose()
+        .blocking_pick_folder();
+    path.map(|path| match path.into_path() {
+        Ok(path) => path_string(&strip_verbatim(&path)),
+        Err(error) => Err(error.to_string()),
+    })
+    .transpose()
 }
 
-pub fn pick_template_path() -> Result<Option<String>, String> {
-    rfd::FileDialog::new()
+pub fn pick_template_path(app: &tauri::AppHandle) -> Result<Option<String>, String> {
+    let path = app
+        .dialog()
+        .file()
         .set_title("Save the environment template outside your workspace")
         .set_file_name("sbxenv.yaml")
         .add_filter("Environment YAML", &["yaml", "yml"])
-        .save_file()
-        .map(|path| path_string(&strip_verbatim(&path)))
-        .transpose()
+        .blocking_save_file();
+    path.map(|path| match path.into_path() {
+        Ok(path) => path_string(&strip_verbatim(&path)),
+        Err(error) => Err(error.to_string()),
+    })
+    .transpose()
 }
