@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { clearDebugLog, readDebugLog, debugLogDir, type DebugLogEntry } from "../../../lib/catalog";
 import { copyText } from "../../../common/lib/clipboard";
+import { redactSecrets } from "../../../common/lib/redact";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 
@@ -100,7 +101,9 @@ export default function Advanced() {
   const copyLog = async () => {
     if (!log) return;
     try {
-      await copyText(log);
+      // The clipboard is readable by other apps, so it gets a redacted copy
+      // rather than the raw log shown in the view or persisted on disk.
+      await copyText(redactSecrets(log));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
