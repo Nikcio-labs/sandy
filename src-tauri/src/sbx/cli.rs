@@ -111,7 +111,7 @@ pub fn is_sbx_installed() -> bool {
 /// path only, so progress noise never pollutes parsed output).
 pub fn run_capture(args: &[&str]) -> Result<String, String> {
     let result = run_capture_inner(args);
-    crate::diaglog::cli_call(args, &result);
+    crate::logging::cli_call(args, &result);
     result
 }
 
@@ -205,6 +205,6 @@ pub fn run_capture_lines(args: &[&str], line: &mut dyn FnMut(&str)) -> Result<St
             stderr_tail.trim()
         )),
     };
-    crate::diaglog::cli_call(args, &outcome);
+    crate::logging::cli_call(args, &outcome);
     outcome
 }

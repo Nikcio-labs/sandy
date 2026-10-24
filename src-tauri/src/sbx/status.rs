@@ -20,7 +20,7 @@ fn diagnose_report() -> Result<Vec<DiagnoseCheck>, String> {
         })?;
         Ok(report.checks)
     })();
-    crate::diaglog::cli_call_with(&["diagnose", "--format", "json"], &result);
+    crate::logging::cli_call_with(&["diagnose", "--format", "json"], &result);
     result
 }
 
@@ -207,7 +207,7 @@ fn daemon_running() -> Result<bool, String> {
             })?;
         Ok(out.status.success() && status.eq_ignore_ascii_case("running"))
     })();
-    crate::diaglog::cli_call_with(&["daemon", "status", "--format", "json"], &result);
+    crate::logging::cli_call_with(&["daemon", "status", "--format", "json"], &result);
     result
 }
 

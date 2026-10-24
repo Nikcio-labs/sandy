@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use tauri::Manager;
 
-use crate::{catalog, diaglog, environments, sbx, setup};
+use crate::{catalog, environments, logging, sbx, setup};
 
 /// Log every Tauri command outcome (command name, ok/error, and the error
 /// text on failure). Successes carry no detail; the domain loggers already
@@ -20,15 +20,7 @@ where
     E: std::fmt::Display,
 {
     let result = work.await;
-    match &result {
-        Ok(_) => crate::diaglog::write_record("command", command, None, Some("ok")),
-        Err(error) => crate::diaglog::write_record(
-            "command",
-            command,
-            Some(&error.to_string()),
-            Some("error"),
-        ),
-    }
+    logging::command_call(command, &result);
     result
 }
 
@@ -270,7 +262,7 @@ async fn pick_template_path(app: tauri::AppHandle) -> Result<Option<String>, Str
 async fn read_debug_log(app: tauri::AppHandle) -> Result<String, String> {
     let root = data_dir(&app)?;
     blocking(move || {
-        let path = diaglog::log_path(&root);
+        let path = logging::log_path(&root);
         std::fs::read_to_string(&path).or_else(|error| match error.kind() {
             // A missing file is an empty log, not a failure: nothing has
             // been logged yet (or the user cleared it).
@@ -294,7 +286,7 @@ async fn debug_log_dir(app: tauri::AppHandle) -> Result<String, String> {
 async fn clear_debug_log(app: tauri::AppHandle) -> Result<(), String> {
     let root = data_dir(&app)?;
     blocking(move || {
-        let path = diaglog::log_path(&root);
+        let path = logging::log_path(&root);
         match std::fs::remove_file(&path) {
             Ok(()) => Ok(()),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),

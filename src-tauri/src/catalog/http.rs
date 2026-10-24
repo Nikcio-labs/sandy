@@ -61,7 +61,7 @@ impl Api {
             return Ok((body.clone(), digest.clone()));
         }
         let result = self.request_uncached(url, token);
-        crate::diaglog::http_call("GET", url, &result);
+        crate::logging::http_call("GET", url, &result);
         let (body, digest) = result?;
         let mut entries = cache.lock().map_err(|e| e.to_string())?;
         if entries.len() > 1024 {

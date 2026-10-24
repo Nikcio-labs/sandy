@@ -1,7 +1,7 @@
 mod catalog;
 mod commands;
-mod diaglog;
 mod environments;
+mod logging;
 mod progress;
 mod sbx;
 mod setup;
@@ -34,46 +34,57 @@ pub fn run() {
         )
         .setup(|app| {
             // The plugin is registered here instead of via the builder's
-            // `.plugin()` chain because the split API needs the app handle to
-            // attach the global logger, and a logging failure must degrade to
-            // stdout-only rather than abort startup the way `plugin()`
-            // propagation would.
-            let dispatch = fern::Dispatch::new().chain(fern::Output::call(|record| {
-                let kind = match record.level() {
-                    log::Level::Error => "error",
-                    log::Level::Warn | log::Level::Info => "info",
-                    log::Level::Debug | log::Level::Trace => "info",
-                };
-                match record.level() {
-                    log::Level::Error => {
-                        diaglog::write_record(kind, &record.args().to_string(), None, Some("error"))
-                    }
-                    _ => diaglog::write_record(kind, &record.args().to_string(), None, None),
-                }
-            }));
+            // `.plugin()` chain because attaching the global logger needs the
+            // app handle, and a logging failure must degrade to stdout-only
+            // rather than abort startup the way `plugin()` propagation would.
+            // The diagnostic file target must match `read_debug_log` and
+            // `clear_debug_log`, which resolve the app data dir themselves:
+            // the plugin's own LogDir lives elsewhere (and differs per OS),
+            // so the file is pinned here next to providers.json and the
+            // template library.
+            let file_targets = app.path().app_data_dir().map_or_else(
+                |_| Vec::new(),
+                |root| {
+                    vec![
+                        Target::new(TargetKind::Folder {
+                            path: root,
+                            file_name: Some(logging::LOG_STEM.into()),
+                        })
+                        // JSON Lines, one object per record, parsed by the
+                        // Settings log viewer; the plugin's default format
+                        // is human-readable prose.
+                        .format(|out, message, record| {
+                            out.finish(format_args!(
+                                "{}",
+                                logging::file_line(
+                                    record.level(),
+                                    record.target(),
+                                    &message.to_string()
+                                )
+                            ))
+                        }),
+                    ]
+                },
+            );
+            let mut targets = vec![Target::new(TargetKind::Stdout)];
+            targets.extend(file_targets);
             let log_builder = tauri_plugin_log::Builder::new()
-                .targets([
-                    Target::new(TargetKind::Stdout),
-                    Target::new(TargetKind::Dispatch(dispatch)),
-                ])
-                .level(log::LevelFilter::Info);
-            // Losing the plugin's logs must never break the app; at worst the
-            // global logger is not installed and stdout still shows records
-            // until the global logger attaches.
+                .targets(targets)
+                // Dependency crates (reqwest, hyper, ...) log at Info and
+                // would bury the app's own records without this.
+                .level(log::LevelFilter::Info)
+                .max_file_size(10 * 1024 * 1024);
             if let Ok((plugin, max_level, logger)) = log_builder.split(app.handle()) {
                 app.handle().plugin(plugin).ok();
                 let _ = tauri_plugin_log::attach_logger(max_level, logger);
             }
-            // The diagnostic log lives next to providers.json and the template
-            // library. Its path is fixed once, before any command can run.
-            if let Ok(root) = app.path().app_data_dir() {
-                diaglog::init(diaglog::log_path(&root));
-                diaglog::info("Sandy started");
-            } else {
-                // Release builds on Windows have no console, so this warning
-                // is only visible on other platforms or in dev runs.
+            // Only after the logger is attached can a warning reach stdout;
+            // release builds on Windows have no console, so it may still be
+            // invisible there.
+            if app.path().app_data_dir().is_err() {
                 log::warn!("app data dir unavailable; diagnostic log disabled");
             }
+            log::info!(target: "app", "Sandy started");
             Ok(())
         })
         // `run()` returns () and there is nowhere left to report a fatal
