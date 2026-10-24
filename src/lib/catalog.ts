@@ -35,6 +35,16 @@ export interface Catalog {
   warnings: string[];
 }
 
+/** Catalog discovery preferences persisted to settings.json by the backend. */
+export interface CatalogSettings {
+  /**
+   * Read GitHub tags and branches through the git smart-HTTP protocol
+   * (github.com) instead of the REST API (api.github.com), whose anonymous
+   * quota is 60 requests/hour. On by default.
+   */
+  discovery_use_git_protocol: boolean;
+}
+
 export type KitArguments = Record<string, Record<string, string>>;
 
 // Same dedupe as sandbox.ts's checkSetup: StrictMode double mounts must not
@@ -49,6 +59,11 @@ export const discoverKits = (providers: Provider[], refresh?: boolean) =>
     providers,
     ...(refresh ? { refresh: true } : {}),
   });
+export const getCatalogSettings = shareInFlight(() =>
+  invoke<CatalogSettings>("get_catalog_settings"),
+);
+export const saveCatalogSettings = (settings: CatalogSettings) =>
+  invoke<CatalogSettings>("save_catalog_settings", { settings });
 export const pickWorkspace = () => invoke<string | null>("pick_workspace");
 export const pickTemplatePath = () => invoke<string | null>("pick_template_path");
 

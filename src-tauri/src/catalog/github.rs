@@ -1,5 +1,5 @@
-//! GitHub provider discovery: tags, repository trees, and raw kit
-//! descriptors fetched over the public HTTPS APIs.
+//! GitHub provider discovery: refs via git smart-HTTP, the repository tree
+//! via the REST API, and raw kit descriptors from raw.githubusercontent.com.
 
 use std::collections::HashSet;
 
@@ -9,25 +9,46 @@ use super::descriptor::{comment_descriptor, option_from_descriptor, schema_versi
 use super::http::Api;
 use super::store::github_repository;
 use super::types::{Catalog, Provider};
-use super::{METADATA_BATCH, encoded, encoded_path, repository_name};
+use super::{GitMode, METADATA_BATCH, encoded, encoded_path, repository_name};
 
-pub(super) fn discover_github(api: &Api, provider: &Provider) -> Result<Catalog, String> {
+pub(super) fn discover_github(
+    api: &Api,
+    mode: GitMode,
+    provider: &Provider,
+) -> Result<Catalog, String> {
     let repository = github_repository(&provider.repository)?;
-    let commit = if provider.reference.is_empty() {
-        let tags = api.github_tags(&repository)?;
-        if let Some(sha) = tags.first().and_then(|tag| tag["commit"]["sha"].as_str()) {
-            sha.to_string()
-        } else {
-            let metadata = api.json(&format!("{}/repos/{repository}", api.github))?;
-            let branch = metadata["default_branch"]
-                .as_str()
-                .ok_or("GitHub repository has no default branch")?;
-            github_commit(api, &repository, branch)?
+    let commit = match mode {
+        // The ref advertisement is the only github.com call discovery needs:
+        // tags, the default branch, and manual reference resolution all come
+        // from one pkt-line response.
+        GitMode::Git => {
+            let refs = api.git_refs(&repository)?;
+            if provider.reference.is_empty() {
+                refs.latest_commit()?
+            } else {
+                refs.resolve(&provider.reference)?
+            }
         }
-    } else {
-        // A manual branch, tag, or commit is independent of tag enumeration.
-        // Resolve it directly even when listing tags is unavailable or rate-limited.
-        github_commit(api, &repository, &provider.reference)?
+        // REST mode keeps the per-tag pagination (up to one request per 100
+        // tags) against api.github.com's much tighter anonymous quota.
+        GitMode::Rest => {
+            if provider.reference.is_empty() {
+                let tags = api.github_tags(&repository)?;
+                if let Some(sha) = tags.first().and_then(|tag| tag["commit"]["sha"].as_str()) {
+                    sha.to_string()
+                } else {
+                    let metadata = api.json(&format!("{}/repos/{repository}", api.github))?;
+                    let branch = metadata["default_branch"]
+                        .as_str()
+                        .ok_or("GitHub repository has no default branch")?;
+                    github_commit(api, &repository, branch)?
+                }
+            } else {
+                // A manual branch, tag, or commit is independent of tag enumeration.
+                // Resolve it directly even when listing tags is unavailable or rate-limited.
+                github_commit(api, &repository, &provider.reference)?
+            }
+        }
     };
     let tree = api.json(&format!(
         "{}/repos/{repository}/git/trees/{commit}?recursive=1",

@@ -14,6 +14,10 @@ use serde_json::Value;
 pub(super) struct Api {
     pub(super) client: Client,
     pub(super) github: String,
+    /// Git smart-HTTP base (github.com), a separate rate domain from the
+    /// REST API: ref listings here do not consume the 60 req/hour anonymous
+    /// REST quota.
+    pub(super) github_git: String,
     pub(super) raw: String,
 }
 
@@ -27,6 +31,7 @@ impl Api {
                 .build()
                 .map_err(|e| e.to_string())?,
             github: "https://api.github.com".into(),
+            github_git: "https://github.com".into(),
             raw: "https://raw.githubusercontent.com".into(),
         })
     }
@@ -108,6 +113,18 @@ impl Api {
             return Err(format!("Metadata from {url} exceeds 12 MiB"));
         }
         Ok((body, digest))
+    }
+
+    /// Fetch a git smart-HTTP v0 ref advertisement. The 5-minute cache
+    /// applies here too, so repeated discovery runs cost one github.com
+    /// request per repository per window.
+    pub(super) fn git_refs(&self, repository: &str) -> Result<super::git::GitRefs, String> {
+        let url = format!(
+            "{}/{repository}.git/info/refs?service=git-upload-pack",
+            self.github_git
+        );
+        let (body, _) = self.request(&url, None)?;
+        super::git::parse_ref_advertisement(&body).map_err(|e| format!("{url}: {e}"))
     }
 
     pub(super) fn github_tags(&self, repository: &str) -> Result<Vec<Value>, String> {
