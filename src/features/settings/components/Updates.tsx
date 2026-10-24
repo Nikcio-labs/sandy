@@ -4,6 +4,10 @@ import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 import { useUpdater } from "../../../common/hooks/useUpdater";
 
+// Settings mounts and unmounts this card on every navigation; the automatic
+// check runs once per app session, like the startup setup check.
+let checkedThisSession = false;
+
 /**
  * Settings → Updates: checks GitHub Releases for a newer Sandy, downloads it
  * with a progress bar, and restarts into the new version. The updater plugin
@@ -32,12 +36,11 @@ export default function Updates() {
   // single-shot per component instance.
   const checkedOnMount = useRef(false);
   useEffect(() => {
-    if (checkedOnMount.current) return;
+    if (checkedOnMount.current || checkedThisSession) return;
     checkedOnMount.current = true;
+    checkedThisSession = true;
     check();
-    // Runs once: the automatic check happens when Settings opens, and later
-    // checks go through the visible button.
-  }, []);
+  }, [check]);
 
   const progress =
     state.step === "downloading" && state.total !== null
@@ -45,7 +48,11 @@ export default function Updates() {
       : null;
 
   return (
-    <section className="catalog-providers" aria-labelledby={`${id}-title`}>
+    <section
+      className="catalog-providers"
+      aria-labelledby={`${id}-title`}
+      aria-busy={state.step === "checking"}
+    >
       <div className="catalog-section-heading">
         <div>
           <h2 id={`${id}-title`}>Updates</h2>
@@ -102,7 +109,7 @@ export default function Updates() {
 
       {state.step === "downloading" && (
         <div className="update-progress">
-          <p className="setup-progress-label" role="status">
+          <p className="setup-progress-label">
             {progress !== null ? `Downloading… ${progress}%` : "Downloading…"}
           </p>
           <div

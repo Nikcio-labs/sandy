@@ -108,7 +108,8 @@ jobs:
           # The updater installs the .app.tar.gz, not the .dmg.
           find src-tauri/target -path '*release/bundle*' -name '*.app.tar.gz' -exec cp {} artifacts/ \;
           find src-tauri/target -path '*release/bundle*' -name '*.app.tar.gz.sig' -exec cp {} artifacts/ \;
-          find src-tauri/target -path '*release/bundle*' -name '*.app' -maxdepth 0 -exec cp -R {} artifacts/ \;
+          # The bare .app directory stays out on purpose: gh release upload
+          # cannot upload directories, and users install from the .dmg.
 
       - name: Prepare artifacts (Windows)
         if: runner.os == 'Windows'
@@ -130,7 +131,9 @@ jobs:
 
   # The updater endpoint is a static JSON file next to the installers. Each
   # entry points at the platform asset on this release together with the
-  # contents of its `.sig` file (the signature itself, not a path).
+  # contents of its `.sig` file (the signature itself, not a path). The
+  # manifest must upload cleanly before publish runs: an empty signature or a
+  # missing asset would hand users an update that cannot be verified.
   manifest:
     name: Build updater manifest
     needs: sandy
@@ -138,29 +141,39 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.sha }}
-
       - name: Create latest.json
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ inputs.tag }}
+        shell: bash
         run: |
+          set -euo pipefail
           version="${TAG_NAME#v}"
           release_url="https://github.com/${GH_REPO}/releases/download/${TAG_NAME}"
+          # The URL must name the exact uploaded asset, so take it from the
+          # downloaded `.sig` file's real name (the bundle name plus .sig)
+          # instead of assuming the bundler's version-in-file-name scheme.
           collect() {
-            local asset="$1"
-            local signature
-            signature="$(gh release download "${TAG_NAME}" --pattern "${asset}.sig" --output - | tr -d '\n')"
+            local pattern="$1"
+            local dir signature asset
+            dir="$(mktemp -d)"
+            gh release download "${TAG_NAME}" --pattern "${pattern}.sig" --dir "$dir"
+            signature="$(tr -d '\n' < "$dir"/*.sig)"
+            if [ -z "$signature" ]; then
+              echo "No signature downloaded for ${pattern}" >&2
+              exit 1
+            fi
+            asset="$(basename "$dir"/*.sig .sig)"
+            rm -rf "$dir"
             printf '"%s": { "signature": "%s", "url": "%s/%s" }' "$2" "$signature" "$release_url" "$asset"
           }
           {
-            printf '{\n  "version": "%s",\n  "platforms": {\n' "$version"
+            printf '{\n  "version": "%s",\n  "notes": %s,\n  "platforms": {\n' \
+              "$version" \
+              "$(gh release view "${TAG_NAME}" --json body --jq .body | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')"
             printf '    %s,\n' "$(collect 'Sandy_*_amd64.AppImage' 'linux-x86_64')"
-            printf '    %s,\n' "$(collect 'Sandy_*_aarch64.app.tar.gz' 'darwin-aarch64')"
+            printf '    %s,\n' "$(collect 'Sandy.app.tar.gz' 'darwin-aarch64')"
             printf '    %s\n' "$(collect 'Sandy_*_x64-setup.exe' 'windows-x86_64')"
             printf '  }\n}\n'
           } > latest.json

@@ -34,7 +34,9 @@ export async function runUpdateCheck(
   onState({ step: "checking" });
   let update;
   try {
-    update = await check();
+    // Without a timeout a hung connection would leave the check spinner up
+    // with no retry path.
+    update = await check({ timeout: 30_000 });
   } catch (error) {
     onError(toUpdateError(error));
     return false;
@@ -43,16 +45,23 @@ export async function runUpdateCheck(
     onState({ step: "idle" });
     return false;
   }
+  // One download per update object: a second click before the state flip
+  // renders would start a concurrent downloadAndInstall on the same resource.
+  let started = false;
   const download = async () => {
+    if (started) return;
+    started = true;
     onState({ step: "downloading", downloaded: 0, total: null });
     try {
       let downloaded = 0;
+      let total: number | null = null;
       await update.downloadAndInstall((event) => {
         if (event.event === "Started") {
-          onState({ step: "downloading", downloaded: 0, total: event.data.contentLength ?? null });
+          total = event.data.contentLength ?? null;
+          onState({ step: "downloading", downloaded: 0, total });
         } else if (event.event === "Progress") {
           downloaded += event.data.chunkLength;
-          onState({ step: "downloading", downloaded, total: null });
+          onState({ step: "downloading", downloaded, total });
         } else {
           onState({ step: "installing" });
         }
@@ -61,8 +70,15 @@ export async function runUpdateCheck(
         step: "ready",
         version: update.version,
         restart: async () => {
-          const { relaunch } = await import("@tauri-apps/plugin-process");
-          await relaunch();
+          try {
+            const { relaunch } = await import("@tauri-apps/plugin-process");
+            await relaunch();
+          } catch (error) {
+            // Relaunching is the user's only path into the new version, and
+            // on Windows the installer already exited the app, so a failure
+            // here can only be reported, never retried from this UI.
+            onError({ message: String(error), canRetry: false });
+          }
         },
       });
     } catch (error) {

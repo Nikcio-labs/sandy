@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { runUpdateCheck, type UpdateError, type UpdateState } from "../../lib/updater";
 
 export interface UpdaterHook {
   state: UpdateState;
   error: UpdateError | null;
-  /** True while a check or download is running, so buttons can disable. */
+  /** True while a check is running, so the check button can disable. */
   busy: boolean;
   check: () => void;
   dismiss: () => void;
@@ -30,6 +30,17 @@ export function useUpdater(): UpdaterHook {
       if (pending.current) setState(pending.current);
     });
   }, []);
+
+  // Dropping the card mid-download must not leave a queued rAF updating
+  // state after unmount; the download itself keeps running by design, since
+  // there is no cancel API and interrupting an install would leave a
+  // half-applied update.
+  useEffect(
+    () => () => {
+      if (frame.current !== null) cancelAnimationFrame(frame.current);
+    },
+    [],
+  );
 
   const check = useCallback(() => {
     if (busy) return;
