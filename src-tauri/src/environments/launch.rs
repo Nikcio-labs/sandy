@@ -32,6 +32,7 @@ pub(super) trait SandboxRuntime {
     fn start(&mut self, name: &str) -> Result<String, String>;
     fn create_streaming(
         &mut self,
+        dir: Option<&Path>,
         args: &[&str],
         line: &mut dyn FnMut(&str),
     ) -> Result<String, String>;
@@ -56,10 +57,14 @@ impl SandboxRuntime for SbxRuntime {
 
     fn create_streaming(
         &mut self,
+        dir: Option<&Path>,
         args: &[&str],
         line: &mut dyn FnMut(&str),
     ) -> Result<String, String> {
-        crate::sbx::run_capture_lines(args, line)
+        match dir {
+            Some(dir) => crate::sbx::run_capture_lines_in(dir, args, line),
+            None => crate::sbx::run_capture_lines(args, line),
+        }
     }
 }
 
@@ -98,12 +103,32 @@ pub(super) fn launch_with(
     }
     // An empty workspace (saved or override) launches a mountless sandbox,
     // isolated from the host file system: no directory checks apply.
-    let workspace = match workspace.as_deref().unwrap_or(&saved.workspace) {
-        "" => None,
-        path => Some(workspace_path(path)?),
-    };
+    // Registered templates may record a relative workspace (".", "./src", …):
+    // sbx resolves it from the declaring file's directory, so the value
+    // passes through instead of being turned into an absolute path here.
+    let workspace_value = workspace.unwrap_or_else(|| saved.workspace.clone());
+    let registered_launch = record.registered;
     let original = canonicalize(&record.path).map_err(|e| format!("{}: {e}", record.path))?;
-    if let Some(workspace) = workspace.as_deref() {
+    let template_directory = original
+        .parent()
+        .ok_or_else(|| format!("{} has no parent directory", record.path))?;
+    let workspace = if registered_launch {
+        // The file is authoritative for a registered template: sbx resolves
+        // relative workspaces from this directory, and sbx itself protects a
+        // file mounted at a workspace root (read-only) while refusing deeper
+        // placement. Sandy only validates an absolute workspace's shape.
+        match workspace_value.trim() {
+            "" => None,
+            path if Path::new(path).is_absolute() => Some(workspace_path(path)?),
+            _ => None,
+        }
+    } else {
+        match workspace_value.trim() {
+            "" => None,
+            path => Some(workspace_path(path)?),
+        }
+    };
+    if !registered_launch && let Some(workspace) = workspace.as_deref() {
         ensure_outside(&original, workspace)?;
     }
     let providers = get_providers(root)?;
@@ -145,59 +170,78 @@ pub(super) fn launch_with(
             ));
         }
     }
-    // Use an immutable per-launch snapshot, preserving the original file and the
-    // sbx environment journal's file identity for later env commands.
-    let directory = root.join("launches").join(unique_id());
-    let mut ancestor = directory.as_path();
-    while !ancestor.exists() {
-        ancestor = ancestor
-            .parent()
-            .ok_or("Launch directory has no existing parent")?;
-    }
-    if let Some(workspace) = workspace.as_deref() {
-        ensure_outside(&canonicalize(ancestor)?, workspace)?;
-    }
-    std::fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
-    let path = canonicalize(directory)?.join("sbxenv.yaml");
-    if let Some(workspace) = workspace.as_deref() {
-        ensure_outside(&path, workspace)?;
-    }
-    // Edit the decoded document so manually added environment settings survive.
-    // Removing workspace launches a mountless sandbox with no host bind mount.
-    let mut document: serde_yaml_ng::Value =
-        serde_yaml_ng::from_str(&saved.content).map_err(|e| e.to_string())?;
-    document["name"] = serde_yaml_ng::Value::String(name.clone());
-    match (&environment.workspace, workspace) {
-        (Some(Workspace::Object { path: _, clone }), Some(workspace)) => {
-            document["workspace"] = serde_yaml_ng::to_value(Workspace::Object {
-                path: escape(&path_string(workspace.as_path())?),
-                clone: *clone,
-            })
-            .map_err(|e| e.to_string())?;
+    // Registered templates run against their original file from its own
+    // directory: relative kit and workspace paths resolve from the declaring
+    // file's directory (workspace: "." is the file's folder), so copying the
+    // YAML into Sandy's storage would silently retarget them. The file is the
+    // user's, which also keeps it the single source of truth.
+    let (create_directory, create_path) = if registered_launch {
+        (Some(template_directory.to_path_buf()), original)
+    } else {
+        // Use an immutable per-launch snapshot, preserving the original file
+        // and the sbx environment journal's file identity for later env
+        // commands.
+        let directory = root.join("launches").join(unique_id());
+        let mut ancestor = directory.as_path();
+        while !ancestor.exists() {
+            ancestor = ancestor
+                .parent()
+                .ok_or("Launch directory has no existing parent")?;
         }
-        (Some(_), Some(workspace)) => {
-            document["workspace"] =
-                serde_yaml_ng::Value::String(escape(&path_string(workspace.as_path())?));
+        if let Some(workspace) = workspace.as_deref() {
+            ensure_outside(&canonicalize(ancestor)?, workspace)?;
         }
-        (Some(_), None) => {
-            document
-                .as_mapping_mut()
-                .ok_or("Environment file is not a mapping")?
-                .remove("workspace");
+        std::fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
+        let path = canonicalize(directory)?.join("sbxenv.yaml");
+        if let Some(workspace) = workspace.as_deref() {
+            ensure_outside(&path, workspace)?;
         }
-        // A mountless template cannot gain a workspace without re-saving:
-        // mountless is the recorded isolation choice for this launch.
-        (None, _) => {}
-    }
-    let content = serde_yaml_ng::to_string(&document).map_err(|e| e.to_string())?;
-    let mut file = std::fs::OpenOptions::new()
-        .create_new(true)
-        .write(true)
-        .open(&path)
-        .map_err(|e| e.to_string())?;
-    file.write_all(content.as_bytes())
-        .and_then(|_| file.sync_all())
-        .map_err(|e| e.to_string())?;
+        (None, path)
+    };
+    let path = match create_directory {
+        None => {
+            // Edit the decoded document so manually added environment settings survive.
+            // Removing workspace launches a mountless sandbox with no host bind mount.
+            let mut document: serde_yaml_ng::Value =
+                serde_yaml_ng::from_str(&saved.content).map_err(|e| e.to_string())?;
+            document["name"] = serde_yaml_ng::Value::String(name.clone());
+            match (&environment.workspace, workspace) {
+                (Some(Workspace::Object { path: _, clone }), Some(workspace)) => {
+                    document["workspace"] = serde_yaml_ng::to_value(Workspace::Object {
+                        path: escape(&path_string(workspace.as_path())?),
+                        clone: *clone,
+                    })
+                    .map_err(|e| e.to_string())?;
+                }
+                (Some(_), Some(workspace)) => {
+                    document["workspace"] =
+                        serde_yaml_ng::Value::String(escape(&path_string(workspace.as_path())?));
+                }
+                (Some(_), None) => {
+                    document
+                        .as_mapping_mut()
+                        .ok_or("Environment file is not a mapping")?
+                        .remove("workspace");
+                }
+                // A mountless template cannot gain a workspace without re-saving:
+                // mountless is the recorded isolation choice for this launch.
+                (None, _) => {}
+            }
+            let content = serde_yaml_ng::to_string(&document).map_err(|e| e.to_string())?;
+            let mut file = std::fs::OpenOptions::new()
+                .create_new(true)
+                .write(true)
+                .open(&create_path)
+                .map_err(|e| e.to_string())?;
+            file.write_all(content.as_bytes())
+                .and_then(|_| file.sync_all())
+                .map_err(|e| e.to_string())?;
+            create_path
+        }
+        // The original file keeps its own name and workspace field: sbx
+        // applies --name and reads relative paths against this directory.
+        Some(_) => create_path,
+    };
     let path = path_string(&path)?;
     progress(if authorized_any {
         LaunchProgress::Creating
@@ -205,11 +249,15 @@ pub(super) fn launch_with(
         LaunchProgress::Preparing
     });
     let created = runtime
-        .create_streaming(&["env", "create", "--force", "--name", &name, &path], &mut |text| {
-            progress(LaunchProgress::Output {
-                line: text.to_string(),
-            });
-        })
+        .create_streaming(
+            create_directory.as_deref(),
+            &["env", "create", "--force", "--name", &name, &path],
+            &mut |text| {
+                progress(LaunchProgress::Output {
+                    line: text.to_string(),
+                });
+            },
+        )
         .map_err(|e| format!("Environment creation failed. Launch file retained at {path} for diagnostics and retry:\n{e}"))?;
     progress(LaunchProgress::Starting);
     let started = runtime.start(&name).map_err(|error| {

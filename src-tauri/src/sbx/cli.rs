@@ -1,7 +1,7 @@
 //! Discovery of the `sbx` executable and the shared command runner.
 
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 pub const SBX_COMMAND: &str = "sbx";
@@ -98,8 +98,19 @@ impl HideConsole for Command {
 
 /// Construct a direct CLI invocation; callers can also set `current_dir`.
 pub(crate) fn sbx_command(args: &[&str]) -> Result<Command, String> {
+    sbx_command_in(args, None)
+}
+
+/// Construct a direct CLI invocation, optionally running it from `dir`.
+/// Environment files resolve their relative paths (kits, workspaces, host
+/// commands) from the declaring file's directory, so template launches run
+/// from the template's own folder.
+pub(crate) fn sbx_command_in(args: &[&str], dir: Option<&Path>) -> Result<Command, String> {
     let mut cmd = Command::new(sbx_executable()?);
     cmd.args(args).hide_console();
+    if let Some(dir) = dir {
+        cmd.current_dir(dir);
+    }
     Ok(cmd)
 }
 
@@ -110,13 +121,11 @@ pub fn is_sbx_installed() -> bool {
 /// Run `sbx` with args, capturing stdout (stderr is merged into the error
 /// path only, so progress noise never pollutes parsed output).
 pub fn run_capture(args: &[&str]) -> Result<String, String> {
-    let result = run_capture_inner(args);
-    crate::logging::cli_call(args, &result);
-    result
+    run_capture_inner(args, None)
 }
 
-fn run_capture_inner(args: &[&str]) -> Result<String, String> {
-    let output = sbx_command(args)?
+fn run_capture_inner(args: &[&str], dir: Option<&Path>) -> Result<String, String> {
+    let output = sbx_command_in(args, dir)?
         .output()
         .map_err(|e| format!("failed to run {}: {}", SBX_COMMAND, e))?;
     let text = String::from_utf8_lossy(&output.stdout).to_string();
@@ -136,13 +145,31 @@ fn run_capture_inner(args: &[&str]) -> Result<String, String> {
     Ok(text.trim().to_string())
 }
 
+/// Run `sbx` from `dir`, streaming each output line as it is printed. See
+/// [`run_capture_lines`] and [`run_capture_in`].
+pub fn run_capture_lines_in(
+    dir: &Path,
+    args: &[&str],
+    line: &mut dyn FnMut(&str),
+) -> Result<String, String> {
+    run_capture_lines_inner(args, Some(dir), line)
+}
+
 /// Run `sbx` with args, streaming each output line as it is printed to a
 /// callback, and returning the full stdout like [`run_capture`] does. Lines
 /// arrive in near-real time; `sbx env create` writes progress while it pulls
 /// images and provisions containers, so this drives UI progress displays.
 /// stderr is still reserved for the error path, mirroring `run_capture`.
 pub fn run_capture_lines(args: &[&str], line: &mut dyn FnMut(&str)) -> Result<String, String> {
-    let mut child = sbx_command(args)?
+    run_capture_lines_inner(args, None, line)
+}
+
+fn run_capture_lines_inner(
+    args: &[&str],
+    dir: Option<&Path>,
+    line: &mut dyn FnMut(&str),
+) -> Result<String, String> {
+    let mut child = sbx_command_in(args, dir)?
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
