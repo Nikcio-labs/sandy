@@ -13,6 +13,8 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 #[allow(clippy::expect_used, clippy::panic)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(commands::handlers())
         .setup(|app| {
             // The diagnostic log lives next to providers.json and the template

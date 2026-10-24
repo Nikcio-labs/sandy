@@ -29,6 +29,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -40,6 +41,14 @@
       "deb": {
         "depends": []
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg5OTI5Qjc1QTc0QjQwOEUKUldTT1FFdW5kWnVTaVRaTlBtQlRPbFd0bjA2YXNaN0p0VExMZWM2N3NFZk1sY0RqdG5JTTFkbGcK",
+      "endpoints": [
+        "https://github.com/Nikcio-labs/sandy/releases/latest/download/latest.json"
+      ]
     }
   }
 }

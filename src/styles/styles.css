@@ -1045,6 +1045,30 @@ select {
   line-height: 1.8;
 }
 
+/* Settings → Updates: the in-app updater offer and download progress. */
+.update-offer p {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 14px 0 4px;
+}
+
+.update-offer .catalog-help {
+  display: inline;
+}
+
+.update-progress {
+  margin: 14px 0 4px;
+}
+
+.update-progress .setup-progress-label {
+  margin: 0 0 8px;
+}
+
+.update-progress .progress-track {
+  margin: 0;
+}
+
 /* Settings → Advanced: the diagnostic log viewer. */
 .debug-log-toolbar {
   display: flex;
