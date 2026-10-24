@@ -2,6 +2,7 @@ mod catalog;
 mod commands;
 mod diaglog;
 mod environments;
+mod progress;
 mod sbx;
 mod setup;
 

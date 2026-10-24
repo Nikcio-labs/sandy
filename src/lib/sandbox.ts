@@ -1,5 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
+import { Channel, invoke } from "@tauri-apps/api/core";
 import { shareInFlight } from "./inFlight";
+import type { LaunchTemplateRequest } from "./templates";
 
 /** The CLI's own explanation of a diagnose check's verdict. */
 export interface CheckExplanation {
@@ -52,3 +53,32 @@ export const restartSandbox = (name: string) => invoke<string>("restart_sandbox"
 export const openTerminal = (name: string) => invoke<void>("open_terminal", { name });
 export const connectionInfo = (name: string) =>
   invoke<ConnectionInfo>("connection_info", { name });
+
+/** Phases and console lines reported while a template launch runs. */
+export type LaunchProgress =
+  | { kind: "preparing" }
+  | { kind: "authorizing" }
+  | { kind: "creating" }
+  | { kind: "starting" }
+  | { kind: "ready" }
+  | { kind: "output"; text: string };
+
+const launchPhaseLabels: Record<Exclude<LaunchProgress["kind"], "output">, string> = {
+  preparing: "Preparing the sandbox environment…",
+  authorizing: "Authorizing the kit source…",
+  creating: "Creating the sandbox image and container…",
+  starting: "Starting the sandbox…",
+  ready: "Sandbox is ready.",
+};
+
+export const launchPhaseLabel = (progress: LaunchProgress) =>
+  progress.kind === "output" ? null : launchPhaseLabels[progress.kind];
+
+export const launchTemplate = (
+  request: LaunchTemplateRequest,
+  onProgress: (progress: LaunchProgress) => void,
+) => {
+  const channel = new Channel<LaunchProgress>();
+  channel.onmessage = onProgress;
+  return invoke<string>("launch_template", { ...request, onProgress: channel });
+};

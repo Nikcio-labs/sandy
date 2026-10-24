@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { KitOption, KitArguments } from "./catalog";
+import { launchTemplate as launchTemplateSandbox } from "./sandbox";
+import type { LaunchProgress } from "./sandbox";
 
 export interface SaveTemplateRequest {
   name: string;
@@ -33,5 +35,7 @@ export const saveTemplate = (request: SaveTemplateRequest) =>
 export const listTemplates = () => invoke<SavedTemplate[]>("list_templates");
 export const templateWarnings = () => invoke<string[]>("template_warnings");
 export const deleteTemplate = (id: string) => invoke<void>("delete_template", { id });
-export const launchTemplate = (request: LaunchTemplateRequest) =>
-  invoke<string>("launch_template", { ...request });
+export const launchTemplate = (
+  request: LaunchTemplateRequest,
+  onProgress?: (progress: LaunchProgress) => void,
+) => launchTemplateSandbox(request, onProgress ?? (() => {}));

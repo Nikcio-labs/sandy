@@ -12,9 +12,11 @@ import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
 export interface TemplatesPageProps {
   onCreate: () => void;
   onBusyChange?: (busy: boolean) => void;
+  /** Called with the new sandbox's name after a successful launch. */
+  onLaunched?: (sandbox: string) => void;
 }
 
-export default function TemplatesPage({ onCreate, onBusyChange }: TemplatesPageProps) {
+export default function TemplatesPage({ onCreate, onBusyChange, onLaunched }: TemplatesPageProps) {
   const id = useId();
   const mounted = useMountedRef();
   const [templates, setTemplates] = useState<SavedTemplate[] | null>(null);
@@ -231,7 +233,11 @@ export default function TemplatesPage({ onCreate, onBusyChange }: TemplatesPageP
         <LaunchDialog
           key={selected.id}
           template={selected}
-          onLaunched={(text) => setNotice({ kind: "success", text })}
+          onLaunched={(text, sandbox) => {
+            setNotice({ kind: "success", text });
+            // The sandbox exists: show it in the dashboard's inspector.
+            onLaunched?.(sandbox);
+          }}
           onClose={() => setSelected(null)}
         />
       )}

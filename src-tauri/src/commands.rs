@@ -221,13 +221,20 @@ async fn delete_template(app: tauri::AppHandle, id: String) -> Result<(), String
 #[tauri::command]
 async fn launch_template(
     app: tauri::AppHandle,
+    on_progress: tauri::ipc::Channel<crate::progress::LaunchProgress>,
     id: String,
     name: Option<String>,
     workspace: Option<String>,
 ) -> Result<String, String> {
     logged("launch_template", async move {
         let root = data_dir(&app)?;
-        blocking(move || environments::launch_template(&root, &id, name, workspace)).await
+        blocking(move || {
+            environments::launch_template(&root, &id, name, workspace, &mut |progress| {
+                // A closed or slow UI must not fail or block the launch.
+                let _ = on_progress.send(progress);
+            })
+        })
+        .await
     })
     .await
 }

@@ -14,6 +14,9 @@ import { ComingSoonDialog } from "../../../common/components/ComingSoonDialog";
 export interface DashboardPageProps {
   home: boolean;
   status: SetupStatus | null;
+  /** A sandbox to select and inspect once the list reports it (launch handoff). */
+  pendingSelection?: string | null;
+  onPendingSelectionHandled?: () => void;
   onGoSettings: () => void;
   onGoTemplates: () => void;
   onCreate: () => void;
@@ -31,6 +34,8 @@ const actionLabels: Record<SandboxAction, string> = {
 export default function DashboardPage({
   home,
   status,
+  pendingSelection,
+  onPendingSelectionHandled,
   onGoSettings,
   onGoTemplates,
   onCreate,
@@ -63,6 +68,17 @@ export default function DashboardPage({
         : (sandboxes?.[0]?.name ?? null),
     );
   }, [sandboxes]);
+
+  // A launch handed off from another page selects the new sandbox as soon as
+  // the list confirms it exists — never assume state the CLI has not reported.
+  useEffect(() => {
+    if (!pendingSelection) return;
+    if ((sandboxes ?? []).some((item) => item.name === pendingSelection)) {
+      setSelected(pendingSelection);
+      setInspectorOpen(true);
+      onPendingSelectionHandled?.();
+    }
+  }, [pendingSelection, sandboxes, onPendingSelectionHandled]);
 
   const selectSandbox = (name: string) => {
     setSelected(name);
