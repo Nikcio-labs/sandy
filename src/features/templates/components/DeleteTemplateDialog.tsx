@@ -69,7 +69,9 @@ export function DeleteTemplateDialog({
     >
       <div aria-busy={busy}>
         <div className="catalog-section-heading">
-          <h2 id={`${id}-delete-title`}>Delete {template.name}?</h2>
+          <h2 id={`${id}-delete-title`}>
+            {template.registered ? `Remove ${template.name} from Sandy?` : `Delete ${template.name}?`}
+          </h2>
           <button
             type="button"
             className="icon-button"
@@ -81,8 +83,18 @@ export function DeleteTemplateDialog({
           </button>
         </div>
         <p className="catalog-muted" id={`${id}-delete-description`}>
-          This permanently removes the saved template file{" "}
-          <code>{template.path}</code>. Sandboxes already created from it keep working.
+          {template.registered ? (
+            <>
+              Sandy stops listing this template, and the file{" "}
+              <code>{template.path}</code> stays on your computer. Sandboxes already created from it
+              keep working.
+            </>
+          ) : (
+            <>
+              This permanently removes the saved template file{" "}
+              <code>{template.path}</code>. Sandboxes already created from it keep working.
+            </>
+          )}
         </p>
         {deleteError && (
           <ErrorBanner title="Couldn’t delete this template.">
@@ -97,20 +109,27 @@ export function DeleteTemplateDialog({
           <button type="button" className="danger" onClick={remove} disabled={busy}>
             {busy ? (
               <>
-                <span className="spinner" /> Deleting…
+                <span className="spinner" /> {template.registered ? "Removing…" : "Deleting…"}
               </>
             ) : deleteError ? (
-              "Retry delete"
+              template.registered ? (
+                "Retry remove"
+              ) : (
+                "Retry delete"
+              )
             ) : (
               <>
-                <Icon name="trash" size={16} /> Delete template
+                <Icon name="trash" size={16} />{" "}
+                {template.registered ? "Remove template" : "Delete template"}
               </>
             )}
           </button>
         </div>
         {busy && (
           <p className="catalog-status" role="status">
-            Removing the saved template file…
+            {template.registered
+              ? "Removing the template from Sandy…"
+              : "Removing the saved template file…"}
           </p>
         )}
       </div>

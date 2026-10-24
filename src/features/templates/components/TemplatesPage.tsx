@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
-import { listTemplates, templateWarnings } from "../../../lib/templates";
+import { listTemplates, registerTemplate, templateWarnings } from "../../../lib/templates";
+import { pickLocalTemplate } from "../../../lib/catalog";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
@@ -30,6 +31,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SavedTemplate | null>(null);
   const [deleting, setDeleting] = useState<SavedTemplate | null>(null);
+  const [adding, setAdding] = useState(false);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
   const loadingLock = useRef(false);
   const generation = useRef(0);
@@ -76,6 +78,26 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
     };
   }, [refresh]);
 
+  const addLocal = async () => {
+    if (adding) return;
+    setAdding(true);
+    setError(null);
+    try {
+      const path = await pickLocalTemplate();
+      if (path) {
+        await registerTemplate(path);
+        if (mounted.current) {
+          setNotice({ kind: "success", text: "Template added from your computer." });
+          await refresh();
+        }
+      }
+    } catch (failure) {
+      if (mounted.current) setError(String(failure));
+    } finally {
+      if (mounted.current) setAdding(false);
+    }
+  };
+
   const visible = (templates ?? []).filter((template) =>
     `${template.name} ${template.agent} ${template.workspace} ${template.path}`
       .toLowerCase()
@@ -89,6 +111,9 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           <h1 id={`${id}-title`}>Templates</h1>
           <p className="page-sub">Your saved environments, ready for the next project.</p>
         </div>
+        <button type="button" className="ghost" disabled={loading} onClick={() => void addLocal()}>
+          <Icon name="folder" size={18} /> Add local template
+        </button>
         <button type="button" className="primary" onClick={onCreate}>
           <Icon name="create" size={18} /> Create template
         </button>
@@ -179,10 +204,13 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                       <h3>{template.name}</h3>
                       <p className="catalog-template-meta">
                         {template.agent} <span className="catalog-badge">Kit v{template.kit_version}</span>
+                        {template.registered && (
+                          <span className="catalog-badge catalog-badge-local">Local file</span>
+                        )}
                       </p>
                     </div>
                     <div className="catalog-template-actions">
-                      {onEdit && (
+                      {onEdit && !template.registered && (
                         <button
                           type="button"
                           className="ghost"
@@ -195,13 +223,18 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                       <button
                         type="button"
                         className="ghost"
-                        aria-label={`Delete ${template.name}`}
+                        aria-label={
+                          template.registered
+                            ? `Remove ${template.name} from Sandy`
+                            : `Delete ${template.name}`
+                        }
                         onClick={(event) => {
                           returnFocus.current = event.currentTarget;
                           setDeleting(template);
                         }}
                       >
-                        <Icon name="trash" size={16} /> Delete
+                        <Icon name="trash" size={16} />{" "}
+                        {template.registered ? "Remove" : "Delete"}
                       </button>
                       <button
                         type="button"
@@ -221,6 +254,12 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                       <code>{template.path}</code>
                     </dd>
                   </dl>
+                  {template.registered && (
+                    <p className="catalog-help">
+                      Registered from a file on this computer. Sandy does not change it; edit the
+                      file itself and refresh to pick up your changes.
+                    </p>
+                  )}
                   <details className="catalog-output">
                     <summary>Preview saved YAML</summary>
                     <pre className="catalog-yaml" aria-label={`Saved YAML for ${template.name}`}>

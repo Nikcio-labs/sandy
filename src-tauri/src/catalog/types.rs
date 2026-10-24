@@ -23,7 +23,7 @@ pub struct KitArgument {
     pub choices: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KitOption {
     pub id: String,
     pub name: String,

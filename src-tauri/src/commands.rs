@@ -183,6 +183,18 @@ async fn save_template(
 }
 
 #[tauri::command]
+async fn register_template(
+    app: tauri::AppHandle,
+    path: String,
+) -> Result<environments::SavedTemplate, String> {
+    logged("register_template", async move {
+        let root = data_dir(&app)?;
+        blocking(move || environments::register_template(&root, path)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn list_templates(app: tauri::AppHandle) -> Result<Vec<environments::SavedTemplate>, String> {
     logged("list_templates", async move {
         let root = data_dir(&app)?;
@@ -280,6 +292,14 @@ async fn pick_template_path(app: tauri::AppHandle) -> Result<Option<String>, Str
     .await
 }
 
+#[tauri::command]
+async fn pick_local_template(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    logged("pick_local_template", async move {
+        blocking(move || environments::pick_local_template(&app)).await
+    })
+    .await
+}
+
 /// The diagnostic log file, read from the end (newest last). The cap keeps
 /// the payload bounded at 10 MiB.
 #[tauri::command]
@@ -339,6 +359,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         provider_versions,
         discover_kits,
         save_template,
+        register_template,
         list_templates,
         template_warnings,
         read_template_details,
@@ -348,6 +369,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         allow_source,
         pick_workspace,
         pick_template_path,
+        pick_local_template,
         read_debug_log,
         clear_debug_log,
         debug_log_dir

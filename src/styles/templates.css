@@ -179,6 +179,13 @@
   line-height: 1.5;
 }
 
+/* Registered local files are read-only: distinguish them from saved templates. */
+.catalog-badge-local {
+  border-color: #cfe3d6;
+  color: #2c6e49;
+  background: #eef7f1;
+}
+
 .catalog-providers {
   margin: 25px 0 0;
 }

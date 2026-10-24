@@ -133,6 +133,11 @@ pub(super) fn launch_with(
                 progress(LaunchProgress::Authorizing);
                 allow_source_with(provider, &mut |args| runtime.run(args))?;
             }
+        } else if record.registered {
+            // Registered templates reference kits Sandy never discovered, so
+            // there is no provider record to authorize: sbx enforces its own
+            // kit.allowedSources policy at create time.
+            continue;
         } else {
             return Err(format!(
                 "Unsupported saved source: {}. Select a kit from an enabled GitHub provider",

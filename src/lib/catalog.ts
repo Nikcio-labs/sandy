@@ -48,6 +48,8 @@ export const discoverKits = (providers: Provider[]) =>
   invoke<Catalog>("discover_kits", { providers });
 export const pickWorkspace = () => invoke<string | null>("pick_workspace");
 export const pickTemplatePath = () => invoke<string | null>("pick_template_path");
+/** Picks an existing environment file on disk to register in the library where it is. */
+export const pickLocalTemplate = () => invoke<string | null>("pick_local_template");
 
 /** One structured entry from the Sandy diagnostic log (JSON Lines on disk). */
 export interface DebugLogEntry {
