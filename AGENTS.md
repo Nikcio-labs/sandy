@@ -1,6 +1,6 @@
 # Sandy
 
-A desktop app (experimental) for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with guided setup, reusable environment templates, and local sandbox management, powered by the `sbx` CLI. The frontend is React + TypeScript (Vite), the desktop shell is Tauri 2 (Rust), and the package manager is pnpm.
+A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with guided setup, reusable environment templates, and local sandbox management, powered by the `sbx` CLI. The frontend is React + TypeScript (Vite), the desktop shell is Tauri 2 (Rust), and the package manager is pnpm.
 
 ## Before you start
 
