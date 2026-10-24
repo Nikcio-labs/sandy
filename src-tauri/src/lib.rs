@@ -30,12 +30,11 @@ fn is_allowed_origin(url: &tauri::Url) -> bool {
         ("https", "tauri.localhost", Some(443)),
     ];
 
-    let matches =
-        |scheme: &str, host: &str, port: Option<u16>| -> bool {
-            url.scheme() == scheme
-                && url.host_str() == Some(host)
-                && url.port_or_known_default() == port
-        };
+    let matches = |scheme: &str, host: &str, port: Option<u16>| -> bool {
+        url.scheme() == scheme
+            && url.host_str() == Some(host)
+            && url.port_or_known_default() == port
+    };
 
     APP_ORIGINS
         .iter()
@@ -51,14 +50,16 @@ fn is_allowed_origin(url: &tauri::Url) -> bool {
 #[allow(clippy::expect_used, clippy::panic)]
 pub fn run() {
     tauri::Builder::default()
-        // In tauri 2.x the navigation hook lives on the plugin builder, so
-        // the guard is registered as a plugin. First registered, first
-        // consulted, so it vetoes before any other hook runs.
         .plugin(
+            // In tauri 2.x the navigation hook lives on the plugin builder,
+            // so the guard is registered as a plugin. Plugins combine with
+            // AND semantics, so its `false` vetoes the navigation.
             tauri::plugin::Builder::<tauri::Wry>::new("navigation-guard")
                 .on_navigation(|_webview, url| is_allowed_origin(url))
                 .build(),
         )
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(commands::handlers())
