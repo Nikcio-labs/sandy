@@ -27,6 +27,7 @@ If a comment fails that test, omit it; when touching code with such comments, re
 ## Development
 
 - Packages are pinned exactly, and installs reject anything published in the last 24 hours (`pnpm-workspace.yaml`, `minimumReleaseAge`) as supply-chain protection. Do not relax these settings or introduce loose version ranges.
+- The 24h gate has one carve-out (`minimumReleaseAgeExclude`) for the dev toolchain — `vite-plus`/`@voidzero-dev/*`, `oxlint`/`@oxlint/*`, `oxlint-tsgolint`/`@oxlint-tsgolint/*`, `oxfmt`/`@oxfmt/*`, and `vitest`/`@vitest/*` — which publish so frequently that a 24h hold would constantly block routine updates. Keep this list exactly as it is; do not add entries or widen it.
 - Releases use release-please (`.release-please-config.json`): Conventional Commit messages determine the next version and changelog, and published releases are built and attached automatically by the release workflows.
 - The app talks to the local `sbx` CLI and Docker Sandboxes; sandbox names, states, agents, and workspaces always come from the CLI — never assume state the CLI has not reported.
 - Keep documentation simple and up to date. The `README.md` is the main entry point for users of this project, and its audience is non-technical users with no knowledge of Docker Sandboxes or the `sbx` CLI.
