@@ -42,7 +42,6 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
   const mounted = useMountedRef();
   const [step, setStep] = useState(0);
   const [providers, setProviders] = useState<Provider[] | null>(null);
-  const [hubQuery, setHubQuery] = useState("");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [agent, setAgent] = useState<KitOption | null>(null);
   const [mixins, setMixins] = useState<KitOption[]>([]);
@@ -181,7 +180,7 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     try {
       // Defaults from get_providers may not have a file yet. Persist before discovery.
       const persistedProviders = await saveProviders(providers);
-      const result = await discoverKits(persistedProviders, hubQuery);
+      const result = await discoverKits(persistedProviders);
       if (!mounted.current) return;
       const seen = new Set<string>();
       const verified = result.kits.filter((kit) => {
@@ -416,8 +415,6 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     values,
     // Step 0: providers and discovery.
     providers,
-    hubQuery,
-    setHubQuery,
     catalog,
     onProvidersChange,
     discover,

@@ -1,6 +1,5 @@
 //! Source authorization: extending the sbx kit.allowedSources policy for
 //! enabled GitHub providers.
-
 use std::path::Path;
 
 use crate::catalog::{Provider, get_providers, github_repository};
@@ -38,9 +37,6 @@ pub(super) fn allow_source_with(
     provider: &Provider,
     run: &mut impl FnMut(&[&str]) -> Result<String, String>,
 ) -> Result<String, String> {
-    if provider.kind != "github" {
-        return Ok("Docker Hub is governed by the existing sbx source policy".into());
-    }
     if !provider.enabled {
         return Err("Enable this GitHub provider before authorizing its source".into());
     }

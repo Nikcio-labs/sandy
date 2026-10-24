@@ -1,13 +1,8 @@
 //! Public provider discovery. GitHub uses HTTPS APIs, never a local git/curl install.
-//! Hub discovery uses its typed catalog and small OCI manifests, never image layers.
 //! Blocking entry points belong on Tauri's blocking worker pool.
 //!
 //! Verified public interfaces:
 //! - GitHub /repos/{owner}/{repo}/tags and /git/trees/{commit}?recursive=1.
-//! - Hub /api/search/v3/catalog/search?type=sbx_kit&from=0&size=24;
-//!   the older /v2/search/repositories endpoint ignores the type filter.
-//! - Hub /v2/repositories/{namespace}/{repo}/tags exposes content_type,
-//!   media_type, and version tag names. The search provider has no global version.
 //! - V2 OCI artifactType is application/vnd.docker.sandbox.kit.v2, with a
 //!   application/vnd.docker.sandbox.kit.v2.spec+yaml config. V3 uses ordinary
 //!   image manifests with vnd.docker.sandbox.kit.descriptor annotations.
@@ -17,7 +12,6 @@
 mod descriptor;
 mod github;
 mod http;
-mod hub;
 mod store;
 mod types;
 
@@ -34,8 +28,7 @@ pub use types::{Catalog, KitOption, Provider};
 
 use self::github::discover_github;
 use self::http::Api;
-use self::hub::discover_hub;
-use self::store::{hub_repository, validate_provider};
+use self::store::validate_provider;
 
 /// The built-in agents as documented on
 /// <https://docs.docker.com/ai/sandboxes/agents/>.
@@ -59,23 +52,18 @@ pub fn provider_versions(provider: Provider) -> Result<Vec<String>, String> {
 
 fn versions_with(api: &Api, provider: &Provider) -> Result<Vec<String>, String> {
     validate_provider(provider)?;
-    let values = if provider.kind == "github" {
-        api.github_tags(&github_repository(&provider.repository)?)?
-    } else if let Some(repository) = hub_repository(&provider.repository)? {
-        api.hub_tags(&repository)?
-    } else {
-        return Ok(Vec::new()); // The search provider has per-repository tags, not a global version.
-    };
+    let repository = github_repository(&provider.repository)?;
+    let values = api.github_tags(&repository)?;
     Ok(values
         .iter()
         .filter_map(|v| v["name"].as_str().map(String::from))
         .collect())
 }
 
-/// `query` narrows Docker Hub's remote search. GitHub repositories and installed
-/// built-ins remain available; the frontend can filter their complete metadata.
-pub fn discover_kits(providers: Vec<Provider>, query: Option<String>) -> Result<Catalog, String> {
-    let mut catalog = discover_with(&Api::public()?, &providers, query.as_deref().unwrap_or(""))?;
+/// `query` is accepted for IPC compatibility; GitHub repositories and installed
+/// built-ins are returned in full, and the frontend can filter their metadata.
+pub fn discover_kits(providers: Vec<Provider>, _query: Option<String>) -> Result<Catalog, String> {
+    let mut catalog = discover_with(&Api::public()?, &providers)?;
     // The built-ins are documented v2 shortcuts, not guessed registry repositories.
     for name in BUILTIN_AGENTS {
         let description = format!("Built-in {name} agent (v2)");
@@ -94,13 +82,12 @@ pub fn discover_kits(providers: Vec<Provider>, query: Option<String>) -> Result<
     Ok(catalog)
 }
 
-fn discover_with(api: &Api, providers: &[Provider], query: &str) -> Result<Catalog, String> {
+fn discover_with(api: &Api, providers: &[Provider]) -> Result<Catalog, String> {
     let mut catalog = Catalog::default();
     for provider in providers.iter().filter(|p| p.enabled) {
         let result = validate_provider(provider).and_then(|_| match provider.kind.as_str() {
             "github" => discover_github(api, provider),
-            "dockerhub" => discover_hub(api, provider, query),
-            _ => unreachable!(),
+            other => Err(format!("Unsupported provider kind: {other}")),
         });
         match result {
             Ok(mut found) => {
@@ -141,10 +128,5 @@ fn encoded_path(value: &str) -> String {
     encoded(value).replace('+', "%20")
 }
 
-const DESCRIPTOR: &str = "vnd.docker.sandbox.kit.descriptor";
-
 const MAX_BODY: u64 = 12 * 1024 * 1024;
 const METADATA_BATCH: usize = 4;
-/// Hub catalog search pages through everything up to this bound; metadata
-/// reads per repository dominate the cost beyond it.
-const MAX_SEARCH_REPOSITORIES: usize = 500;

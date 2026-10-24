@@ -15,27 +15,23 @@ pub fn get_providers(root: &Path) -> Result<Vec<Provider>, String> {
         Ok(bytes) => {
             let providers: Vec<Provider> = serde_json::from_slice(&bytes)
                 .map_err(|e| format!("Cannot read {}: {e}", path.display()))?;
+            // Docker Hub providers were removed; an older configuration's
+            // entries are dropped rather than failing every read.
+            let providers: Vec<_> = providers
+                .into_iter()
+                .filter(|provider| provider.kind != "dockerhub")
+                .collect();
             validate_providers(&providers)?;
             Ok(providers)
         }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(vec![
-            Provider {
-                id: "nikcio-docker-sandboxing".into(),
-                label: "nikcio/docker-sandboxing".into(),
-                kind: "github".into(),
-                repository: "nikcio/docker-sandboxing".into(),
-                reference: String::new(),
-                enabled: true,
-            },
-            Provider {
-                id: "dockerhub".into(),
-                label: "Docker Hub sandbox kits".into(),
-                kind: "dockerhub".into(),
-                repository: "https://hub.docker.com/search?type=sbx_kit".into(),
-                reference: String::new(),
-                enabled: false,
-            },
-        ]),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(vec![Provider {
+            id: "nikcio-docker-sandboxing".into(),
+            label: "nikcio/docker-sandboxing".into(),
+            kind: "github".into(),
+            repository: "nikcio/docker-sandboxing".into(),
+            reference: String::new(),
+            enabled: true,
+        }]),
         Err(e) => Err(format!("Cannot read {}: {e}", path.display())),
     }
 }
@@ -63,7 +59,11 @@ pub(super) fn validate_provider(provider: &Provider) -> Result<(), String> {
     }
     match provider.kind.as_str() {
         "github" => github_repository(&provider.repository).map(|_| ()),
-        "dockerhub" => hub_repository(&provider.repository).map(|_| ()),
+        // Docker Hub providers were removed; keep them out of new saves but
+        // tolerate them when reading an older configuration (get_providers).
+        "dockerhub" => Err(
+            "Docker Hub providers are no longer supported; use a GitHub repository provider".into(),
+        ),
         _ => Err(format!("Unsupported provider kind: {}", provider.kind)),
     }
 }
@@ -88,27 +88,6 @@ fn valid_component(component: &str) -> bool {
         && component
             .bytes()
             .all(|c| c.is_ascii_alphanumeric() || b"-_.".contains(&c))
-}
-
-pub(super) fn hub_repository(repository: &str) -> Result<Option<String>, String> {
-    let repository = repository.trim().trim_end_matches('/');
-    if repository.is_empty()
-        || repository == "docker.io"
-        || repository == "https://hub.docker.com/search?type=sbx_kit"
-        || repository == "https://hub.docker.com/search"
-    {
-        return Ok(None);
-    }
-    let repository = repository
-        .strip_prefix("https://hub.docker.com/r/")
-        .or_else(|| repository.strip_prefix("docker.io/"))
-        .unwrap_or(repository);
-    let parts: Vec<_> = repository.split('/').collect();
-    if parts.len() == 2 && parts.iter().all(|p| valid_component(p)) {
-        Ok(Some(repository.into()))
-    } else {
-        Err("Docker Hub provider must be the kit search URL or namespace/repository".into())
-    }
 }
 
 pub(crate) fn unique_id() -> String {

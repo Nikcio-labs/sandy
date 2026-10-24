@@ -29,8 +29,6 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
     busy,
     error,
     providers,
-    hubQuery,
-    setHubQuery,
     catalog,
     onProvidersChange,
     discover,
@@ -153,8 +151,6 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
               {providers && (
                 <DiscoveryStep
                   providers={providers}
-                  hubQuery={hubQuery}
-                  onHubQuery={setHubQuery}
                   busy={busy !== null}
                   onDiscover={() => void discover()}
                 />
