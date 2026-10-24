@@ -50,8 +50,8 @@ export default function Updates() {
         <div>
           <h2 id={`${id}-title`}>Updates</h2>
           <p className="catalog-muted">
-            Sandy checks for new versions when Settings opens and can update itself in place —
-            the download is verified against a signature before it is installed.
+            Sandy can check for new versions and update itself in place; you just confirm the
+            restart.
           </p>
         </div>
         {version && <span className="catalog-badge">Version {version}</span>}

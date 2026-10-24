@@ -13,7 +13,6 @@ A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with
 - **Create** — enable kit providers (GitHub, Docker Hub search, or specific Docker Hub repositories), discover kits, and pick a **v2 agent** or **v3 workload**. Complete the kit inputs, choose a workspace folder (or run mountless, with no host folder at all), and name the sandbox.
 - **Templates** — save any environment as a real `sbxenv.yaml` file and relaunch it later with a different name or workspace. Each launch creates its own file outside the workspace; saved templates stay intact until you delete them.
 - **Setup** — Settings walks you through installing the `sbx` CLI, signing in to Docker, enabling image pasting, and setting up SSH. Each step shows what it runs, can be skipped, and can be revisited later.
-- **Updates** — Sandy keeps itself current. It checks for new versions automatically and can download and install an update in place; you just confirm the restart. Every update is verified against a digital signature before it is applied.
 
 ## Installing Sandy
 
@@ -41,10 +40,6 @@ pnpm tauri build  # produce installers
 ```
 
 Packages are pinned exactly and installs reject anything published in the last 24 hours (`pnpm-workspace.yaml`) as supply-chain protection.
-
-### Release signing
-
-Released builds are signed so in-app updates can verify them. The private signing key lives in the `UPDATER_SIGNING_KEY` repository secret (create one with `pnpm tauri signer generate`); the matching public key is set in `src-tauri/tauri.conf.json`. Losing the private key means already-installed apps can no longer update themselves.
 
 ### Windows: `link.exe` errors
 
