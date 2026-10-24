@@ -49,7 +49,7 @@ export function FinishedPanel({
         <dt>Kit format</dt>
         <dd>v{saved.kit_version}</dd>
         <dt>Workspace</dt>
-        <dd>{saved.workspace}</dd>
+        <dd>{saved.workspace || "None (mountless, isolated)"}</dd>
       </dl>
       <div className="catalog-section-heading">
         <h3>Saved YAML</h3>

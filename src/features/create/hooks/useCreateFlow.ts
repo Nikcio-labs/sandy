@@ -41,6 +41,7 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
   const [providerFilter, setProviderFilter] = useState("");
   const [name, setName] = useState("");
   const [workspace, setWorkspace] = useState("");
+  const [mountless, setMountless] = useState(false);
   const [savePath, setSavePath] = useState("");
   const [busy, setBusy] = useState<"discover" | "save" | "launch" | "workspace" | "path" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
   const request: SaveTemplateRequest | null = agent
     ? {
         name: name.trim(),
-        workspace: workspace.trim(),
+        workspace: mountless ? "" : workspace.trim(),
         agent,
         mixins,
         arguments: resolvedArguments(selectedKits, values),
@@ -207,11 +208,13 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     if (
       !inputValid ||
       !request.name ||
-      !request.workspace ||
+      (!mountless && !request.workspace) ||
       !mixins.every((kit) => isCompatibleMixin(kit, request.agent))
     ) {
       setError(
-        "Choose a compatible agent and mixins, complete required kit inputs, and enter a project name and workspace.",
+        mountless
+          ? "Choose a compatible agent and mixins, complete required kit inputs, and enter a project name."
+          : "Choose a compatible agent and mixins, complete required kit inputs, and enter a project name and workspace.",
       );
       return;
     }
@@ -347,6 +350,8 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     setName,
     workspace,
     setWorkspace,
+    mountless,
+    setMountless,
     savePath,
     setSavePath,
     submit,

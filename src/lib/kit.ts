@@ -124,8 +124,12 @@ export function previewTemplate(request: SaveTemplateRequest): string {
     'schemaVersion: "1"',
     `name: ${quote(request.name)}`,
     `agent: ${quote(agent.name)}`,
-    `workspace: ${quote(escape(request.workspace))}`,
   ];
+  // An empty workspace omits the field: the sandbox is mountless and isolated
+  // from the host file system.
+  if (request.workspace) {
+    lines.push(`workspace: ${quote(escape(request.workspace))}`);
+  }
   if (kits.length) {
     lines.push("kits:");
     for (const kit of kits) {

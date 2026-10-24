@@ -201,7 +201,7 @@ export default function TemplatesPage({ onCreate, onBusyChange }: TemplatesPageP
                   </div>
                   <dl className="catalog-review-grid">
                     <dt>Workspace</dt>
-                    <dd>{template.workspace || "Not set"}</dd>
+                    <dd>{template.workspace || "None (mountless, isolated)"}</dd>
                     <dt>Template file</dt>
                     <dd>
                       <code>{template.path}</code>

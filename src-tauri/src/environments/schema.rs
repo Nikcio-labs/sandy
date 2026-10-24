@@ -10,7 +10,10 @@ pub(super) struct Environment {
     pub(super) schema_version: String,
     pub(super) name: String,
     pub(super) agent: String,
-    pub(super) workspace: Workspace,
+    /// Omitted for mountless sandboxes: no host directory is bound into the
+    /// sandbox, isolating it from the host file system.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) workspace: Option<Workspace>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(super) kits: Vec<KitEntry>,
 }

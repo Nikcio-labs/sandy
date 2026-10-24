@@ -54,6 +54,8 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
     setName,
     workspace,
     setWorkspace,
+    mountless,
+    setMountless,
     savePath,
     setSavePath,
     submit,
@@ -227,6 +229,8 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange }: Creat
                   onName={setName}
                   workspace={workspace}
                   onWorkspace={setWorkspace}
+                  mountless={mountless}
+                  onMountless={setMountless}
                   savePath={savePath}
                   onSavePath={setSavePath}
                   busy={busy !== null}

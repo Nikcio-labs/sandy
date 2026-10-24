@@ -13,6 +13,8 @@ export function ReviewStep({
   onName,
   workspace,
   onWorkspace,
+  mountless,
+  onMountless,
   savePath,
   onSavePath,
   busy,
@@ -28,6 +30,8 @@ export function ReviewStep({
   onName: (value: string) => void;
   workspace: string;
   onWorkspace: (value: string) => void;
+  mountless: boolean;
+  onMountless: (value: boolean) => void;
   savePath: string;
   onSavePath: (value: string) => void;
   busy: boolean;
@@ -69,25 +73,43 @@ export function ReviewStep({
             is the default launch name.
           </span>
         </label>
-        <label className="catalog-field" htmlFor={`${id}-workspace`}>
-          Workspace folder <span className="catalog-sr-only">(required)</span>
-        </label>
-        <div className="catalog-path-row">
+        <label className="catalog-check" htmlFor={`${id}-mountless`}>
           <input
-            id={`${id}-workspace`}
-            value={workspace}
-            required
-            placeholder="Absolute project path"
-            aria-describedby={`${id}-workspace-help`}
-            onChange={(event) => onWorkspace(event.target.value)}
+            id={`${id}-mountless`}
+            type="checkbox"
+            checked={mountless}
+            onChange={(event) => onMountless(event.target.checked)}
           />
-          <button type="button" className="ghost" onClick={() => onBrowse("workspace")}>
-            Browse…
-          </button>
-        </div>
-        <p className="catalog-help" id={`${id}-workspace-help`}>
-          Choose an existing folder on this computer. The template stores this workspace for reuse.
+          Run without a workspace (mountless)
+        </label>
+        <p className="catalog-help" id={`${id}-mountless-help`}>
+          The sandbox gets no folder from this computer, isolating it from the host file system.
+          Files stay inside the sandbox and are removed with it.
         </p>
+        {!mountless && (
+          <>
+            <label className="catalog-field" htmlFor={`${id}-workspace`}>
+              Workspace folder <span className="catalog-sr-only">(required)</span>
+            </label>
+            <div className="catalog-path-row">
+              <input
+                id={`${id}-workspace`}
+                value={workspace}
+                required
+                placeholder="Absolute project path"
+                aria-describedby={`${id}-workspace-help`}
+                onChange={(event) => onWorkspace(event.target.value)}
+              />
+              <button type="button" className="ghost" onClick={() => onBrowse("workspace")}>
+                Browse…
+              </button>
+            </div>
+            <p className="catalog-help" id={`${id}-workspace-help`}>
+              Choose an existing folder on this computer. The template stores this workspace for
+              reuse.
+            </p>
+          </>
+        )}
         <label className="catalog-field" htmlFor={`${id}-path`}>
           Save file location (optional)
         </label>
@@ -122,6 +144,8 @@ export function ReviewStep({
             </dd>
             <dt>Mixins</dt>
             <dd>{mixins.length} selected</dd>
+            <dt>Workspace</dt>
+            <dd>{mountless ? "None (mountless, isolated)" : workspace.trim() || "Not set"}</dd>
             <dt>File location</dt>
             <dd>{savePath.trim() || "Sandy managed templates (outside the workspace)"}</dd>
           </dl>
@@ -150,7 +174,7 @@ export function ReviewStep({
             name="action"
             value="save"
             className="ghost"
-            disabled={!name.trim() || !workspace.trim()}
+            disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
             Save template
           </button>
@@ -159,7 +183,7 @@ export function ReviewStep({
             name="action"
             value="launch"
             className="primary"
-            disabled={!name.trim() || !workspace.trim()}
+            disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
             {busy ? "Saving template…" : "Save & launch"} <Icon name="arrow" size={16} />
           </button>

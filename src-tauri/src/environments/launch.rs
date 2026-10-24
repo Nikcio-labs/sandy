@@ -79,9 +79,16 @@ pub(super) fn launch_with(
             "Started existing sandbox {name} in the background using its existing agent, kits, and workspace.\n{output}"
         ));
     }
-    let workspace = workspace_path(workspace.as_deref().unwrap_or(&saved.workspace))?;
+    // An empty workspace (saved or override) launches a mountless sandbox,
+    // isolated from the host file system: no directory checks apply.
+    let workspace = match workspace.as_deref().unwrap_or(&saved.workspace) {
+        "" => None,
+        path => Some(workspace_path(path)?),
+    };
     let original = canonicalize(&record.path).map_err(|e| format!("{}: {e}", record.path))?;
-    ensure_outside(&original, &workspace)?;
+    if let Some(workspace) = workspace.as_deref() {
+        ensure_outside(&original, workspace)?;
+    }
     let providers = get_providers(root)?;
     let mut authorized = HashSet::new();
     for kit in selected(&record.agent, &record.mixins) {
@@ -122,22 +129,41 @@ pub(super) fn launch_with(
             .parent()
             .ok_or("Launch directory has no existing parent")?;
     }
-    ensure_outside(&canonicalize(ancestor)?, &workspace)?;
+    if let Some(workspace) = workspace.as_deref() {
+        ensure_outside(&canonicalize(ancestor)?, workspace)?;
+    }
     std::fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     let path = canonicalize(directory)?.join("sbxenv.yaml");
-    ensure_outside(&path, &workspace)?;
+    if let Some(workspace) = workspace.as_deref() {
+        ensure_outside(&path, workspace)?;
+    }
     // Edit the decoded document so manually added environment settings survive.
+    // Removing workspace launches a mountless sandbox with no host bind mount.
     let mut document: serde_yaml_ng::Value =
         serde_yaml_ng::from_str(&saved.content).map_err(|e| e.to_string())?;
     document["name"] = serde_yaml_ng::Value::String(name.clone());
-    document["workspace"] = match environment.workspace {
-        Workspace::Object { clone, .. } => serde_yaml_ng::to_value(Workspace::Object {
-            path: escape(&path_string(&workspace)?),
-            clone,
-        })
-        .map_err(|e| e.to_string())?,
-        Workspace::Path(_) => serde_yaml_ng::Value::String(escape(&path_string(&workspace)?)),
-    };
+    match (&environment.workspace, workspace) {
+        (Some(Workspace::Object { path: _, clone }), Some(workspace)) => {
+            document["workspace"] = serde_yaml_ng::to_value(Workspace::Object {
+                path: escape(&path_string(workspace.as_path())?),
+                clone: *clone,
+            })
+            .map_err(|e| e.to_string())?;
+        }
+        (Some(_), Some(workspace)) => {
+            document["workspace"] =
+                serde_yaml_ng::Value::String(escape(&path_string(workspace.as_path())?));
+        }
+        (Some(_), None) => {
+            document
+                .as_mapping_mut()
+                .ok_or("Environment file is not a mapping")?
+                .remove("workspace");
+        }
+        // A mountless template cannot gain a workspace without re-saving:
+        // mountless is the recorded isolation choice for this launch.
+        (None, _) => {}
+    }
     let content = serde_yaml_ng::to_string(&document).map_err(|e| e.to_string())?;
     let mut file = std::fs::OpenOptions::new()
         .create_new(true)

@@ -7,6 +7,9 @@
 //! need only agent=name. See Docker's configuration/environment-files reference.
 //! `sbx env create --help` verifies --force, --name, and file PATH support;
 //! it explicitly directs callers to env run to attach afterward.
+//!
+//! Templates may omit the workspace entirely: the sandbox is then mountless,
+//! with no host bind mount, isolated from the host file system.
 
 mod launch;
 mod library;

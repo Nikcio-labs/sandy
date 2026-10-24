@@ -295,7 +295,10 @@ fn launches_noninteractively_with_name_workspace_override_and_no_mutation() {
     assert_eq!(runtime.calls[2], ["run", "--detach", "--name", "second"]);
     let launch: Environment =
         serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
-    assert_eq!(launch.workspace.path(), path_string(&other).unwrap());
+    assert_eq!(
+        launch.workspace.unwrap().path(),
+        path_string(&other).unwrap()
+    );
     assert_eq!(std::fs::read_to_string(saved.path).unwrap(), saved.content);
 }
 
@@ -485,4 +488,76 @@ fn canonicalized_paths_simplify_windows_verbatim_prefixes() {
         super::validation::strip_verbatim(&fixture.workspace),
         fixture.workspace
     );
+}
+
+#[test]
+fn mountless_templates_save_launch_and_stay_isolated() {
+    let fixture = Fixture::new();
+    let mut request = fixture.request();
+    // An empty workspace opts out of host mounts entirely.
+    request.workspace = "".into();
+    let saved = save_template(&fixture.root, request).unwrap();
+    assert_eq!(saved.workspace, "");
+    let environment: Environment = serde_yaml_ng::from_str(&saved.content).unwrap();
+    assert!(environment.workspace.is_none());
+    assert!(!saved.content.contains("workspace"));
+
+    let mut runtime = MockRuntime::default();
+    let result = launch_with(&fixture.root, &saved.id, None, None, &mut runtime).unwrap();
+    assert!(result.contains("Created and started sandbox example"));
+    let launch: Environment =
+        serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
+    // The launch file stays mountless: no workspace field is written.
+    assert!(launch.workspace.is_none());
+    assert!(
+        !std::fs::read_to_string(&runtime.calls[1][5])
+            .unwrap()
+            .contains("workspace")
+    );
+    // The saved template is never mutated.
+    assert_eq!(std::fs::read_to_string(saved.path).unwrap(), saved.content);
+}
+
+#[test]
+fn mountless_launch_ignores_workspace_override_and_launch_files() {
+    let fixture = Fixture::new();
+    let mut request = fixture.request();
+    request.workspace = "".into();
+    let saved = save_template(&fixture.root, request).unwrap();
+    let mut runtime = MockRuntime::default();
+    // An override against a mountless template cannot silently add a host
+    // mount: isolation is the recorded configuration.
+    launch_with(
+        &fixture.root,
+        &saved.id,
+        Some("second".into()),
+        Some(path_string(&fixture.workspace).unwrap()),
+        &mut runtime,
+    )
+    .unwrap();
+    let launch: Environment =
+        serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
+    assert!(launch.workspace.is_none());
+    assert_eq!(launch.name, "second");
+}
+
+#[test]
+fn mountless_launch_of_workspace_template_drops_the_mount_when_requested() {
+    let fixture = Fixture::new();
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    let mut runtime = MockRuntime::default();
+    // An explicit empty override opts out of the saved workspace mount.
+    launch_with(
+        &fixture.root,
+        &saved.id,
+        None,
+        Some(String::new()),
+        &mut runtime,
+    )
+    .unwrap();
+    let launch: Environment =
+        serde_yaml_ng::from_str(&std::fs::read_to_string(&runtime.calls[1][5]).unwrap()).unwrap();
+    assert!(launch.workspace.is_none());
+    // The saved template keeps its workspace.
+    assert_eq!(std::fs::read_to_string(saved.path).unwrap(), saved.content);
 }
