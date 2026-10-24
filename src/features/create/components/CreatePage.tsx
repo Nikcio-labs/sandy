@@ -153,6 +153,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
                   providers={providers}
                   busy={busy !== null}
                   onDiscover={() => void discover()}
+                  onDiscoverRefresh={() => void discover(true)}
                 />
               )}
             </div>

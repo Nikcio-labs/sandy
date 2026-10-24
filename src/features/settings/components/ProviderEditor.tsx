@@ -64,16 +64,19 @@ export function ProviderEditor({
     }
   }, [repositoryKey, provider.id, disabled]);
 
-  const loadVersions = async () => {
+  const loadVersions = async (refresh = false) => {
     if (inFlight.current) return;
     inFlight.current = true;
     const key = repositoryKey;
     setVersions((previous) => ({ ...previous, loading: true, error: null }));
     try {
-      const result = await providerVersions({
-        ...provider,
-        repository: normalizeRepository(provider.repository),
-      });
+      const result = await providerVersions(
+        {
+          ...provider,
+          repository: normalizeRepository(provider.repository),
+        },
+        refresh,
+      );
       const values = [
         ...new Set(result.filter((value) => typeof value === "string" && value.trim())),
       ];
@@ -188,7 +191,7 @@ export function ProviderEditor({
             type="button"
             className="ghost"
             disabled={versions.loading || !repositoryIsValid(provider.repository)}
-            onClick={loadVersions}
+            onClick={() => void loadVersions(true)}
           >
             {versions.loading ? (
               <span className="spinner" />
