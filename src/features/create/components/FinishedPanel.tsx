@@ -33,7 +33,7 @@ export function FinishedPanel({
         <Icon name={launched ? "check" : "template"} size={30} />
       </span>
       <h2>{launched ? "Sandbox launched" : edited ? "Template updated" : "Template saved"}</h2>
-      <p className="catalog-muted">
+      <p className="help intro">
         {busy
           ? "Launching your sandbox…"
           : launched
@@ -56,7 +56,7 @@ export function FinishedPanel({
         <dt>Workspace</dt>
         <dd>{saved.workspace || "None (mountless, isolated)"}</dd>
       </dl>
-      <div className="catalog-section-heading">
+      <div className="sectionhead">
         <h3>Saved YAML</h3>
         <button type="button" className="btn" disabled={busy} onClick={onCopy}>
           <Icon name="clipboard" size={16} /> Copy YAML
@@ -66,7 +66,7 @@ export function FinishedPanel({
         <code>{saved.content}</code>
       </pre>
       {copyNotice && (
-        <p className="catalog-help" role="status">
+        <p className="help" role="status">
           {copyNotice}
         </p>
       )}
@@ -76,7 +76,7 @@ export function FinishedPanel({
           <pre>{launchOutput}</pre>
         </details>
       )}
-      <div className="catalog-actions">
+      <div className="actionbar">
         {!launched && (
           <button type="button" className="btn primary" disabled={busy} onClick={onRetryLaunch}>
             {busy ? (

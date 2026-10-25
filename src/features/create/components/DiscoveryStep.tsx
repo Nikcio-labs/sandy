@@ -17,7 +17,7 @@ export function DiscoveryStep({
   onDiscoverRefresh: () => void;
 }) {
   return (
-    <div className="catalog-actions">
+    <div className="actionbar">
       <button
         type="button"
         className="btn primary"
@@ -37,7 +37,7 @@ export function DiscoveryStep({
       <button type="button" className="btn" disabled={busy} onClick={onDiscoverRefresh}>
         <Icon name="refresh" size={16} /> Fetch fresh from sources
       </button>
-      <span className="catalog-help">
+      <span className="help">
         Discovery reuses the last result for these sources without calling GitHub. Use Fetch fresh
         to bypass that cache. Unsaved provider changes are saved when you discover.
       </span>

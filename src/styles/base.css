@@ -102,6 +102,15 @@ summary {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Fieldsets default to a framed box with min-inline-size: min-content, which
+   breaks grid children; grouping boxes opt back in via .fieldset. */
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
 button {
   color: inherit;
   cursor: pointer;

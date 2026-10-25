@@ -92,7 +92,7 @@ export default function SettingsPage({
           onStepDone={onStepDone}
         />
       ) : (
-        <section className="panel setup-summary" aria-busy={checkingSetup}>
+        <section className="panel" aria-busy={checkingSetup}>
           <div className="updatecard">
             <div className="split">
               <h2>
@@ -127,13 +127,13 @@ export default function SettingsPage({
       )}
       {active && (
         <div className="settings-stack">
-          <div className="panel settings-card">
+          <div className="panel group-body">
             <Updates />
           </div>
-          <div className="panel settings-card">
+          <div className="panel group-body">
             <Providers disabled={busy || checkingSetup} />
           </div>
-          <div className="panel settings-card">
+          <div className="panel group-body">
             <Advanced />
           </div>
         </div>

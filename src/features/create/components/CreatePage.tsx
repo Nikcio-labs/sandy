@@ -8,6 +8,7 @@ import { AgentStep } from "./AgentStep";
 import { MixinStep } from "./MixinStep";
 import { ReviewStep } from "./ReviewStep";
 import { FinishedPanel } from "./FinishedPanel";
+import { RecipeAside } from "./RecipeAside";
 
 export interface CreatePageProps {
   onClose: () => void;
@@ -71,7 +72,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
 
   return (
     <section className="standalone-page catalog-page" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
-      <header className="pagehead catalog-page-heading">
+      <header className="pagehead sectionhead catalog-page-heading">
         <div>
           <span className="eyebrow">
             {editing ? "EDIT SAVED TEMPLATE" : "YOUR NEXT WORKSPACE"}
@@ -92,12 +93,12 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
         </button>
       </header>
       {!saved && (
-        <ol className="setup-steps catalog-steps" aria-label="Sandbox creation steps">
+        <ol className="steps" aria-label="Sandbox creation steps">
           {STEPS.map((label, index) => (
             <li key={label}>
               <button
                 type="button"
-                className={`setup-step ${step === index ? "current" : ""} ${step > index ? "complete" : ""}`}
+                className={`${step === index ? "current" : ""} ${step > index ? "complete" : ""}`.trim() || undefined}
                 aria-current={step === index ? "step" : undefined}
                 disabled={busy !== null || index > step}
                 onClick={() => moveTo(index)}
@@ -140,7 +141,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
           {step === 0 && (
             <div className="panel catalog-panel">
               <h2>Start with your kit sources</h2>
-              <p className="catalog-muted">
+              <p className="help intro">
                 Enable the providers you want to use and choose their versions. Discovery reads kit
                 descriptors from those saved references.
               </p>
@@ -160,7 +161,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
           )}
           {step > 0 && !catalog && (
             <div className="panel catalog-panel">
-              <p className="catalog-muted">
+              <p className="help intro">
                 No discovery results. Review your kit sources and discover kits again.
               </p>
               <button
@@ -176,7 +177,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
           {step > 0 && catalog && (
             <>
               {catalog.warnings.length > 0 && (
-                <details className="catalog-warnings" open>
+                <details className="warnings" open>
                   <summary>Discovery notes ({catalog.warnings.length})</summary>
                   <ul>
                     {catalog.warnings.map((warning, index) => (
@@ -193,59 +194,64 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
                   </button>
                 </details>
               )}
-              {step === 1 && (
-                <AgentStep
-                  agents={agents}
-                  agent={agent}
-                  search={agentSearch}
-                  onSearch={setAgentSearch}
-                  onSelect={selectAgent}
-                  onBack={() => moveTo(0)}
-                  onContinue={() => moveTo(2)}
-                  onReviewSources={() => moveTo(0)}
-                />
-              )}
-              {step === 2 && agent && (
-                <MixinStep
-                  agent={agent}
-                  compatible={compatible}
-                  matchingMixins={matchingMixins}
-                  mixinGroups={mixinGroups}
-                  mixins={mixins}
-                  values={flow.values}
-                  search={mixinSearch}
-                  onSearch={setMixinSearch}
-                  providerFilter={providerFilter}
-                  onProviderFilter={setProviderFilter}
-                  providerLabel={providerLabel}
-                  onToggleMixin={toggleMixin}
-                  onRemoveMixin={removeMixin}
-                  onArgumentChange={changeArgument}
-                  onBack={() => moveTo(1)}
-                  onContinue={() => inputValid && moveTo(3)}
-                />
-              )}
-              {step === 3 && request && agent && (
-                <ReviewStep
-                  agent={agent}
-                  mixins={mixins}
-                  selectedKits={flow.selectedKits}
-                  name={name}
-                  onName={setName}
-                  workspace={workspace}
-                  onWorkspace={setWorkspace}
-                  mountless={mountless}
-                  onMountless={setMountless}
-                  savePath={savePath}
-                  onSavePath={setSavePath}
-                  editing={editing}
-                  busy={busy !== null}
-                  request={request}
-                  onSubmit={(launch) => void submit(launch)}
-                  onBrowse={(target) => void browse(target)}
-                  onBack={() => moveTo(2)}
-                />
-              )}
+              <div className="wizardgrid">
+                <div>
+                  {step === 1 && (
+                    <AgentStep
+                      agents={agents}
+                      agent={agent}
+                      search={agentSearch}
+                      onSearch={setAgentSearch}
+                      onSelect={selectAgent}
+                      onBack={() => moveTo(0)}
+                      onContinue={() => moveTo(2)}
+                      onReviewSources={() => moveTo(0)}
+                    />
+                  )}
+                  {step === 2 && agent && (
+                    <MixinStep
+                      agent={agent}
+                      compatible={compatible}
+                      matchingMixins={matchingMixins}
+                      mixinGroups={mixinGroups}
+                      mixins={mixins}
+                      values={flow.values}
+                      search={mixinSearch}
+                      onSearch={setMixinSearch}
+                      providerFilter={providerFilter}
+                      onProviderFilter={setProviderFilter}
+                      providerLabel={providerLabel}
+                      onToggleMixin={toggleMixin}
+                      onRemoveMixin={removeMixin}
+                      onArgumentChange={changeArgument}
+                      onBack={() => moveTo(1)}
+                      onContinue={() => inputValid && moveTo(3)}
+                    />
+                  )}
+                  {step === 3 && request && agent && (
+                    <ReviewStep
+                      agent={agent}
+                      mixins={mixins}
+                      selectedKits={flow.selectedKits}
+                      name={name}
+                      onName={setName}
+                      workspace={workspace}
+                      onWorkspace={setWorkspace}
+                      mountless={mountless}
+                      onMountless={setMountless}
+                      savePath={savePath}
+                      onSavePath={setSavePath}
+                      editing={editing}
+                      busy={busy !== null}
+                      request={request}
+                      onSubmit={(launch) => void submit(launch)}
+                      onBrowse={(target) => void browse(target)}
+                      onBack={() => moveTo(2)}
+                    />
+                  )}
+                </div>
+                <RecipeAside agent={agent} mixins={mixins} workspace={workspace} mountless={mountless} />
+              </div>
             </>
           )}
         </>

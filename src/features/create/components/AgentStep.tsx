@@ -26,16 +26,17 @@ export function AgentStep({
   return (
     <div className="panel catalog-panel">
       <h2>Choose an agent or workload</h2>
-      <p className="catalog-muted">
+      <p className="help intro">
         Built-in agent shortcuts use kit v2. A v3 workload starts a v3-only environment. Remote kit
         sources below come from discovered descriptors.
       </p>
-      <label className="catalog-field catalog-search" htmlFor={`${id}-agent-search`}>
-        Search agents and workloads
+      <label className="search wide" htmlFor={`${id}-agent-search`}>
+        <Icon name="search" size={14} />
         <input
           id={`${id}-agent-search`}
           type="search"
-          placeholder="Search catalog"
+          placeholder="Search agents and workloads…"
+          aria-label="Search agents and workloads"
           value={search}
           onChange={(event) => onSearch(event.target.value)}
         />
@@ -46,9 +47,9 @@ export function AgentStep({
           items.length > 0 && (
             <fieldset className="catalog-unframed catalog-choice-group" key={version}>
               <legend>{version === 2 ? "Kit v2 agents" : "Kit v3 workloads"}</legend>
-              <div className="catalog-kit-grid">
+              <div className="options">
                 {items.map((kit) => (
-                  <label className={`catalog-kit ${agent?.id === kit.id ? "selected" : ""}`} key={kit.id}>
+                  <label className={`option ${agent?.id === kit.id ? "selected" : ""}`} key={kit.id}>
                     <input
                       type="radio"
                       name={`${id}-agent`}
@@ -65,7 +66,7 @@ export function AgentStep({
         );
       })}
       {!agents.length && (
-        <div className="catalog-empty-note">
+        <div className="note">
           <h3>
             {search ? "No matching agents or workloads" : "No agents or workloads were discovered"}
           </h3>
@@ -79,7 +80,7 @@ export function AgentStep({
           </button>
         </div>
       )}
-      <div className="catalog-actions">
+      <div className="actionbar">
         <button type="button" className="btn" onClick={onBack}>
           Back
         </button>

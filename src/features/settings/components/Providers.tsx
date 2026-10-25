@@ -100,28 +100,28 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
   };
 
   return (
-    <section className="catalog-providers" aria-labelledby={`${id}-title`} aria-busy={loading || saving}>
-      <div className="catalog-section-heading">
+    <section className="group group-body" aria-labelledby={`${id}-title`} aria-busy={loading || saving}>
+      <div className="sectionhead">
         <div>
           <h2 id={`${id}-title`}>Kit providers</h2>
-          <p className="catalog-muted">
+          <p className="help intro">
             Choose where Sandy finds agents, workloads, and mixins. Save your references before
             discovering kits.
           </p>
         </div>
         {providers !== null && (
-          <span className="catalog-badge">
+          <span className="badge pill">
             {providers.filter((provider) => provider.enabled).length} enabled
           </span>
         )}
       </div>
-      <p className="catalog-help">
+      <p className="help">
         Enabling a GitHub repository authorizes Sandy to add a repository-scoped entry to{" "}
         <code>sbx kit.allowedSources</code> when you launch its kits. Existing policy entries are
         preserved. Managed policy restrictions are reported rather than overridden.
       </p>
       {loading && (
-        <p className="catalog-status" role="status">
+        <p className="statusline" role="status">
           <span className="spinner" /> Loading saved providers…
         </p>
       )}
@@ -138,7 +138,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
       {providers !== null && !loading && (
         <form onSubmit={save}>
           <fieldset className="catalog-unframed" disabled={disabled || saving}>
-            <legend className="catalog-sr-only">Provider configuration</legend>
+            <legend className="sr-only">Provider configuration</legend>
             {providers.map((provider) => (
               <ProviderEditor
                 key={provider.id}
@@ -151,11 +151,11 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
               />
             ))}
             {!providers.length && (
-              <p className="catalog-empty-note">
+              <p className="note">
                 No providers configured. Add a GitHub repository to get started.
               </p>
             )}
-            <div className="catalog-provider-add">
+            <div className="actionbar">
               <button
                 type="button"
                 className="btn"
@@ -200,11 +200,11 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
                 </button>
               )}
             </div>
-            <div className="catalog-actions">
+            <div className="actionbar">
               <button type="submit" className="btn primary" disabled={!dirty || saving}>
                 {saving ? "Saving providers…" : "Save providers"}
               </button>
-              <span className="catalog-help" role="status">
+              <span className="help" role="status">
                 {notice ||
                   (incomplete
                     ? "Give each enabled repository a valid repository URL."

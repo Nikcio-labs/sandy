@@ -74,7 +74,7 @@ export default function App() {
 
   return (
     <div className="shell">
-      <Titlebar />
+      <Titlebar view={view} />
       <div className="app">
         <Rail
           view={view}

@@ -98,6 +98,18 @@
   color: var(--brand-dark);
 }
 
+/* Rounded brand pill with a visible border, for counts and metadata that
+   should read as selectable-chip-like rather than plain labels. */
+.badge.pill {
+  padding: 4px 9px;
+  border: 1px solid var(--brand-border);
+  border-radius: 20px;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  font-size: 11px;
+  font-weight: 500;
+}
+
 .state {
   display: inline-flex;
   align-items: center;
@@ -215,6 +227,15 @@
   outline-offset: 6px;
 }
 
+/* Full-width standalone search above a list or grid of choices. */
+.search.wide {
+  margin: 0 0 16px;
+}
+
+.search.wide input {
+  width: 100%;
+}
+
 .search:focus-within {
   outline: 2px solid var(--brand-soft);
   outline-offset: 2px;
@@ -237,9 +258,23 @@
 }
 
 .help {
+  display: block;
   color: var(--muted);
   font-size: 12px;
+  font-weight: 400;
+  line-height: 1.65;
   margin: 7px 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* Muted paragraph that leads a panel section instead of following a field. */
+.help.intro {
+  line-height: 1.75;
+  margin: 0 0 18px;
+}
+
+.sectionhead .help.intro {
+  margin: 0;
 }
 
 /* ---- Banners ---- */
@@ -363,6 +398,539 @@ input[type="radio"] {
   transition: width 0.25s;
 }
 
+.legend {
+  padding: 0 7px;
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.sr-only {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.eyebrow {
+  display: block;
+  font: 600 10px var(--body);
+  color: var(--brand-dark);
+  letter-spacing: 1.4px;
+  margin-bottom: 10px;
+}
+
+/* ---- Forms ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+.field input,
+.field select,
+.field textarea,
+.path-row > input {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 9px 10px;
+  font: inherit;
+  font-weight: 400;
+  border: 1px solid var(--field-border);
+  border-radius: 7px;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.field input:disabled,
+.field select:disabled,
+.path-row input:disabled {
+  background: var(--field-disabled);
+  color: var(--muted);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  min-width: 0;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 36px;
+  line-height: 1.5;
+}
+
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -7px;
+}
+
+.path-row > button {
+  flex-shrink: 0;
+}
+
+/* A framed group box around related fields, with its label notched into the
+   top border. */
+.fieldset {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 14px 18px 10px;
+  margin: 0 0 22px;
+  min-width: 0;
+}
+
+.fieldset > .legend {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+/* ---- Grouped panels ---- */
+
+.group {
+  margin: 25px 0 0;
+}
+
+.group-body {
+  padding: 26px;
+  margin-top: 0;
+}
+
+/* Heading row shared by every panel section (title, muted description, and
+   an optional trailing count/action). */
+.sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.sectionhead > div {
+  flex: 1;
+  min-width: 200px;
+}
+
+.sectionhead h2,
+.sectionhead h3 {
+  margin-bottom: 6px;
+}
+
+.sectionhead + .help {
+  display: block;
+}
+
+/* ---- Action bar ---- */
+
+.actionbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.actionbar.end {
+  justify-content: flex-end;
+}
+
+/* ---- Status line ---- */
+
+.statusline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+/* ---- Console ---- */
+
+.console {
+  margin: 10px 0 0;
+  padding: 15px;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #202640;
+  color: #e8ecff;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+
+/* ---- Skeleton rows ---- */
+
+.skeleton {
+  padding: 22px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.skeleton:last-child {
+  border-bottom: 0;
+}
+
+.bone {
+  border-radius: 5px;
+  background: var(--surface-sunken);
+}
+
+.bone.face {
+  width: 35px;
+  height: 35px;
+}
+
+.bone.line {
+  width: 150px;
+  height: 10px;
+  margin: 6px 0;
+}
+
+.bone.line.short {
+  width: 96px;
+}
+
+/* ---- Option cards ---- */
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 9px;
+  padding: 13px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.option:hover {
+  border-color: var(--brand-border);
+}
+
+.option.selected,
+.option:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-faint);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+.option:focus-within {
+  outline: 2px solid var(--brand-soft);
+  outline-offset: 3px;
+}
+
+.option > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Selection is a fading check mark, not a visible form control; the hidden
+   input keeps native keyboard and form semantics. */
+.option::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  align-self: flex-end;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  background: currentColor;
+  color: var(--brand-dark);
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>') center / contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>') center / contain no-repeat;
+  transition: opacity 120ms ease;
+}
+
+.option.selected::after,
+.option:has(input:checked)::after {
+  opacity: 1;
+}
+
+.option-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.option-title strong {
+  font: 600 16px var(--display);
+}
+
+.option-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.option-source {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  user-select: text;
+}
+
+/* ---- Step tabs ---- */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+  margin: 0 0 24px;
+}
+
+.steps li {
+  display: flex;
+  min-width: 0;
+}
+
+.steps button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 5px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  border-radius: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.steps button:hover:not(:disabled),
+.steps button.current {
+  background: transparent;
+  color: var(--brand-dark);
+  border-color: var(--brand);
+}
+
+.steps button.complete:not(.current) {
+  color: var(--green);
+}
+
+.steps button:disabled {
+  opacity: 1;
+}
+
+.step-number {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef0f8;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.steps button.current .step-number {
+  color: #fff;
+  background: var(--brand);
+}
+
+.steps button.complete .step-number {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+/* ---- Command row ---- */
+
+.command {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: var(--surface-sunken);
+  color: var(--muted);
+}
+
+.command code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.6;
+}
+
+.command .iconbtn {
+  width: 26px;
+  height: 26px;
+}
+
+/* ---- Note card ---- */
+
+.note {
+  margin: 20px 0;
+  padding: 24px;
+  background: var(--surface-soft);
+  border: 1px dashed #d9e1f4;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.note p:last-child {
+  margin-bottom: 0;
+}
+
+.note h3 {
+  margin-bottom: 8px;
+}
+
+/* ---- Warnings box ---- */
+
+.warnings {
+  margin: 14px 15px 0;
+  padding: 15px 18px;
+  border: 1px solid #e4d9b5;
+  border-radius: 10px;
+  background: var(--sand-soft);
+  color: var(--sand);
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.warnings summary {
+  font-weight: 550;
+}
+
+.warnings ul {
+  padding-left: 21px;
+  margin: 8px 0;
+}
+
+.warnings li + li {
+  margin-top: 7px;
+}
+
+/* ---- Inline error ---- */
+
+.inline-error {
+  padding: 12px 14px;
+  margin-bottom: 13px;
+  border: 1px solid var(--red-border);
+  border-radius: 8px;
+  color: var(--red);
+  background: var(--red-soft);
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Dialogs ---- */
+
+/* Native <dialog> chrome shared by every modal: panel surface, floating
+   close button, and the study's dimmed blurred backdrop. */
+.appdialog {
+  position: relative;
+  width: min(570px, calc(100vw - 36px));
+  max-height: calc(100dvh - 50px);
+  padding: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 22px 65px #141a3d38;
+  overflow-y: auto;
+}
+
+.appdialog h2 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin: 0 35px 7px 0;
+  overflow-wrap: anywhere;
+}
+
+.appdialog::backdrop {
+  background: #141a3d50;
+  backdrop-filter: blur(3px);
+}
+
+@starting-style {
+  .appdialog:not([open]) {
+    opacity: 0;
+  }
+
+  .appdialog[open] {
+    opacity: 0;
+    transform: scale(0.97) translateY(5px);
+  }
+}
+
+.dialogclose {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+}
+
+/* ---- Result count ---- */
+
+.resultcount {
+  padding: 9px 15px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+
 /* ---- Toasts ---- */
 
 .toasts {
@@ -383,7 +951,7 @@ input[type="radio"] {
   align-items: center;
   gap: 10px;
   padding: 11px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid #cdd9d3;
   border-radius: 9px;
   background: var(--surface);
   box-shadow: 0 5px 18px #141a3d18;
@@ -403,6 +971,11 @@ input[type="radio"] {
 
 .toast.error > svg {
   color: var(--red);
+}
+
+.toast.leaving {
+  opacity: 0;
+  transform: translateY(7px);
 }
 
 @starting-style {
@@ -441,6 +1014,14 @@ input[type="radio"] {
 .titlebrand img {
   width: 28px;
   height: 28px;
+}
+
+.wintitle {
+  margin-left: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
 }
 
 .wincontrols {
@@ -534,6 +1115,16 @@ input[type="radio"] {
   margin-top: auto;
 }
 
+/* The nav is a <nav> wrapper around the page buttons; display: contents
+   keeps the rail's flex column layout authoritative. */
+.railnav {
+  display: contents;
+}
+
+.railcount {
+  margin-left: auto;
+}
+
 .rail .railfoot {
   border-top: 1px solid var(--line);
   padding: 12px 10px 0;
@@ -561,6 +1152,51 @@ input[type="radio"] {
   overflow: auto;
   min-width: 0;
   scrollbar-gutter: stable;
+}
+
+@media (min-width: 1050px) and (max-width: 1230px) {
+  .app {
+    grid-template-columns: 140px minmax(0, 1fr);
+  }
+
+  .main {
+    padding: 25px 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .app {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .rail {
+    padding: 17px 5px;
+  }
+
+  .rail button {
+    padding: 11px;
+    justify-content: center;
+  }
+
+  .rail button span,
+  .railfoot,
+  .wintitle {
+    display: none;
+  }
+
+  .main {
+    padding: 20px 12px;
+  }
+
+  .pagehead {
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .pagehead h1 {
+    font-size: 25px;
+  }
 }
 
 .pagehead {
@@ -595,4 +1231,10 @@ input[type="radio"] {
 .contextline svg {
   width: 15px;
   height: 15px;
+}
+
+@media (max-width: 720px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

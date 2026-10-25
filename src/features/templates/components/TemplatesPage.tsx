@@ -153,7 +153,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
             </div>
           )}
           {warnings.length > 0 && (
-            <details className="catalog-warnings" open>
+            <details className="warnings" open>
               <summary>Template file warnings ({warnings.length})</summary>
               <p>Some saved files could not be read. Readable templates are still available below.</p>
               <ul>
@@ -256,7 +256,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                       className="textbtn"
                       onClick={() => void copyYaml(template)}
                     >
-                      <Icon name="plus" size={13} /> Copy YAML
+                      <Icon name="clipboard" size={13} /> Copy YAML
                     </button>
                   </details>
                 </article>

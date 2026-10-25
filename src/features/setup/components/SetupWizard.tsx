@@ -90,11 +90,11 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
       >
         <span style={{ width: `${(completed / 4) * 100}%` }} />
       </div>
-      <ol className="setup-steps" aria-label="Setup steps">
+      <ol className="steps" aria-label="Setup steps">
         {SETUP_STEPS.map((item, index) => (
           <li key={item.id}>
             <button
-              className={`setup-step ${current === index && !finished ? "current" : ""} ${isDone(item) ? "complete" : ""}`}
+              className={`${current === index && !finished ? "current" : ""} ${isDone(item) ? "complete" : ""}`.trim() || undefined}
               aria-current={current === index && !finished ? "step" : undefined}
               disabled={busy}
               onClick={() => {
@@ -125,7 +125,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
               ? "Your sandbox workspace is ready to explore."
               : "Missing steps will still be here whenever you’re ready."}
           </p>
-          <div className="wizard-actions">
+          <div className="actionbar wizard-actions">
             <button className="btn primary" onClick={onDone}>
               Go to home <Icon name="arrow" size={18} />
             </button>
@@ -150,7 +150,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
           <span className="eyebrow">STEP {current + 1} OF 4</span>
           <h3>{step.title}</h3>
           <p className="step-description">{step.description}</p>
-          <div className="command-preview">
+          <div className="command">
             <Icon name="terminal" size={17} />
             <code>{step.command}</code>
           </div>
@@ -183,7 +183,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
               <pre>{outputs[step.id]}</pre>
             </details>
           )}
-          <div className="wizard-actions">
+          <div className="actionbar wizard-actions">
             {current > 0 && (
               <button
                 className="btn"

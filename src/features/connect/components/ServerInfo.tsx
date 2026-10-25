@@ -60,7 +60,7 @@ export function ServerInfo({
             <dt>Port</dt>
             <dd>{info.port == null ? "From your SSH configuration" : info.port}</dd>
           </dl>
-          <div className="connection-command">
+          <div className="command">
             <code>{info.command}</code>
             <button
               className="iconbtn"

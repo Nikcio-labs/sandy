@@ -156,6 +156,7 @@ export default function SandboxesPage({
                 installed={installed}
                 selected={selected}
                 pending={pending}
+                actionLabels={actionLabels}
                 search={search}
                 onSearch={setSearch}
                 onRefresh={() => void refresh()}

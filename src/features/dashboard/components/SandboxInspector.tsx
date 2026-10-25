@@ -37,7 +37,7 @@ export function SandboxInspector({
         </button>
         <Avatar name={detail.name} />
         <h2>{detail.name}</h2>
-        <StatePill state={detail.state} pending={busy} />
+        <StatePill state={detail.state} pending={pending && actionLabels[pending]} />
         <p className="help">
           Local sandbox · {detail.agent || "No agent reported"}
         </p>

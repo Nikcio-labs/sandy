@@ -15,6 +15,14 @@ const navigation: {
   { id: "settings", icon: "settings", label: "Settings" },
 ];
 
+const titles: Record<View, string> = {
+  sandboxes: "Your sandboxes",
+  templates: "Templates",
+  settings: "Settings",
+  create: "Create a sandbox",
+  "edit-template": "Edit template",
+};
+
 /**
  * The window has no OS decorations, so the custom buttons must cover
  * minimize, maximize-restore, and close. Without OS decorations there is
@@ -52,7 +60,7 @@ function WindowControls() {
   );
 }
 
-export function Titlebar() {
+export function Titlebar({ view }: { view: View }) {
   return (
     // Draggable title bar. The "deep" value makes every non-interactive part
     // of the subtree draggable; interactive children (buttons) stay clickable
@@ -64,6 +72,9 @@ export function Titlebar() {
         <img src={logo} alt="" />
         <span>Sandy</span>
       </div>
+      <span className="wintitle" aria-hidden="true">
+        {titles[view]}
+      </span>
       <WindowControls />
     </header>
   );
@@ -84,7 +95,7 @@ export function Rail({
 }) {
   return (
     <aside className="rail" aria-label="App navigation">
-      <nav style={{ display: "contents" }}>
+      <nav className="railnav">
         {navigation.map((item) => {
           const active =
             view === item.id ||
@@ -101,9 +112,7 @@ export function Rail({
               <Icon name={item.icon} />
               <span>{item.label}</span>
               {item.id === "sandboxes" && count !== null && (
-                <span className="badge" style={{ marginLeft: "auto" }}>
-                  {count}
-                </span>
+                <span className="badge railcount">{count}</span>
               )}
             </button>
           );

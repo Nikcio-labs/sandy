@@ -19,11 +19,11 @@ export function ConnectionMethods({
   onSelect: (method: Method) => void;
 }) {
   return (
-    <div className="connection-options" role="group" aria-label="Connection options">
+    <div className="connection-options options" role="group" aria-label="Connection options">
       {methods.map((item) => (
         <button
           key={item.id}
-          className={method === item.id ? "active" : ""}
+          className={`option ${method === item.id ? "selected" : ""}`}
           aria-pressed={method === item.id}
           aria-controls="connection-method"
           disabled={busy}

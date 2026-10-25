@@ -14,6 +14,7 @@ export function SandboxList({
   installed,
   selected,
   pending,
+  actionLabels,
   search,
   onSearch,
   onRefresh,
@@ -28,6 +29,7 @@ export function SandboxList({
   installed: boolean;
   selected: string | null;
   pending: Map<string, SandboxAction>;
+  actionLabels: Record<SandboxAction, string>;
   search: string;
   onSearch: (value: string) => void;
   onRefresh: () => void;
@@ -38,7 +40,20 @@ export function SandboxList({
 }) {
   const loading = sandboxes === null;
   return (
-    <section className="panel" aria-label="Local sandboxes" aria-busy={loading || refreshing}>
+    <>
+      {/* Refresh failures sit above the panel so the last known rows stay
+          visible and recover without replaying the list. */}
+      {error && (
+        <ErrorBanner
+          title="Couldn’t refresh your sandboxes."
+          actionLabel="Try again"
+          disabled={refreshing}
+          onAction={onRefresh}
+        >
+          <p>{error}</p>
+        </ErrorBanner>
+      )}
+      <section className="panel" aria-label="Local sandboxes" aria-busy={loading || refreshing}>
       <div className="listhead">
         <h2>All sandboxes</h2>
         {sandboxes !== null && <span className="badge">{sandboxes.length}</span>}
@@ -62,21 +77,18 @@ export function SandboxList({
           <Icon name="refresh" size={16} />
         </button>
       </div>
-      {error && (
-        <ErrorBanner
-          title="Couldn’t refresh your sandboxes."
-          actionLabel="Try again"
-          disabled={refreshing}
-          onAction={onRefresh}
-        >
-          <p>{error}</p>
-        </ErrorBanner>
-      )}
       {loading && !error && installed && (
-        <div className="empty" role="status">
-          <p className="help">
-            <span className="spinner" aria-hidden="true" /> Loading local sandboxes…
-          </p>
+        <div role="status">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div className="skeleton" key={index} aria-hidden="true">
+              <div className="bone face" />
+              <div>
+                <div className="bone line" />
+                <div className="bone line short" />
+              </div>
+            </div>
+          ))}
+          <p className="help listnotice">Loading local sandboxes…</p>
         </div>
       )}
       {!loading && visible.length === 0 && (
@@ -125,7 +137,10 @@ export function SandboxList({
                     {sandbox.workspace || "No host workspace"}
                   </span>
                 </span>
-                <StatePill state={sandbox.state} pending={busy} />
+                <StatePill
+                  state={sandbox.state}
+                  pending={pending.get(sandbox.name) && actionLabels[pending.get(sandbox.name)!]}
+                />
               </button>
               <span className="rowaction">
                 <button
@@ -157,5 +172,6 @@ export function SandboxList({
         </p>
       )}
     </section>
+    </>
   );
 }

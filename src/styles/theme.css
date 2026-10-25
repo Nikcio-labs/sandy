@@ -44,6 +44,11 @@
   --brand-dark: #4535d7;
   --brand-soft: #efedff;
   --brand-border: #d8d2ff;
+  --brand-faint: #f6f4ff;
+
+  /* Form chrome. */
+  --field-border: #ccd3e5;
+  --field-disabled: #f4f5fa;
 
   /* Signals. */
   --green: #187344;

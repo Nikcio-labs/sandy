@@ -1,38 +1,8 @@
 /*
  * Templates list and the create wizard (catalog) pages. Shared appearance
  * classes live in components.css; only template/catalog-specific layout and
- * detail styling belong here.
+ * detail styling belongs here.
  */
-
-/* ---- Template launch and delete dialogs ---- */
-
-.catalog-launch-dialog {
-  width: min(600px, calc(100vw - 36px));
-  max-height: calc(100dvh - 50px);
-  padding: 28px;
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 22px 65px #141a3d38;
-  overflow-y: auto;
-}
-
-.catalog-launch-dialog::backdrop {
-  background: #141a3d50;
-  backdrop-filter: blur(3px);
-}
-
-.catalog-launch-dialog h2 {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.catalog-launch-dialog .catalog-actions {
-  justify-content: flex-end;
-}
 
 /* ---- Templates list ---- */
 
@@ -74,43 +44,13 @@
 
 /* Banners floated inside a panel need the list padding without touching
    the shared banner component's own box styles. */
-.panelnotice {
+.panelnotice,
+.listnotice {
   padding: 14px 15px 0;
 }
 
 .templatebadges {
   margin-top: 6px;
-}
-
-.catalog-warnings {
-  margin: 14px 15px 0;
-  padding: 15px 18px;
-  border: 1px solid #e4d9b5;
-  border-radius: 10px;
-  background: var(--sand-soft);
-  color: var(--sand);
-  font-size: 12px;
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-}
-
-.catalog-warnings summary {
-  font-weight: 550;
-}
-
-.catalog-warnings ul {
-  padding-left: 21px;
-  margin: 8px 0;
-}
-
-.catalog-warnings li + li {
-  margin-top: 7px;
-}
-
-/* ---- Create wizard (catalog) ---- */
-
-.catalog-page {
-  max-width: 1040px;
 }
 
 /* The create wizard replaces the page content in-place under the shared
@@ -119,63 +59,23 @@
   margin: 0 auto;
 }
 
+.catalog-page {
+  max-width: 1040px;
+}
+
 .catalog-panel {
   padding: 20px;
   min-width: 0;
 }
 
-.catalog-page-heading,
-.catalog-section-heading,
-.catalog-provider-heading,
-.catalog-actions,
-.catalog-version-actions,
-.catalog-provider-add {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.catalog-page-heading > div,
-.catalog-section-heading > div {
-  flex: 1;
+/* The create page's pagehead lets its title block wrap on narrow windows
+   while the Cancel button keeps its size. */
+.catalog-page-heading > div {
   min-width: 200px;
 }
 
 .catalog-page-heading > button {
   flex-shrink: 0;
-}
-
-.catalog-section-heading {
-  margin-bottom: 19px;
-}
-
-.catalog-section-heading h2,
-.catalog-section-heading h3 {
-  margin-bottom: 6px;
-}
-
-.catalog-muted {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.75;
-  margin-bottom: 18px;
-  overflow-wrap: anywhere;
-}
-
-.catalog-section-heading .catalog-muted {
-  margin-bottom: 0;
-}
-
-.catalog-help {
-  display: block;
-  font-weight: 400;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.65;
-  overflow-wrap: anywhere;
 }
 
 .catalog-unframed {
@@ -185,101 +85,6 @@
   min-width: 0;
 }
 
-/* Absolutely positioned sr-only content inside a static-ancestor page (e.g. a
-   form legend) takes the viewport as its containing block, so it escapes the
-   .main scroll clip and grows the document scrollHeight — the Settings page
-   ended up with a scrollbar on the window itself next to the content one. */
-.catalog-sr-only {
-  position: fixed;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.catalog-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 600;
-  min-width: 0;
-  margin-bottom: 17px;
-}
-
-.catalog-field input,
-.catalog-field select,
-.catalog-path-row > input {
-  width: 100%;
-  max-width: none;
-  min-width: 0;
-  min-height: 42px;
-  height: auto;
-  padding: 10px 12px;
-  font: inherit;
-  font-weight: 400;
-  border: 1px solid #ccd3e5;
-  border-radius: 7px;
-  color: var(--ink);
-  background: var(--surface);
-}
-
-.catalog-field input:disabled,
-.catalog-field select:disabled,
-.catalog-path-row input:disabled {
-  background: #f4f5fa;
-  color: var(--muted);
-}
-
-.catalog-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 18px;
-  min-width: 0;
-}
-
-.catalog-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  min-height: 36px;
-  line-height: 1.5;
-}
-
-.catalog-check input,
-.catalog-kit > input {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  flex-shrink: 0;
-  accent-color: var(--brand);
-}
-
-.catalog-badge {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 4px 9px;
-  border: 1px solid var(--brand-border);
-  border-radius: 20px;
-  color: var(--brand-dark);
-  background: var(--brand-soft);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.5;
-}
-
-.catalog-providers {
-  margin: 25px 0 0;
-}
 
 .explanation-details {
   margin-bottom: 20px;
@@ -295,99 +100,6 @@
   max-height: 200px;
 }
 
-.catalog-provider,
-.catalog-input-group {
-  margin: 0 0 22px;
-  padding: 14px 18px 10px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  min-width: 0;
-}
-
-.catalog-provider legend,
-.catalog-input-group legend {
-  padding: 0 7px;
-  font-size: 14px;
-  font-weight: 650;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-}
-
-.catalog-provider-heading {
-  justify-content: flex-start;
-  margin-bottom: 18px;
-}
-
-.catalog-provider-heading > button {
-  margin-left: auto;
-}
-
-.catalog-version-fields {
-  align-items: start;
-}
-
-.catalog-version-actions {
-  justify-content: flex-start;
-  align-self: center;
-  margin: 0 0 17px;
-  gap: 10px;
-}
-
-.catalog-version-actions .catalog-check {
-  font-size: 12px;
-}
-
-.catalog-reference {
-  max-width: 480px;
-}
-
-.catalog-inline-error {
-  padding: 12px 14px;
-  margin-bottom: 13px;
-  border: 1px solid var(--red-border);
-  border-radius: 8px;
-  color: var(--red);
-  background: var(--red-soft);
-  font-size: 12px;
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-}
-
-.catalog-provider-add {
-  justify-content: flex-start;
-  align-items: end;
-  margin: 5px 0 20px;
-}
-
-.catalog-provider-add .catalog-field {
-  min-width: 160px;
-  margin-bottom: 0;
-}
-
-.catalog-actions {
-  justify-content: flex-start;
-  margin-top: 24px;
-}
-
-.catalog-actions .catalog-help {
-  max-width: 450px;
-}
-
-.catalog-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  line-height: 1.75;
-  color: var(--muted);
-}
-
-.catalog-search {
-  max-width: 520px;
-  margin: 23px 0;
-}
-
 .catalog-choice-group {
   margin-top: 24px;
 }
@@ -398,104 +110,6 @@
   margin-bottom: 12px;
 }
 
-.catalog-kit-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
-}
-
-.catalog-kit {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  text-align: left;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 9px;
-  padding: 13px;
-  cursor: pointer;
-  transition:
-    background 120ms ease,
-    border-color 120ms ease;
-}
-
-.catalog-kit:hover {
-  border-color: var(--brand-border);
-}
-
-.catalog-kit.selected,
-.catalog-kit:has(input:checked) {
-  border-color: var(--brand);
-  background: #f6f4ff;
-  box-shadow: inset 0 0 0 1px var(--brand);
-}
-
-.catalog-kit:focus-within {
-  outline: 2px solid var(--brand-soft);
-  outline-offset: 3px;
-}
-
-.catalog-kit > input {
-  margin-top: 3px;
-}
-
-.catalog-kit-details {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.catalog-kit-title {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
-.catalog-kit-title strong {
-  font: 600 16px var(--display);
-}
-
-.catalog-kit-details .catalog-muted {
-  margin: 0;
-  font-size: 11px;
-}
-
-.catalog-source {
-  font-size: 10px;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  user-select: text;
-}
-
-.catalog-empty-note {
-  margin: 20px 0;
-  padding: 24px;
-  background: var(--surface-soft);
-  border: 1px dashed #d9e1f4;
-  border-radius: 10px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.75;
-}
-
-.catalog-empty-note p:last-child {
-  margin-bottom: 0;
-}
-
-.catalog-empty-note h3 {
-  margin-bottom: 8px;
-}
-
 .catalog-selected,
 .catalog-kit-inputs,
 .catalog-review {
@@ -504,7 +118,7 @@
   margin-top: 27px;
 }
 
-.catalog-finished > .catalog-muted {
+.catalog-finished > .help.intro {
   max-width: 650px;
 }
 
@@ -534,15 +148,71 @@
   font-weight: 500;
 }
 
-.catalog-path-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: -7px;
+/* The wizard's environment summary rail: a quiet sidebar beside the steps,
+   showing what is being assembled as choices are made. */
+.wizardgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 192px;
+  gap: 24px;
+  align-items: start;
 }
 
-.catalog-path-row > button {
-  flex-shrink: 0;
+.recipe {
+  border-left: 1px solid var(--line);
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.recipe h3 {
+  font-size: 17px;
+  margin-bottom: 14px;
+}
+
+.recipe p {
+  margin-bottom: 9px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.recipe strong {
+  color: var(--ink);
+}
+
+.recipe p:has(> svg) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recipe p:has(> svg) svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recipemark {
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #b8b0ef;
+  border-radius: 11px;
+  background: var(--brand-faint);
+  color: var(--brand-dark);
+  margin-bottom: 17px;
+}
+
+.recipemark svg {
+  width: 35px;
+  height: 35px;
+}
+
+@media (max-width: 720px) {
+  .wizardgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recipe {
+    display: none;
+  }
 }
 
 .catalog-review-grid {
@@ -610,41 +280,13 @@ pre.catalog-yaml {
   margin-top: 16px;
 }
 
-.catalog-console {
-  margin: 10px 0 0;
-  padding: 15px;
-  max-height: 180px;
-  overflow-y: auto;
-  background: #202640;
-  color: #e8ecff;
-  border-radius: 8px;
-  font-size: 11px;
-  line-height: 1.8;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  tab-size: 2;
-}
-
-/* ---- Settings ---- */
+/* The console and note components live in components.css; these aliases keep
+   the catalog call sites styled without renaming them feature by feature. */
+/* ---- Settings cards ---- */
 
 .settingshome {
   max-width: 780px;
-}
-
-.settings-card {
-  padding: 26px;
-  margin-top: 0;
-}
-
-.settings-card > .catalog-providers {
-  margin-top: 0;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-}
-
-/* Stacked cards on the Settings page (Updates, Kit providers, Advanced). */
+}/* Stacked cards on the Settings page (Updates, Kit providers, Advanced). */
 .settings-stack > .panel {
   margin-top: 17px;
 }
@@ -703,62 +345,6 @@ pre.catalog-yaml {
   white-space: nowrap;
 }
 
-.setup-steps {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 0;
-  list-style: none;
-  margin-bottom: 24px;
-}
-
-.setup-step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 5px;
-  width: 100%;
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid var(--line);
-  border-radius: 0;
-  font-size: 12px;
-  color: var(--muted);
-  text-align: left;
-}
-
-.setup-step:hover:not(:disabled),
-.setup-step.current {
-  background: transparent;
-  color: var(--brand-dark);
-  border-color: var(--brand);
-}
-
-.setup-step.complete:not(.current) {
-  color: var(--green);
-}
-
-.step-number {
-  width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #eef0f8;
-  flex-shrink: 0;
-  font-size: 10px;
-}
-
-.setup-step.current .step-number {
-  color: #fff;
-  background: var(--brand);
-}
-
-.setup-step.complete .step-number {
-  color: var(--green);
-  background: var(--green-soft);
-}
-
 .step-card {
   padding: 25px;
 }
@@ -775,22 +361,6 @@ pre.catalog-yaml {
   max-width: 620px;
   font-size: 13px;
   margin-bottom: 23px;
-}
-
-.command-preview {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 12px;
-  border-radius: 7px;
-  background: #f0f2f9;
-  color: var(--muted);
-}
-
-.command-preview code {
-  font-size: 12px;
-  overflow-wrap: anywhere;
-  flex: 1;
 }
 
 .step-feedback {
@@ -820,12 +390,9 @@ pre.catalog-yaml {
   color: var(--red);
 }
 
-.wizard-actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-top: 28px;
+/* The setup wizard centers its actions in the finish state. */
+.setup-finish .actionbar {
+  justify-content: center;
 }
 
 .step-output {
@@ -868,10 +435,6 @@ pre.catalog-yaml {
 .setup-finish p {
   color: var(--muted);
   font-size: 13px;
-}
-
-.setup-finish .wizard-actions {
-  justify-content: center;
 }
 
 /* Large rounded icon tile for wizard/finish states. */
@@ -936,14 +499,6 @@ pre.catalog-yaml {
   align-items: center;
   gap: 10px;
   margin: 0;
-}
-
-.eyebrow {
-  display: block;
-  font: 600 10px var(--body);
-  color: var(--brand-dark);
-  letter-spacing: 1.4px;
-  margin-bottom: 10px;
 }
 
 /* ---- Diagnostic log ---- */
@@ -1062,10 +617,6 @@ pre.catalog-yaml {
   margin: 14px 0 4px;
 }
 
-.update-offer .catalog-help {
-  display: inline;
-}
-
 .update-progress {
   margin: 14px 0 4px;
 }
@@ -1116,48 +667,14 @@ pre.catalog-yaml {
   font-size: 12px;
 }
 
-/* Close button floats over the dialog corner; the dialog is the offset parent. */
-.dialogclose {
-  position: absolute;
-  top: 14px;
-  right: 12px;
-}
-
 .connection-options {
-  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
   margin: 21px 0;
 }
 
-.connection-options button {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-  padding: 13px 11px;
-  text-align: left;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--surface);
-  line-height: 1.4;
-}
-
-.connection-options button.active {
-  border-color: var(--brand);
-  background: #f6f4ff;
-  box-shadow: inset 0 0 0 1px var(--brand);
-  color: var(--brand-dark);
-}
-
-.connection-options button:hover:not(:disabled):not(.active) {
-  background: var(--surface-sunken);
-}
-
-.connection-options span {
-  font-weight: 600;
-  font-size: 12px;
+/* Connection option cards lead with their icon, not a check mark. */
+.connection-options .option::after {
+  display: none;
 }
 
 .connection-options small {
@@ -1286,26 +803,6 @@ pre.catalog-yaml {
   user-select: text;
 }
 
-.connection-command {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f0f2f9;
-  padding: 10px 12px;
-  border-radius: 7px;
-}
-
-.connection-command code {
-  flex: 1;
-  min-width: 0;
-  line-height: 1.6;
-}
-
-.connection-command .iconbtn {
-  width: 26px;
-  height: 26px;
-}
-
 .connect-dialog .connection-loading,
 .connect-dialog .connection-feedback p {
   display: flex;
@@ -1354,47 +851,13 @@ pre.catalog-yaml {
 
 /* ---- Responsive ---- */
 
-@media (max-width: 1000px) {
-  .catalog-kit-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .setup-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 720px) {
   .catalog-panel {
     padding: 15px;
   }
 
-  .catalog-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .catalog-provider,
-  .catalog-input-group {
-    padding: 12px;
-  }
-
-  .catalog-review-grid {
-    grid-template-columns: 85px minmax(0, 1fr);
-    gap: 10px 12px;
-    font-size: 12px;
-  }
-
-  .catalog-page-heading > div,
-  .catalog-section-heading > div {
+  .catalog-page-heading > div {
     min-width: 0;
-    flex-basis: 100%;
-  }
-
-  .catalog-path-row {
-    flex-wrap: wrap;
-  }
-
-  .catalog-path-row > input {
     flex-basis: 100%;
   }
 
@@ -1422,10 +885,6 @@ pre.catalog-yaml {
   .setup-heading h2,
   .step-card h3 {
     font-size: 22px;
-  }
-
-  .setup-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .connect-dialog {

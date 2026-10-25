@@ -1,6 +1,6 @@
 import { stateKind } from "../lib/sandboxState";
 
-export function StatePill({ state, pending }: { state: string; pending?: boolean }) {
+export function StatePill({ state, pending }: { state: string; pending?: boolean | string }) {
   const label = state.replace(/^[•○]\s*/, "").trim() || "Unknown";
   // Pending actions are Sandy's own work, never a CLI state: they borrow the
   // violet pending styling while the CLI-reported label stays untouched.
@@ -11,7 +11,11 @@ export function StatePill({ state, pending }: { state: string; pending?: boolean
       ) : (
         <span className="dot" aria-hidden="true" />
       )}
-      {pending ? "Working…" : label.charAt(0).toUpperCase() + label.slice(1)}
+      {pending
+        ? typeof pending === "string"
+          ? pending
+          : "Working…"
+        : label.charAt(0).toUpperCase() + label.slice(1)}
     </span>
   );
 }

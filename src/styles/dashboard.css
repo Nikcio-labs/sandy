@@ -93,14 +93,6 @@
   display: inline-flex;
 }
 
-.resultcount {
-  padding: 9px 15px;
-  border-top: 1px solid var(--line);
-  font-size: 11px;
-  color: var(--muted);
-  margin: 0;
-}
-
 /* ---- Inspector ---- */
 
 .inspector {

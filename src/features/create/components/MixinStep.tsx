@@ -49,34 +49,34 @@ export function MixinStep({
         onContinue();
       }}
     >
-      <div className="catalog-section-heading">
+      <div className="sectionhead">
         <div>
           <h2>Make it your own</h2>
-          <p className="catalog-muted">
+          <p className="help intro">
             Showing only kit v{agent.schema_version} mixins compatible with {agent.name}, including
             each mixin’s required agent.
           </p>
         </div>
-        <span className="catalog-badge">{mixins.length} selected</span>
+        <span className="badge pill">{mixins.length} selected</span>
       </div>
-      <div className="catalog-fields">
-        <label className="catalog-field" htmlFor={`${id}-mixin-search`}>
-          Search mixins
-          <input
-            id={`${id}-mixin-search`}
-            type="search"
-            placeholder="Search mixins"
-            value={search}
-            onChange={(event) => onSearch(event.target.value)}
-          />
-        </label>
-        <label className="catalog-field" htmlFor={`${id}-provider-filter`}>
-          Group by provider
-          <select
-            id={`${id}-provider-filter`}
-            value={providerFilter}
-            onChange={(event) => onProviderFilter(event.target.value)}
-          >
+      <label className="search wide" htmlFor={`${id}-mixin-search`}>
+        <Icon name="search" size={14} />
+        <input
+          id={`${id}-mixin-search`}
+          type="search"
+          placeholder="Search compatible mixins…"
+          aria-label="Search mixins"
+          value={search}
+          onChange={(event) => onSearch(event.target.value)}
+        />
+      </label>
+      <label className="field" htmlFor={`${id}-provider-filter`}>
+        Group by provider
+        <select
+          id={`${id}-provider-filter`}
+          value={providerFilter}
+          onChange={(event) => onProviderFilter(event.target.value)}
+        >
             <option value="">All providers</option>
             {[...new Set(compatible.map((kit) => kit.provider_id))].map((providerId) => (
               <option key={providerId} value={providerId}>
@@ -85,11 +85,10 @@ export function MixinStep({
             ))}
           </select>
         </label>
-      </div>
       {mixinGroups.map((providerId) => (
         <fieldset className="catalog-unframed catalog-choice-group" key={providerId}>
           <legend>{providerLabel(providerId)}</legend>
-          <div className="catalog-kit-grid">
+          <div className="options">
             {matchingMixins
               .filter((kit) => kit.provider_id === providerId)
               .map((kit) => {
@@ -97,21 +96,19 @@ export function MixinStep({
                 const duplicateName =
                   !selected && (agent.name === kit.name || mixins.some((item) => item.name === kit.name));
                 return (
-                  <label className={`catalog-kit ${selected ? "selected" : ""}`} key={kit.id}>
+                  <label className={`option ${selected ? "selected" : ""}`} key={kit.id}>
                     <input
                       type="checkbox"
                       checked={selected}
                       disabled={duplicateName}
                       onChange={(event) => onToggleMixin(kit, event.target.checked)}
                     />
-                    <span className="catalog-kit-details">
-                      <KitDetails kit={kit} />
-                      {duplicateName && (
-                        <span className="catalog-help">
-                          Another kit with this name is already selected.
-                        </span>
-                      )}
-                    </span>
+                    <KitDetails kit={kit} />
+                    {duplicateName && (
+                      <span className="help">
+                        Another kit with this name is already selected.
+                      </span>
+                    )}
                   </label>
                 );
               })}
@@ -119,7 +116,7 @@ export function MixinStep({
         </fieldset>
       ))}
       {!matchingMixins.length && (
-        <div className="catalog-empty-note">
+        <div className="note">
           <p>
             {compatible.length
               ? "No mixins match these filters."
@@ -165,7 +162,7 @@ export function MixinStep({
         disabled={false}
         onChange={onArgumentChange}
       />
-      <div className="catalog-actions">
+      <div className="actionbar">
         <button type="button" className="btn" onClick={onBack}>
           Back
         </button>

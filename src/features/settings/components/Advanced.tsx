@@ -143,24 +143,24 @@ export default function Advanced() {
   };
 
   return (
-    <section className="catalog-providers" aria-labelledby="advanced-title" aria-busy={loading}>
-      <div className="catalog-section-heading">
+    <section className="group group-body" aria-labelledby="advanced-title" aria-busy={loading}>
+      <div className="sectionhead">
         <div>
           <h2 id="advanced-title">Advanced</h2>
-          <p className="catalog-muted">
+          <p className="help intro">
             A running record of what Sandy does on your behalf: every sandbox CLI call, kit
             discovery request, and error, with timestamps. Sandy keeps the newest entries when
             the log reaches its 10 MB limit.
           </p>
         </div>
         {entries.length > 0 && (
-          <span className="catalog-badge">
+          <span className="badge pill">
             {errorCount > 0 ? `${errorCount} error${errorCount === 1 ? "" : "s"}` : `${entries.length} entries`}
           </span>
         )}
       </div>
       {loading && (
-        <p className="catalog-status" role="status">
+        <p className="statusline" role="status">
           <span className="spinner" /> Loading diagnostic log…
         </p>
       )}
@@ -172,7 +172,7 @@ export default function Advanced() {
       {!loading && !error && (
         <>
           {entries.length === 0 ? (
-            <p className="catalog-empty-note">
+            <p className="note">
               Nothing logged yet. Entries appear as you use sandboxes, providers, and templates.
             </p>
           ) : (
@@ -185,7 +185,7 @@ export default function Advanced() {
                     <option value="errors">Errors only</option>
                   </select>
                 </label>
-                <span className="catalog-help">
+                <span className="help">
                   {visible.length === entries.length
                     ? `${entries.length} entries, ${sizeLabel}`
                     : `${visible.length} of ${entries.length} entries, ${sizeLabel}`}
@@ -207,7 +207,7 @@ export default function Advanced() {
                   </details>
                 ))}
                 {visible.length === 0 && (
-                  <p className="catalog-empty-note">No matching entries.</p>
+                  <p className="note">No matching entries.</p>
                 )}
                 {rendered.length < visible.length && (
                   <div className="debug-log-older">
@@ -224,11 +224,11 @@ export default function Advanced() {
             </>
           )}
           {notice && (
-            <p className="catalog-help" role="status">
+            <p className="help" role="status">
               {notice}
             </p>
           )}
-          <div className="catalog-actions">
+          <div className="actionbar">
             <button type="button" className="btn" onClick={() => void refresh()} disabled={loading}>
               <Icon name="refresh" size={16} />
               Refresh
