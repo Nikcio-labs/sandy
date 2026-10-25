@@ -9,6 +9,15 @@ mod setup;
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind, log};
 use tauri_plugin_window_state::{Builder as WindowStateBuilder, StateFlags};
+use time::OffsetDateTime;
+use time::format_description::FormatItem;
+use time::macros::format_description;
+
+// Matches the plugin's own desktop prefix (`[year]-[month]-[day][hour]:[minute]:[second]`)
+// so the stdout target keeps the same shape the builder produced before
+// `clear_format()` removed it.
+const STDOUT_TIME_FORMAT: &[FormatItem<'static>] =
+    format_description!("[[[year]-[month]-[day]][[[hour]:[minute]:[second]]");
 
 // App entry point: there is no caller to return an error to, so a fatal
 // startup failure may panic.
@@ -66,14 +75,38 @@ pub fn run() {
                     ]
                 },
             );
-            let mut targets = vec![Target::new(TargetKind::Stdout)];
+            let stdout_target = Target::new(TargetKind::Stdout)
+                // Re-apply the plugin's default format by hand: the
+                // builder-level `clear_format()` below strips it for every
+                // target, so the file target's JSON formatter receives raw
+                // messages instead of the plugin's prose prefix — which
+                // would otherwise end up verbatim inside every JSON
+                // summary shown in Settings → Advanced.
+                .format(|out, message, record| {
+                    out.finish(format_args!(
+                        "{}[{}][{}] {}",
+                        OffsetDateTime::now_utc()
+                            .format(&STDOUT_TIME_FORMAT)
+                            .unwrap_or_default(),
+                        record.target(),
+                        record.level(),
+                        message
+                    ))
+                });
+            let mut targets = vec![stdout_target];
             targets.extend(file_targets);
             let log_builder = tauri_plugin_log::Builder::new()
                 .targets(targets)
                 // Dependency crates (reqwest, hyper, ...) log at Info and
                 // would bury the app's own records without this.
                 .level(log::LevelFilter::Info)
-                .max_file_size(10 * 1024 * 1024);
+                .max_file_size(10 * 1024 * 1024)
+                // The plugin formats every record once at the builder level
+                // and hands the prefixed prose down to each target, prefix
+                // included; clearing it keeps the file target's JSON lines
+                // free of the duplicated `[date][time][target][LEVEL]`
+                // header.
+                .clear_format();
             if let Ok((plugin, max_level, logger)) = log_builder.split(app.handle()) {
                 app.handle().plugin(plugin).ok();
                 let _ = tauri_plugin_log::attach_logger(max_level, logger);
