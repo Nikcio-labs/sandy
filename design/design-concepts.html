@@ -78,7 +78,7 @@
   /* Window controls: 46px square hover targets, glyphs match native title bars.
      Maximize morphs between restore (two overlapping squares) and full square.
      Close tints red on hover, like every platform's title bar. */
-  .wincontrols { margin-left: auto; display: flex; align-self: stretch; }
+  .wincontrols { margin-left: auto; display: flex; align-self: stretch; position: relative; z-index: 5; }
   .winctl {
     width: 46px; align-self: stretch; border: 0; background: transparent; color: #5d6b96; cursor: pointer;
     display: grid; place-items: center; padding: 0;
@@ -101,51 +101,19 @@
   .viewtabs .vt:active { transform: scale(0.98); }
   .viewtabs .vtpill { position: absolute; z-index: 1; top: 3px; bottom: 3px; background: #fff; border-radius: 9px; box-shadow: 0 1px 4px rgba(23,30,66,0.1); transition: left 220ms var(--ease-in-out), width 220ms var(--ease-in-out); }
 
-  /* Home action cards */
-  .homeactions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .hact {
-    display: flex; align-items: center; gap: 13px; text-align: left; font: inherit; cursor: pointer;
-    border: 1px solid var(--border); border-radius: var(--radius-card); padding: 15px 16px;
-    background: var(--surface); color: var(--ink); position: relative; min-width: 0;
-    transition: transform 160ms var(--ease-out), border-color var(--dur-fast) ease, box-shadow 160ms var(--ease-out);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .hact:hover { transform: translateY(-2px); border-color: #c9cff0; box-shadow: 0 8px 24px rgba(23, 30, 66, 0.08); }
-  }
-  .hact:active { transform: scale(0.98); }
-  .hact:focus-visible { outline: 2px solid #a49bff; outline-offset: 2px; }
-  .hact .hicon {
-    width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: none;
-  }
-  .hact .hicon svg { width: 20px; height: 20px; }
-  .hact.featured { background: linear-gradient(135deg, #7b6cff, #5b4bf5 65%, #4f3ee8); border-color: transparent; color: #fff; }
-  .hact.featured .hicon { background: rgba(255, 255, 255, 0.16); color: #fff; }
-  .hact.featured .hsub { color: rgba(255, 255, 255, 0.78); }
-  .hact.blue .hicon { background: #e3f0ff; color: #1f6fb8; }
-  .hact.dust .hicon { background: #fdf3e2; color: #c97f1b; }
-  .htitle { white-space: nowrap; }
-  .htxt { display: block; min-width: 0; }
-  .hact .htxt { min-width: 0; flex: 1; }
-  .hact .htitle { font-family: var(--font-display); font-weight: 650; font-size: 14.5px; letter-spacing: -0.2px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hact .hsub { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Narrow columns (demo inspector layout): tiles become vertical launcher
-     cards — icon above a centered title, no subtitle or arrow. */
-  @container (max-width: 620px) {
-    .hact { flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 16px 12px 14px; }
-    .hact .hsub, .hact .harrow { display: none; }
-    .hact .htitle { white-space: normal; overflow: visible; text-overflow: clip; font-size: 13.5px; }
-  }
-  .hact .harrow {
-    margin-left: auto; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none;
-    background: #f1f3fa; color: #55679e; transition: transform 160ms var(--ease-out);
-  }
-  .hact .harrow svg { width: 13px; height: 13px; }
-  @media (hover: hover) and (pointer: fine) {
-    .hact:hover .harrow { transform: translateX(2px); }
-    .hact.featured:hover .harrow { background: rgba(255,255,255,0.2); color: #fff; }
+
   }
 
   /* Inspector column */
+  .inspector { position: relative; }
+  .inspector .insclose { position: absolute; top: 12px; right: 12px; }
+  /* Deselecting hides the details column; the list takes the full width.
+     Animated so collapsing doesn't feel like the card vanished. */
+  .withinspector[data-details="false"] { grid-template-columns: minmax(0, 1fr) 0; }
+  .withinspector[data-details="false"] .inspector { opacity: 0; transform: translateX(10px); pointer-events: none; }
+  .inspector { transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
+
+
   .withinspector { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 16px; align-items: start; }
   .withinspector > div:first-child { container-type: inline-size; }
   .inspector {
@@ -314,8 +282,8 @@
   .kit[aria-pressed="true"] { border-color: #a99bff; background: linear-gradient(120deg, #f7f5ff, #fff); box-shadow: inset 0 0 0 1px #a99bff; }
   .kit .kav { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; }
   .kit .kav svg { width: 16px; height: 16px; }
-  .kit .kname { font-weight: 600; font-size: 13px; }
-  .kit .kdesc { font-size: 11.5px; color: var(--faint); margin-top: 1px; }
+  .kit .kname { display: block; font-weight: 600; font-size: 13px; }
+  .kit .kdesc { display: block; font-size: 11.5px; color: var(--faint); margin-top: 1px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
   .chip {
     border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 6px 13px; font: inherit;
@@ -417,6 +385,32 @@
   .bootbg-lines span:nth-child(2) { height: 78%; background: #dfe2f3; }
   .bootbg-lines span:nth-child(3) { height: 58%; background: #e8ebf7; }
   .bootstage[data-phase="app"] .bootbg { opacity: 0.14; filter: blur(2px); }
+
+  /* Create wizard (blank or from a kit) */
+  .cwsteps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .cwtab {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 7px; text-align: left;
+    border: 1px solid var(--border); border-radius: 12px; padding: 12px 13px; background: #fff; cursor: pointer;
+    font: inherit; color: var(--ink);
+    transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, transform 120ms var(--ease-out);
+  }
+  .cwtab:active { transform: scale(0.98); }
+  .cwtab[aria-pressed="true"] { border-color: #a99bff; background: #f8f7ff; box-shadow: inset 0 0 0 1px #a99bff; }
+  .cwicon { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: #f1f3fa; color: #55679e; }
+  .cwicon svg { width: 15px; height: 15px; }
+  .cwtab[aria-pressed="true"] .cwicon { background: var(--primary-soft); color: var(--primary-deep); }
+  .cwname { font-weight: 600; font-size: 13px; }
+  .cwhint { font-size: 11.5px; color: var(--faint); }
+  .cwsearch { position: relative; margin-bottom: 10px; }
+  .cwsearch svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--faint); }
+  .cwsearch input {
+    width: 100%; font: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: 9px;
+    padding: 8px 11px 8px 32px; outline: 0; color: var(--ink);
+    transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  }
+  .cwsearch input:focus-visible { border-color: #a49bff; box-shadow: 0 0 0 3px #efedff; }
+  .cwkits { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cwnote { font-size: 11.5px; color: var(--faint); margin: 10px 0 0; }
 
   /* First-boot setup dialog */
   .bootlogo { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
@@ -923,32 +917,7 @@
                   <span><b>One step left.</b> Sign in to Docker to start creating sandboxes.</span>
                   <button class="btn ghost small" id="setupBannerBtn">Sign in</button>
                 </div>
-                <div class="homeactions" id="homeActions">
-                  <button class="hact featured" id="hactCreate">
-                    <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span>
-                    <span class="htxt">
-                      <span class="htitle">Create sandbox</span>
-                      <span class="hsub">Spin up a fresh environment</span>
-                    </span>
-                    <span class="harrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-                  </button>
-                  <button class="hact blue" id="hactTemplate">
-                    <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>
-                    <span class="htxt">
-                      <span class="htitle">From template</span>
-                      <span class="hsub">Launch a saved setup</span>
-                    </span>
-                    <span class="harrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-                  </button>
-                  <button class="hact dust" id="hactLearn">
-                    <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.7.3-.9.7-.9 1.7M12 16.5v.5"/></svg></span>
-                    <span class="htxt">
-                      <span class="htitle">Learn more</span>
-                      <span class="hsub">What sandboxes can do</span>
-                    </span>
-                    <span class="harrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-                  </button>
-                </div>
+
                 <div class="listcard">
                   <div class="listhead">
                     <h2>All sandboxes</h2>
@@ -975,6 +944,9 @@
                     <div class="insname" id="insName">next-portfolio</div>
                     <div class="inssub" id="insSub">Local sandbox · Claude Code</div>
                   </div>
+                  <button class="ibtn insclose" id="insClose" aria-label="Close details" title="Close details">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  </button>
                 </div>
                 <div class="insactions">
                   <button class="btn primary span2" id="insPrimary">Open</button>
@@ -1273,6 +1245,68 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
             </div>
           </div>
 
+          <div class="wdialog wide" id="dlgCreate" hidden>
+            <button class="ibtn dclose" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <h3>New sandbox</h3>
+            <p class="dsub">Start from a blank image or a kit from your providers.</p>
+            <div class="cwsteps" role="tablist" aria-label="Sandbox source">
+              <button class="cwtab" data-src="blank" aria-pressed="true">
+                <span class="cwicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></span>
+                <span class="cwname">Blank sandbox</span>
+                <span class="cwhint">Pick an image and go</span>
+              </button>
+              <button class="cwtab" data-src="kit" aria-pressed="false">
+                <span class="cwicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>
+                <span class="cwname">From a kit</span>
+                <span class="cwhint">Agents, workloads & mixins</span>
+              </button>
+            </div>
+            <div data-pane="blank">
+              <label class="wfield">Image
+                <input type="text" id="cwImage" placeholder="e.g. node:22" value="node:22" />
+              </label>
+              <label class="wfield">Sandbox name
+                <input type="text" id="cwName" placeholder="Sandbox name" value="new-sandbox" />
+              </label>
+              <label class="wcheck"><input type="checkbox" id="cwMountless" /> Mountless (no project folder attached)</label>
+            </div>
+            <div data-pane="kit" hidden>
+              <div class="cwsearch">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input type="text" id="cwKitSearch" placeholder="Search kits from your providers…" aria-label="Search kits" />
+              </div>
+              <div class="cwkits" id="cwKits">
+                <button class="kit" aria-pressed="true">
+                  <span class="kav" style="background:#ece7ff; color:#4b3fd6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg></span>
+                  <span><span class="kname">Claude Code</span><span class="kdesc">Agent · docker-sandboxing</span></span>
+                </button>
+                <button class="kit" aria-pressed="false">
+                  <span class="kav" style="background:#e3f0ff; color:#1f6fb8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+                  <span><span class="kname">Codex</span><span class="kdesc">Agent · docker-sandboxing</span></span>
+                </button>
+                <button class="kit" aria-pressed="false">
+                  <span class="kav" style="background:#dff0ff; color:#1f6fb8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg></span>
+                  <span><span class="kname">Docs writer</span><span class="kdesc">Workload · sandy library</span></span>
+                </button>
+                <button class="kit" aria-pressed="false">
+                  <span class="kav" style="background:#fdf3e2; color:#c97f1b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a5 5 0 1 0-5.4 8.2L8 22l4-3 4 3-1.3-7.5a5 5 0 0 0 0-8.2z"/></svg></span>
+                  <span><span class="kname">Python lab</span><span class="kdesc">Mixin · sandy library</span></span>
+                </button>
+              </div>
+              <p class="cwnote">Kits come from the providers enabled in Settings.</p>
+            </div>
+            <div class="dfoot">
+              <button class="btn ghost" data-close>Cancel</button>
+              <button class="btn primary" id="cwGo">
+                <span class="swap visible">Create sandbox</span>
+                <span class="swap hidden" data-swap>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+                  Created
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div class="wdialog" id="dlgSoon" hidden>
             <button class="ibtn dclose" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             <h3>Learn more is on its way</h3>
@@ -1557,7 +1591,8 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     document.getElementById("insPrimary").textContent = d.state === "running" ? "Open" : "Start";
   }
 
-  /* Row selection + inspector sync */
+  /* Row selection + inspector sync. Clicking the selected row toggles the
+     details column closed (same gesture as the close button). */
   rows.addEventListener("click", (e) => {
     const rowEl = e.target.closest(".row");
     if (rowEl && !e.target.closest(".rowactions")) {
@@ -1568,6 +1603,14 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
         selectedIdx = i; DATA[i].selected = true;
         rowEl.classList.add("selected");
         syncInspector(DATA[i]);
+        if (insWrap) insWrap.dataset.details = "true";
+      } else if (insWrap) {
+        const open = insWrap.dataset.details !== "false";
+        insWrap.dataset.details = String(!open);
+        if (open) {
+          DATA[i].selected = false;
+          rowEl.classList.remove("selected");
+        }
       }
     }
   });
@@ -1647,7 +1690,6 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
       p.hidden = p.dataset.page !== id;
       if (p.dataset.home) p.hidden = id !== "home" && id !== "sandboxes";
     });
-    document.getElementById("homeActions").style.display = id === "home" ? "" : "none";
     const apply = () => {
       winH1.textContent = PAGES[id].h1;
       document.getElementById("winTitle").textContent = PAGES[id].title;
@@ -1680,7 +1722,7 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
 
   /* ---------- App-window dialogs ---------- */
   const overlay = document.getElementById("winOverlay");
-  const dialogs = ["dlgConnect", "dlgLaunch", "dlgDelete", "dlgSoon", "dlgSetup"];
+  const dialogs = ["dlgConnect", "dlgLaunch", "dlgDelete", "dlgSoon", "dlgSetup", "dlgCreate"];
   function openDialog(id) {
     dialogs.forEach(d => document.getElementById(d).hidden = d !== id);
     overlay.dataset.open = "true";
@@ -1855,6 +1897,56 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     });
     dRender();
   }
+
+  /* ---------- Inspector details: closeable ---------- */
+  const insWrap = document.querySelector(".withinspector");
+  if (insWrap) {
+    insWrap.dataset.details = "true";
+    document.getElementById("insClose").addEventListener("click", () => {
+      insWrap.dataset.details = "false";
+      DATA[selectedIdx].selected = false;
+      rows.children[selectedIdx].classList.remove("selected");
+    });
+  }
+
+  /* ---------- Create wizard (top-right Create sandbox button) ---------- */
+  const cwTabs = document.querySelectorAll("#dlgCreate .cwtab");
+  cwTabs.forEach(tab => tab.addEventListener("click", () => {
+    cwTabs.forEach(t => t.setAttribute("aria-pressed", String(t === tab)));
+    document.querySelectorAll("#dlgCreate [data-pane]").forEach(p => {
+      p.hidden = p.dataset.pane !== tab.dataset.src;
+    });
+  }));
+  const cwKits = document.getElementById("cwKits");
+  if (cwKits) {
+    cwKits.addEventListener("click", (e) => {
+      const kit = e.target.closest(".kit");
+      if (!kit) return;
+      cwKits.querySelectorAll(".kit").forEach(k => k.setAttribute("aria-pressed", String(k === kit)));
+    });
+    document.getElementById("cwKitSearch").addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      cwKits.querySelectorAll(".kit").forEach(k => {
+        k.style.display = (k.textContent.toLowerCase().includes(q)) ? "" : "none";
+      });
+    });
+  }
+  const cwGo = document.getElementById("cwGo");
+  if (cwGo) cwGo.addEventListener("click", () => {
+    const [vis, hid] = cwGo.querySelectorAll(".swap");
+    vis.classList.remove("visible"); vis.classList.add("hidden");
+    hid.classList.remove("hidden"); hid.classList.add("visible");
+    setTimeout(() => {
+      closeDialogs();
+      toast("ok", "Sandbox created");
+      setTimeout(() => {
+        hid.classList.remove("visible"); hid.classList.add("hidden");
+        vis.classList.remove("hidden"); vis.classList.add("visible");
+      }, 400);
+    }, 900);
+  });
+  // No button-morph feedback here: opening the dialog IS the feedback.
+  document.getElementById("pageAction").addEventListener("click", () => openDialog("dlgCreate"));
 
   /* ---------- First-boot setup: only sbx install + login are required ---------- */
   const dlgSetup = document.getElementById("dlgSetup");
@@ -2063,14 +2155,6 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     b.setAttribute("aria-expanded", String(!open));
   }));
 
-  /* Home action cards: Learn more -> coming soon, From template -> templates page */
-  const hactCreate = document.getElementById("hactCreate");
-  if (hactCreate) {
-    hactCreate.addEventListener("click", () => showPage("sandboxes"));
-    document.getElementById("hactTemplate").addEventListener("click", () => showPage("templates"));
-    document.getElementById("hactLearn").addEventListener("click", () => openDialog("dlgSoon"));
-  }
-
   /* ---------- Templates: expand/collapse ---------- */
   const tplList = document.getElementById("tplList");
   if (tplList) {
@@ -2083,7 +2167,6 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
       card.dataset.open = String(!open);
       head.setAttribute("aria-expanded", String(!open));
     });
-    wireMorph(document.getElementById("pageAction"), 1600);
   }
 
   /* Template heads are div[role=button] (real <button>s can't contain the
