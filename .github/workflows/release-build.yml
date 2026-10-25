@@ -34,9 +34,6 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             label: Windows
-          # The Store variant bundles Webview2, as the Store requires, so it
-          # gets its own runner instead of taking over the regular Windows
-          # job's bundle directory.
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             label: Windows (Microsoft Store)
