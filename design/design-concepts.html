@@ -328,6 +328,42 @@
   .updprog { margin-top: 10px; }
 
   /* Providers editor */
+  /* Settings: nested panes slide in from the right; the pane header carries
+     the back gesture (and hardware back in the real shell). */
+  .setlinks { border-top: 1px solid var(--hairline); }
+  .setlink {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    border: 0; background: none; font: inherit; cursor: pointer; padding: 13px 16px;
+    color: var(--ink); border-bottom: 1px solid var(--hairline);
+    transition: background var(--dur-fast) ease, transform 120ms var(--ease-out);
+  }
+  .setlink:last-child { border-bottom: 0; }
+  .setlink:hover { background: #f6f7fd; }
+  .setlink:active { transform: scale(0.99); }
+  .setlink .sli { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: #f1f3fa; color: #55679e; flex: none; }
+  .setlink .sli svg { width: 16px; height: 16px; }
+  .setlink > span:not(.sli):not(.chev) { min-width: 0; }
+  .setlink .slt { display: block; font-size: 13.5px; font-weight: 600; }
+  .setlink .sld { display: block; font-size: 12px; color: var(--faint); margin-top: 1px; }
+  .setlink .chev { margin-left: auto; color: var(--faint); flex: none; }
+  .setlink .chev svg { width: 15px; height: 15px; display: block; }
+  .setpane { display: none; }
+  .settings[data-pane] .setpane[data-pane].active { display: block; animation: paneIn 220ms var(--ease-out); }
+  .settings[data-pane] .settingshome { display: none; }
+  .panehead { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--hairline); }
+  .paneback {
+    width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--border); background: #fff;
+    display: grid; place-items: center; cursor: pointer; color: var(--muted); flex: none;
+    transition: transform 120ms var(--ease-out), background var(--dur-fast) ease;
+  }
+  .paneback:hover { background: #f5f6fd; color: var(--ink); }
+  .paneback:active { transform: scale(0.94); }
+  .paneback svg { width: 15px; height: 15px; }
+  .panehead .ptitle { font-family: var(--font-display); font-size: 16px; font-weight: 650; letter-spacing: -0.2px; }
+  @keyframes paneIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
   .provcard { border-top: 1px solid var(--hairline); padding: 12px 16px; display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 12px; align-items: center; }
   .provcard .pav { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 12px; font-weight: 700; grid-row: span 2; }
   .provcard input {
@@ -863,7 +899,7 @@
   <!-- ================= APP WINDOW ================= -->
   <section id="appwindow">
     <h2>The app window</h2>
-    <p>Custom titlebar with the dune logo, working window controls (minimize / maximize–restore / close), and the full dashboard with an inspector column. The maximize button morphs between its two states; close tints red on hover like every native title bar. Everything inside is clickable.</p>
+    <p>Custom titlebar with the dune logo, working window controls (minimize / maximize–restore / close), and the full app: dashboard with an inspector column, settings as nested panes, and the create wizard. States come straight from the sbx CLI — running, stopped, and anything else grouped as inactive. Everything inside is clickable.</p>
 
     <div class="frame" style="padding: 26px; background: linear-gradient(150deg, #e6e9f5, #eceef6 60%, #e3e6f2);">
       <div class="winframe" id="win">
@@ -975,18 +1011,21 @@
                       <div class="tplavatar pa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg></div>
                       <div style="min-width:0">
                         <div class="tplname">Next.js portfolio</div>
-                        <div class="tplmeta"><span class="tplpill dust">Popular</span><span class="tplpill">Node 22</span></div>
+                        <div class="tplmeta"><span class="tplpill">Claude Code</span><span class="tplpill">Kit v2</span></div>
                       </div>
                       <span class="tplactions"><button class="ibtn" data-tpl-edit aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-tpl-delete aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-tpl-launch>Launch</span></span>
                       <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                     </div>
                     <div class="tplbody"><div><div class="inner">
-                      Launches a Next.js dev server with hot reload. Files stay on this machine.
-                      <pre>image: node:22
-ports:
-  - 3000:3000
-command: npm run dev
-mount: ~/code/portfolio</pre>
+                      <dl class="insgrid" style="padding:0 0 10px;">
+                        <dt>Workspace</dt><dd><code>~/code/portfolio</code></dd>
+                        <dt>Template file</dt><dd><code>~/.sandy/templates/next-portfolio.yml</code></dd>
+                      </dl>
+                      <pre>agent: claude
+kit: docker-sandboxing/claude-code
+workspace: ~/code/portfolio
+mixins:
+  - sandy-library/node-dev</pre>
                     </div></div></div>
                   </div>
 
@@ -995,17 +1034,21 @@ mount: ~/code/portfolio</pre>
                       <div class="tplavatar pb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg></div>
                       <div style="min-width:0">
                         <div class="tplname">Python lab</div>
-                        <div class="tplmeta"><span class="tplpill">Python 3.12</span><span class="tplpill">Jupyter</span></div>
+                        <div class="tplmeta"><span class="tplpill">Codex</span><span class="tplpill">Kit v3</span></div>
                       </div>
                       <span class="tplactions"><button class="ibtn" data-tpl-edit aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-tpl-delete aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-tpl-launch>Launch</span></span>
                       <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                     </div>
                     <div class="tplbody"><div><div class="inner">
-                      Jupyter environment for experiments. Nothing is saved unless you mount a folder.
-                      <pre>image: python:3.12
-ports:
-  - 8888:8888
-command: jupyter lab --no-browser</pre>
+                      <dl class="insgrid" style="padding:0 0 10px;">
+                        <dt>Workspace</dt><dd>None (mountless, isolated)</dd>
+                        <dt>Template file</dt><dd><code>~/.sandy/templates/python-lab.yml</code></dd>
+                      </dl>
+                      <pre>agent: codex
+kit: sandy-library/python-lab
+workspace: null
+mixins:
+  - sandy-library/jupyter</pre>
                     </div></div></div>
                   </div>
 
@@ -1014,16 +1057,19 @@ command: jupyter lab --no-browser</pre>
                       <div class="tplavatar pc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg></div>
                       <div style="min-width:0">
                         <div class="tplname">Docs writer</div>
-                        <div class="tplmeta"><span class="tplpill">Static</span></div>
+                        <div class="tplmeta"><span class="tplpill">Claude Code</span><span class="tplpill">Kit v2</span></div>
                       </div>
                       <span class="tplactions"><button class="ibtn" data-tpl-edit aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-tpl-delete aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-tpl-launch>Launch</span></span>
                       <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                     </div>
                     <div class="tplbody"><div><div class="inner">
-                      Plain container with the docs folder mounted for writing and preview builds.
-                      <pre>image: alpine:3.20
-mount: ~/writing/handbook
-command: sh</pre>
+                      <dl class="insgrid" style="padding:0 0 10px;">
+                        <dt>Workspace</dt><dd><code>~/writing/handbook</code></dd>
+                        <dt>Template file</dt><dd><code>~/.sandy/templates/docs-writer.yml</code></dd>
+                      </dl>
+                      <pre>agent: claude
+kit: sandy-library/docs-writer
+workspace: ~/writing/handbook</pre>
                     </div></div></div>
                   </div>
                 </div>
@@ -1031,105 +1077,135 @@ command: sh</pre>
             </div>
 
             <div class="appPage" data-page="settings" hidden>
-              <div class="listcard" style="margin-bottom: 12px;">
-                <div class="setrow">
-                  <div>
-                    <div class="settitle">Updates</div>
-                    <div class="setdesc">Sandy can check for new versions and update itself in place; you just confirm the restart.</div>
+              <div class="settings" id="settingsRoot">
+                <div class="listcard settingshome">
+                  <div class="setrow">
+                    <div>
+                      <div class="settitle">Updates</div>
+                      <div class="setdesc">Sandy can check for new versions and update itself in place; you just confirm the restart.</div>
+                    </div>
+                    <span class="tplpill" style="flex:none">Version 0.3.1</span>
                   </div>
-                  <span class="tplpill" style="flex:none">Version 0.3.1</span>
+                  <div class="updavail" id="updAvail">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex:none"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+                    <span><b>Sandy 0.4.0</b> is available.</span>
+                    <button class="btn primary small" id="updBtn">Update now</button>
+                  </div>
+                  <div class="updprog" id="updProg" hidden style="padding: 0 16px 14px;">
+                    <div class="ptrack" style="margin-bottom: 6px;"><div class="pfill" id="updFill"></div></div>
+                    <span style="font-size:12px;color:var(--muted)">Downloading… restarts when ready.</span>
+                  </div>
+                  <div class="setlinks">
+                    <button class="setlink" data-open-pane="providers">
+                      <span class="sli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>
+                      <span><span class="slt">Kit providers</span><span class="sld">GitHub repos Sandy discovers agents, workloads, and mixins from · 2 enabled</span></span>
+                      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+                    </button>
+                    <button class="setlink" data-open-pane="sandbox">
+                      <span class="sli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg></span>
+                      <span><span class="slt">Sandbox settings</span><span class="sld">Every sbx settings key, read live from the CLI</span></span>
+                      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+                    </button>
+                    <button class="setlink" data-open-pane="advanced">
+                      <span class="sli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+                      <span><span class="slt">Advanced</span><span class="sld">Diagnostic log from Sandy and the sbx CLI</span></span>
+                      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+                    </button>
+                  </div>
                 </div>
-                <div class="updavail" id="updAvail">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex:none"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
-                  <span><b>Sandy 0.4.0</b> is available.</span>
-                  <button class="btn primary small" id="updBtn">Update now</button>
-                </div>
-                <div class="updprog" id="updProg" hidden style="padding: 0 16px 14px;">
-                  <div class="ptrack" style="margin-bottom: 6px;"><div class="pfill" id="updFill"></div></div>
-                  <span style="font-size:12px;color:var(--muted)">Downloading… restarts when ready.</span>
-                </div>
-              </div>
 
-              <div class="listcard" style="margin-bottom: 12px;">
-                <div class="setrow" style="padding-bottom: 10px;">
-                  <div>
-                    <div class="settitle">Kit providers</div>
-                    <div class="setdesc">GitHub repositories Sandy discovers agents, workloads, and mixins from for the create-template flow. Enabling one authorizes it in <code class="inl">sbx kit.allowedSources</code> when its kits launch.</div>
+                <div class="listcard setpane" data-pane="providers">
+                  <div class="panehead">
+                    <button class="paneback" data-close-pane aria-label="Back to settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+                    <span class="ptitle">Kit providers</span>
                   </div>
-                  <span class="tplpill" style="flex:none">2 enabled</span>
-                </div>
-                <div class="provcard">
-                  <span class="pav" style="background:#eef0f8; color:#55679e">DS</span>
-                  <div style="min-width:0">
-                    <input value="Docker sandboxing" aria-label="Provider name" />
-                    <span class="purl">github.com/nikcio/docker-sandboxing</span>
+                  <div class="setrow" style="padding-bottom: 10px;">
+                    <div>
+                      <div class="setdesc">Choose where Sandy finds agents, workloads, and mixins. Save your references before discovering kits. Enabling a GitHub repository authorizes it in <code class="inl">sbx kit.allowedSources</code> when its kits launch.</div>
+                    </div>
+                    <span class="tplpill" style="flex:none">2 enabled</span>
                   </div>
-                  <span class="pref">Latest</span>
-                  <button class="switch on pswitch" role="switch" aria-checked="true" aria-label="Enable Docker sandboxing"><span class="knob"></span></button>
-                  <button class="ibtn pmore" aria-label="Remove provider" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
-                </div>
-                <div class="provcard">
-                  <span class="pav" style="background:#ece7ff; color:#4b3fd6">SL</span>
-                  <div style="min-width:0">
-                    <input value="Sandy library" aria-label="Provider name" />
-                    <span class="purl">github.com/sandy-dev/library</span>
+                  <div class="provcard">
+                    <span class="pav" style="background:#eef0f8; color:#55679e">DS</span>
+                    <div style="min-width:0">
+                      <input value="Docker sandboxing" aria-label="Provider name" />
+                      <span class="purl">github.com/nikcio/docker-sandboxing</span>
+                    </div>
+                    <span class="pref">Latest</span>
+                    <button class="switch on pswitch" role="switch" aria-checked="true" aria-label="Enable Docker sandboxing"><span class="knob"></span></button>
+                    <button class="ibtn pmore" aria-label="Remove provider" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
                   </div>
-                  <span class="pref">v1.4.0</span>
-                  <button class="switch on pswitch" role="switch" aria-checked="true" aria-label="Enable Sandy library"><span class="knob"></span></button>
-                  <button class="ibtn pmore" aria-label="Remove provider" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+                  <div class="provcard">
+                    <span class="pav" style="background:#ece7ff; color:#4b3fd6">SL</span>
+                    <div style="min-width:0">
+                      <input value="Sandy library" aria-label="Provider name" />
+                      <span class="purl">github.com/sandy-dev/library</span>
+                    </div>
+                    <span class="pref">v1.4.0</span>
+                    <button class="switch on pswitch" role="switch" aria-checked="true" aria-label="Enable Sandy library"><span class="knob"></span></button>
+                    <button class="ibtn pmore" aria-label="Remove provider" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:12px; padding: 12px 16px 14px;">
+                    <button class="btn ghost small" id="provAdd">Add provider</button>
+                    <button class="btn ghost small">Add docker-sandboxing</button>
+                    <button class="btn primary small" id="provSave" disabled>Save providers</button>
+                    <span style="font-size:12px; color:var(--faint)">Using the saved provider configuration</span>
+                  </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:12px; padding: 12px 16px 14px;">
-                  <button class="btn ghost small" id="provAdd">Add provider</button>
-                  <button class="btn primary small" id="provSave" disabled>Save providers</button>
-                  <span style="font-size:12px; color:var(--faint)">Using the saved provider configuration</span>
-                </div>
-              </div>
 
-              <div class="listcard" id="sbxSettingsCard">
-                <div class="setrow" style="padding-bottom: 8px;">
-                  <div>
-                    <div class="settitle">Sandbox settings</div>
-                    <div class="setdesc">Every <code class="inl">sbx settings</code> key, read live from the CLI. Changes are applied with <code class="inl">sbx settings set</code> as soon as you flip them.</div>
+                <div class="listcard setpane" data-pane="sandbox">
+                  <div class="panehead">
+                    <button class="paneback" data-close-pane aria-label="Back to settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+                    <span class="ptitle">Sandbox settings</span>
                   </div>
-                  <button class="btn ghost small" id="sbxRefresh">Refresh</button>
-                </div>
-                <div class="setrow" style="padding-top: 0; padding-bottom: 10px;">
-                  <div class="search" style="border-color: var(--border); min-width: 0; flex: 1;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                    <input type="text" id="sbxSettingFilter" placeholder="Filter settings…" aria-label="Filter settings" style="width: 100%" />
+                  <div class="setrow" style="padding-bottom: 8px;">
+                    <div>
+                      <div class="setdesc">Every <code class="inl">sbx settings</code> key, read live from the CLI. Changes are applied with <code class="inl">sbx settings set</code> as soon as you flip them.</div>
+                    </div>
+                    <button class="btn ghost small" id="sbxRefresh">Refresh</button>
                   </div>
+                  <div class="setrow" style="padding-top: 0; padding-bottom: 10px;">
+                    <div class="search" style="border-color: var(--border); min-width: 0; flex: 1;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                      <input type="text" id="sbxSettingFilter" placeholder="Filter settings…" aria-label="Filter settings" style="width: 100%" />
+                    </div>
+                  </div>
+                  <div id="sbxSettingsList"></div>
                 </div>
-                <div id="sbxSettingsList"></div>
-              </div>
 
-              <div class="listcard">
-                <div class="setrow" style="padding-bottom: 6px;">
-                  <div>
-                    <div class="settitle">Advanced</div>
-                    <div class="setdesc">Diagnostic log from Sandy and the sbx CLI.</div>
+                <div class="listcard setpane" data-pane="advanced">
+                  <div class="panehead">
+                    <button class="paneback" data-close-pane aria-label="Back to settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+                    <span class="ptitle">Advanced</span>
+                    <span class="tplpill" style="margin-left:auto">4 entries</span>
+                    <button class="btn ghost small" id="logsBtn">Refresh</button>
                   </div>
-                  <button class="btn ghost small" id="logsBtn">Refresh</button>
-                </div>
-                <div class="logfilter"><input type="text" placeholder="Filter log entries…" aria-label="Filter log entries" /></div>
-                <div class="logentry" data-open="false">
-                  <button aria-expanded="false"><span class="logkind info">INFO</span><span class="logmsg">Sandboxes refreshed: 3 found, 2 running</span><span class="logtime">14:02:11</span></button>
-                  <div class="logdetail"><pre>sbx list --json
+                  <div class="logfilter"><input type="text" placeholder="Filter log entries…" aria-label="Filter log entries" /></div>
+                  <div class="logentry" data-open="false">
+                    <button aria-expanded="false"><span class="logkind info">INFO</span><span class="logmsg">Sandboxes refreshed: 3 found, 2 running</span><span class="logtime">14:02:11</span></button>
+                    <div class="logdetail"><pre>sbx list --json
 → 3 sandboxes (142 ms)</pre></div>
-                </div>
-                <div class="logentry" data-open="false">
-                  <button aria-expanded="false"><span class="logkind warn">WARN</span><span class="logmsg">Template warnings: 1 file needs attention</span><span class="logtime">14:02:12</span></button>
-                  <div class="logdetail"><pre>python-lab.yml: image tag "python" is ambiguous,
+                  </div>
+                  <div class="logentry" data-open="false">
+                    <button aria-expanded="false"><span class="logkind warn">WARN</span><span class="logmsg">Template warnings: 1 file needs attention</span><span class="logtime">14:02:12</span></button>
+                    <div class="logdetail"><pre>python-lab.yml: image tag "python" is ambiguous,
 using "python:3.12" instead.</pre></div>
-                </div>
-                <div class="logentry" data-open="false">
-                  <button aria-expanded="false"><span class="logkind error">ERROR</span><span class="logmsg">docker daemon unreachable (retry 1/3)</span><span class="logtime">13:57:48</span></button>
-                  <div class="logdetail"><pre>Cannot connect to the Docker daemon at
+                  </div>
+                  <div class="logentry" data-open="false">
+                    <button aria-expanded="false"><span class="logkind error">ERROR</span><span class="logmsg">sbx CLI unreachable (retry 1/3)</span><span class="logtime">13:57:48</span></button>
+                    <div class="logdetail"><pre>Cannot connect to the Docker daemon at
 unix:///var/run/docker.sock. Is the docker daemon running?</pre></div>
-                </div>
-                <div class="logentry" data-open="false">
-                  <button aria-expanded="false"><span class="logkind info">INFO</span><span class="logmsg">Provider configuration saved to disk</span><span class="logtime">13:41:02</span></button>
-                  <div class="logdetail"><pre>providers: 2 enabled
+                  </div>
+                  <div class="logentry" data-open="false">
+                    <button aria-expanded="false"><span class="logkind info">INFO</span><span class="logmsg">Provider configuration saved to disk</span><span class="logtime">13:41:02</span></button>
+                    <div class="logdetail"><pre>providers: 2 enabled
 discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
+                  </div>
+                  <div style="display:flex; gap:8px; padding: 12px 16px 14px; flex-wrap: wrap;">
+                    <button class="btn ghost small">Copy log</button>
+                    <button class="btn ghost small">Open log folder</button>
+                    <button class="btn ghost small" style="color: var(--red)">Clear log</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1268,7 +1344,13 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
               <label class="wfield">Sandbox name
                 <input type="text" id="cwName" placeholder="Sandbox name" value="new-sandbox" />
               </label>
-              <label class="wcheck"><input type="checkbox" id="cwMountless" /> Mountless (no project folder attached)</label>
+              <label class="wcheck"><input type="checkbox" id="cwMountless" /> Run without a workspace (mountless)</label>
+              <label class="wfield" id="cwWsField">Workspace folder
+                <span class="frow">
+                  <input type="text" id="cwWs" placeholder="Absolute project path" value="~/code/portfolio" />
+                  <button class="btn ghost small" id="cwBrowse">Browse…</button>
+                </span>
+              </label>
             </div>
             <div data-pane="kit" hidden>
               <div class="cwsearch">
@@ -1293,7 +1375,7 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
                   <span><span class="kname">Python lab</span><span class="kdesc">Mixin · sandy library</span></span>
                 </button>
               </div>
-              <p class="cwnote">Kits come from the providers enabled in Settings.</p>
+              <p class="cwnote">Kits come from the providers enabled in Settings. Pick one to continue — mixins and the project folder come next.</p>
             </div>
             <div class="dfoot">
               <button class="btn ghost" data-close>Cancel</button>
@@ -1317,7 +1399,7 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
       </div>
     </div>
 
-    <p class="note"><b>Try:</b> navigate with the sidebar — every page lives in this one window, the headline crossfades, the titlebar title follows, and the top-right action button changes per page (none on Settings). Window controls: close tints red, maximize morphs to its restore glyph. Selecting a row swaps the inspector instantly — high-frequency actions never animate. Press Start on a stopped row and watch row + inspector + subtitle update together.</p>
+    <p class="note"><b>Try:</b> navigate with the sidebar — every page lives in this one window, the headline crossfades, the titlebar title follows, and the top-right action button changes per page. Settings opens as a home list; Kit providers, Sandbox settings, and Advanced each slide in as their own pane (Escape walks back out). Selecting a row swaps the inspector instantly — high-frequency actions never animate — and clicking it again closes it. Press Start on a stopped row and watch the pill, inspector, and subtitle update together.</p>
   </section>
 
   <!-- ================= STATES ================= -->
@@ -1328,12 +1410,14 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     <div class="lab">
       <div class="labcard">
         <h3>State pills</h3>
-        <p>Running breathes gently; stopped and inactive rest. Pending spins without pretending to be a state.</p>
+        <p>The CLI reports running, stopped, or anything else — which the app groups as inactive. Pending is never a state of its own: the pill spins with the verb of the action in flight.</p>
         <div class="labrow" id="pillRow">
           <span class="state running"><span class="dot"></span>Running</span>
           <span class="state stopped"><span class="dot"></span>Stopped</span>
           <span class="state inactive"><span class="dot"></span>Inactive</span>
-          <span class="state pending"><span class="spin spin-dark"></span>Starting…</span>
+          <span class="state stopped"><span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Starting…</span>
+          <span class="state stopped"><span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Stopping…</span>
+          <span class="state stopped"><span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Restarting…</span>
         </div>
       </div>
 
@@ -1343,8 +1427,8 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
         <div class="stage" style="height: auto; padding: 8px 0;">
           <div class="emptywrap" style="padding: 20px 16px;">
             <div class="emptyicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18c2.5-6 5.5-9 9-9s6.5 3 9 9"/><path d="M3 18h18"/></svg></div>
-            <h3>No sandboxes yet</h3>
-            <p>Create one and Sandy will set everything up for you.</p>
+            <h3>A little room for your next big idea</h3>
+            <p>Create a sandbox and attach a project folder. Your local environments will appear here.</p>
             <button class="btn primary">Create sandbox</button>
           </div>
         </div>
@@ -1373,8 +1457,8 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
             <div class="emptyicon" style="background:linear-gradient(135deg,#fdf0f1,#f8d9dc); color:#c73a45;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 16.5v.5"/><path d="M10.3 3.8L2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg>
             </div>
-            <h3>Can’t reach the sbx CLI</h3>
-            <p>Docker may not be running. Start Docker Desktop and try again.</p>
+            <h3>Couldn’t refresh your sandboxes</h3>
+            <p>The sbx CLI could not be reached. Make sure Docker Desktop is running, then try again.</p>
             <button class="btn primary">Try again</button>
           </div>
         </div>
@@ -1514,20 +1598,27 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
 
   /* ---------- Shared sandbox data + row renderer ---------- */
   const rows = document.getElementById("rows");
+  // Agent ids come from the CLI (sbx ls); display names follow Docker Sandboxes.
+  const AGENT_NAMES = { claude: "Claude Code", codex: "Codex", copilot: "Copilot", cursor: "Cursor", devin: "Devin", "docker-agent": "Docker Agent", droid: "Droid", gemini: "Gemini CLI", kiro: "Kiro", opencode: "OpenCode", shell: "Shell" };
+  const resolveAgent = (a) => AGENT_NAMES[a] || a || "No agent reported";
   const DATA = [
-    { name: "next-portfolio", agent: "Claude Code", path: "~/code/portfolio", state: "running", pal: "p0",
+    { name: "next-portfolio", agent: "claude", path: "~/code/portfolio", state: "running", pal: "p0",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg>' },
-    { name: "python-lab", agent: "Codex", path: "~/experiments/ml-notebooks", state: "running", pal: "p1",
+    { name: "python-lab", agent: "codex", path: "~/experiments/ml-notebooks", state: "running", pal: "p1",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' },
-    { name: "docs-writer", agent: "Claude Code", path: "~/writing/handbook", state: "stopped", pal: "p2",
+    { name: "docs-writer", agent: "claude", path: "~/writing/handbook", state: "stopped", pal: "p2",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg>' },
+    { name: "api-experiments", agent: "gemini", path: null, state: "inactive", pal: "p3",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l4 4-4 4-4-4 4-4z"/><path d="M12 13l4 4-4 4-4-4 4-4z"/></svg>' },
   ];
   DATA[0].selected = true;
   let selectedIdx = 0;
 
-  const statePill = (s) => {
-    if (s === "running") return '<span class="state running"><span class="dot"></span>Running</span>';
-    if (s === "pending") return '<span class="state stopped"><span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Starting…</span>';
+  const pendingLabel = (d) => d.pendingAction === "stop" ? "Stopping…" : d.pendingAction === "restart" ? "Restarting…" : "Starting…";
+  const statePill = (d) => {
+    if (d.state === "running") return '<span class="state running"><span class="dot"></span>Running</span>';
+    if (d.state === "pending") return '<span class="state stopped"><span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>' + pendingLabel(d) + '</span>';
+    if (d.state === "inactive") return '<span class="state inactive"><span class="dot"></span>Inactive</span>';
     return '<span class="state stopped"><span class="dot"></span>Stopped</span>';
   };
 
@@ -1539,15 +1630,15 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
       '<div class="avatar ' + d.pal + '">' + d.icon + '</div>' +
       '<div class="rowname">' +
         '<div class="name">' + d.name + '</div>' +
-        '<div class="meta"><span class="agent-tag">' + d.agent + '</span><span class="path">' + d.path + '</span></div>' +
+        '<div class="meta"><span class="agent-tag">' + resolveAgent(d.agent) + '</span><span class="path">' + (d.path || "Mountless") + '</span></div>' +
       '</div>' +
-      statePill(d.state) +
+      statePill(d) +
       '<div class="rowactions">' + action +
         '<div class="menuwrap">' +
           '<button class="rowmenu" aria-label="Sandbox actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>' +
           '<div class="menu">' +
-            '<button>Open terminal</button><button>View files</button><button>Restart</button>' +
-            '<hr><button class="danger">Delete sandbox</button>' +
+            '<button>Open terminal</button><button>Copy SSH command</button><button>Restart</button><button>Stop</button>' +
+            '<hr><button class="danger">Remove sandbox</button>' +
           '</div>' +
         '</div>' +
       '</div>');
@@ -1582,11 +1673,11 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     document.getElementById("insAvatar").className = "avatar " + d.pal;
     document.getElementById("insAvatar").innerHTML = d.icon;
     document.getElementById("insName").textContent = d.name;
-    document.getElementById("insSub").textContent = "Local sandbox · " + d.agent;
-    document.getElementById("insWs").textContent = d.path;
-    document.getElementById("insAgent").textContent = d.agent;
+    document.getElementById("insSub").textContent = "Local sandbox · " + resolveAgent(d.agent);
+    document.getElementById("insWs").textContent = d.path || "No workspace";
+    document.getElementById("insAgent").textContent = resolveAgent(d.agent);
     const st = document.getElementById("insState");
-    st.textContent = d.state === "running" ? "Running" : d.state === "pending" ? "Starting…" : "Stopped";
+    st.textContent = d.state === "running" ? "Running" : d.state === "pending" ? pendingLabel(d) : d.state === "inactive" ? "Inactive" : "Stopped";
     st.style.color = d.state === "running" ? "var(--green)" : "var(--muted)";
     document.getElementById("insPrimary").textContent = d.state === "running" ? "Open" : "Start";
   }
@@ -1625,7 +1716,7 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     pill.className = "state stopped";
     pill.innerHTML = '<span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Starting…';
     btn.disabled = true; btn.style.opacity = 0.5;
-    DATA[i].state = "pending";
+    DATA[i].state = "pending"; DATA[i].pendingAction = "start";
     if (i === selectedIdx) syncInspector(DATA[i]);
     syncSubtitle();
     setTimeout(() => {
@@ -1662,9 +1753,9 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
   /* ---------- App window: sidebar navigation + window controls ---------- */
   const PAGES = {
     home:      { title: "Home",      h1: "Welcome back",   sub: () => { const r = DATA.filter(d => d.state === "running").length; return r === 0 ? "All sandboxes are stopped." : r === 1 ? "1 sandbox is running and ready to open." : r + " sandboxes are running and ready to open."; }, action: { label: "Create sandbox", done: "Wizard opened" } },
-    sandboxes: { title: "Sandboxes", h1: "Your sandboxes", sub: () => { const r = DATA.filter(d => d.state === "running").length; return r + " running · " + (DATA.length - r) + " stopped · stored locally on this machine"; }, action: { label: "Create sandbox", done: "Wizard opened" } },
-    templates: { title: "Templates", h1: "Templates",      sub: () => "Reusable environments, ready to launch.", action: { label: "New template", done: "Draft opened" } },
-    settings:  { title: "Settings",  h1: "Settings",       sub: () => "Local CLI, providers, and updates.", action: null },
+    sandboxes: { title: "Sandboxes", h1: "Your sandboxes", sub: () => { const r = DATA.filter(d => d.state === "running").length; const i = DATA.filter(d => d.state === "inactive").length; const s = DATA.length - r - i; return r + " running · " + s + " stopped" + (i ? " · " + i + " inactive" : "") + " · stored locally on this machine"; }, action: { label: "Create sandbox", done: "Wizard opened" } },
+    templates: { title: "Templates", h1: "Templates",      sub: () => "Your saved environments, ready for the next project.", action: { label: "Create template", done: "Editor opened" } },
+    settings:  { title: "Settings",  h1: "Settings",       sub: () => "Make Sandy feel at home on your computer.", action: null },
   };
   let currentPage = "home";
   const navLinks = [...document.querySelectorAll('.rail a[data-page]')];
@@ -1745,12 +1836,31 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     openDialog("dlgConnect");
   });
   rows.addEventListener("click", (e) => {
-    if (!e.target.closest(".menu button")) return;
-    closeDialogs();
-    const label = e.target.textContent.trim();
+    const item = e.target.closest(".menu button");
+    if (!item) return;
+    const row = item.closest(".row");
+    const d = DATA[+row.dataset.idx];
+    const label = item.textContent.trim();
     if (label === "Open terminal") openDialog("dlgConnect");
-    else if (label === "Delete sandbox") toast("err", "Sandbox deletion is not wired in this concept");
-    else toast("ok", label + " — not wired in this concept");
+    else if (label === "Copy SSH command") toast("ok", "ssh " + d.name + ".sbx copied");
+    else if (label === "Remove sandbox") toast("err", "sbx rm " + d.name + " — confirm in the real app");
+    else if (label === "Stop" && d.state === "running") {
+      openMenu.dataset.open = "false";
+      d.state = "pending"; d.pendingAction = "stop";
+      renderRows(false);
+      if (+row.dataset.idx === selectedIdx) syncInspector(d);
+      syncSubtitle();
+      setTimeout(() => {
+        d.state = "stopped"; d.pendingAction = null;
+        renderRows(false);
+        const now = DATA.findIndex(x => x.state !== "running");
+        if (selectedIdx >= DATA.length) selectedIdx = 0;
+        if (DATA[selectedIdx]) syncInspector(DATA[selectedIdx]);
+        syncSubtitle();
+        toast("ok", d.name + " stopped");
+      }, reduce ? 100 : 1100);
+    }
+    else toast("ok", label + " — wired in the real app");
   });
 
   const sshRow = document.getElementById("sshRow");
@@ -1781,7 +1891,7 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     const [vis, hid] = launchGo.querySelectorAll(".swap");
     vis.classList.remove("visible"); vis.classList.add("hidden");
     hid.classList.remove("hidden"); hid.classList.add("visible");
-    setTimeout(() => { closeDialogs(); toast("ok", "Sandbox created from template"); }, 1400);
+    setTimeout(() => { closeDialogs(); toast("ok", document.getElementById("launchSbxName").value.trim() + " launched from template"); }, 1400);
   });
   const browseBtn = document.getElementById("browseBtn");
   if (browseBtn) browseBtn.addEventListener("click", () => toast("ok", "Folder picker opens here"));
@@ -1931,6 +2041,15 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
       });
     });
   }
+  const cwMountless = document.getElementById("cwMountless");
+  const cwWsField = document.getElementById("cwWsField");
+  if (cwMountless) cwMountless.addEventListener("change", () => {
+    cwWsField.style.opacity = cwMountless.checked ? "0.45" : "";
+    document.getElementById("cwWs").disabled = cwMountless.checked;
+    document.getElementById("cwBrowse").disabled = cwMountless.checked;
+  });
+  const cwBrowse = document.getElementById("cwBrowse");
+  if (cwBrowse) cwBrowse.addEventListener("click", () => toast("ok", "Folder picker opens here"));
   const cwGo = document.getElementById("cwGo");
   if (cwGo) cwGo.addEventListener("click", () => {
     const [vis, hid] = cwGo.querySelectorAll(".swap");
@@ -1938,7 +2057,7 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
     hid.classList.remove("hidden"); hid.classList.add("visible");
     setTimeout(() => {
       closeDialogs();
-      toast("ok", "Sandbox created");
+      toast("ok", document.getElementById("cwName").value.trim() + " created");
       setTimeout(() => {
         hid.classList.remove("visible"); hid.classList.add("hidden");
         vis.classList.remove("hidden"); vis.classList.add("visible");
@@ -2071,6 +2190,31 @@ discovered kits: 9 agents, 4 workloads, 11 mixins</pre></div>
       const b = document.getElementById("sbxRefresh");
       b.disabled = true;
       setTimeout(() => { b.disabled = false; toast("ok", "Settings re-read from the sbx CLI"); }, reduce ? 100 : 700);
+    });
+  }
+
+  /* ---------- Settings: nested panes ---------- */
+  const settingsRoot = document.getElementById("settingsRoot");
+  function openPane(id) {
+    settingsRoot.dataset.pane = id;
+    settingsRoot.querySelectorAll(".setpane").forEach(p => {
+      p.classList.toggle("active", p.dataset.pane === id);
+    });
+  }
+  function closePanes() {
+    delete settingsRoot.dataset.pane;
+    settingsRoot.querySelectorAll(".setpane").forEach(p => p.classList.remove("active"));
+  }
+  if (settingsRoot) {
+    settingsRoot.addEventListener("click", (e) => {
+      const link = e.target.closest("[data-open-pane]");
+      if (link) openPane(link.dataset.openPane);
+      if (e.target.closest("[data-close-pane]")) closePanes();
+    });
+    // Escape walks back out of a pane first, then closes dialogs.
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || overlay.dataset.open === "true") return;
+      if (currentPage === "settings" && settingsRoot.dataset.pane) closePanes();
     });
   }
 
