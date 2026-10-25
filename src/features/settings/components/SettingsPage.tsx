@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import Providers from "./Providers";
@@ -9,6 +9,10 @@ import SetupWizard from "../../setup/components/SetupWizard";
 import { isSetupComplete } from "../../setup/setupSteps";
 import { PageHead } from "../../../common/components/PageHead";
 import "./SettingsPage.css";
+
+// The dev pane is loaded lazily and only in dev builds; the dynamic import
+// keeps DevPane.tsx (and its sim engine) out of the production bundle.
+const DevPane = import.meta.env.DEV ? lazy(() => import("./DevPane")) : () => null;
 
 export interface SettingsPageProps {
   status: SetupStatus | null;
@@ -50,6 +54,18 @@ const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; d
     description: "Diagnostic log, errors, and command details",
   },
 ];
+
+// Dev-only pane entry, appended after the user-facing ones. The pane id is
+// spelled through a widening alias so the production type stays closed.
+const DEV_PANE_ID = "dev";
+if (import.meta.env.DEV) {
+  PANES.push({
+    id: DEV_PANE_ID as Pane,
+    icon: "bulb" as (typeof PANES)[number]["icon"],
+    label: "Developer",
+    description: "Simulate fresh setup, CLI failures, and updates (dev only)",
+  });
+}
 
 /**
  * The Settings area: setup summary or wizard, status banners, and nested
@@ -194,6 +210,11 @@ export default function SettingsPage({
             {pane === "providers" && <Providers disabled={busy || checkingSetup} />}
             {pane === "sandbox" && <SandboxSettings />}
             {pane === "advanced" && <Advanced />}
+            {pane === (DEV_PANE_ID as Pane) && import.meta.env.DEV && (
+              <Suspense fallback={null}>
+                <DevPane />
+              </Suspense>
+            )}
           </div>
         </section>
       )}
