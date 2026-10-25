@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.3](https://github.com/Nikcio-labs/sandy/compare/v0.3.2...v0.3.3) (2026-10-25)
+
+
+### Bug Fixes
+
+* change bundle identifier to avoid macOS .app conflict ([#59](https://github.com/Nikcio-labs/sandy/issues/59)) ([e043f7b](https://github.com/Nikcio-labs/sandy/commit/e043f7b306c15fedb0cbaea05678a1cc01e138d7))
+* **ci:** give the Store build its own runner and stop uploading stale bundles ([#60](https://github.com/Nikcio-labs/sandy/issues/60)) ([f12a30e](https://github.com/Nikcio-labs/sandy/commit/f12a30e5b44dd38176fe6a450bd209005a31d997))
+* keep the log plugin's prose prefix out of the diagnostic file ([#57](https://github.com/Nikcio-labs/sandy/issues/57)) ([06a54d8](https://github.com/Nikcio-labs/sandy/commit/06a54d869eb20e05ff0685b2b38cd6c2dbe61cea))
+
 ## [0.3.2](https://github.com/Nikcio-labs/sandy/compare/v0.3.1...v0.3.2) (2026-10-25)
 
 
