@@ -13,9 +13,8 @@ use time::OffsetDateTime;
 use time::format_description::FormatItem;
 use time::macros::format_description;
 
-// Matches the plugin's own desktop prefix (`[year]-[month]-[day][hour]:[minute]:[second]`)
-// so the stdout target keeps the same shape the builder produced before
-// `clear_format()` removed it.
+// Mirrors the plugin's default desktop timestamp format so the stdout
+// target keeps its shape after `clear_format()` below.
 const STDOUT_TIME_FORMAT: &[FormatItem<'static>] =
     format_description!("[[[year]-[month]-[day]][[[hour]:[minute]:[second]]");
 
@@ -59,9 +58,6 @@ pub fn run() {
                             path: root,
                             file_name: Some(logging::LOG_STEM.into()),
                         })
-                        // JSON Lines, one object per record, parsed by the
-                        // Settings log viewer; the plugin's default format
-                        // is human-readable prose.
                         .format(|out, message, record| {
                             out.finish(format_args!(
                                 "{}",
@@ -75,24 +71,17 @@ pub fn run() {
                     ]
                 },
             );
-            let stdout_target = Target::new(TargetKind::Stdout)
-                // Re-apply the plugin's default format by hand: the
-                // builder-level `clear_format()` below strips it for every
-                // target, so the file target's JSON formatter receives raw
-                // messages instead of the plugin's prose prefix — which
-                // would otherwise end up verbatim inside every JSON
-                // summary shown in Settings → Advanced.
-                .format(|out, message, record| {
-                    out.finish(format_args!(
-                        "{}[{}][{}] {}",
-                        OffsetDateTime::now_utc()
-                            .format(&STDOUT_TIME_FORMAT)
-                            .unwrap_or_default(),
-                        record.target(),
-                        record.level(),
-                        message
-                    ))
-                });
+            let stdout_target = Target::new(TargetKind::Stdout).format(|out, message, record| {
+                out.finish(format_args!(
+                    "{}[{}][{}] {}",
+                    OffsetDateTime::now_utc()
+                        .format(&STDOUT_TIME_FORMAT)
+                        .unwrap_or_default(),
+                    record.target(),
+                    record.level(),
+                    message
+                ))
+            });
             let mut targets = vec![stdout_target];
             targets.extend(file_targets);
             let log_builder = tauri_plugin_log::Builder::new()
@@ -101,11 +90,9 @@ pub fn run() {
                 // would bury the app's own records without this.
                 .level(log::LevelFilter::Info)
                 .max_file_size(10 * 1024 * 1024)
-                // The plugin formats every record once at the builder level
-                // and hands the prefixed prose down to each target, prefix
-                // included; clearing it keeps the file target's JSON lines
-                // free of the duplicated `[date][time][target][LEVEL]`
-                // header.
+                // The plugin formats each record once at the builder level,
+                // prefix included, so every target's formatter would receive
+                // the prose header instead of the raw message.
                 .clear_format();
             if let Ok((plugin, max_level, logger)) = log_builder.split(app.handle()) {
                 app.handle().plugin(plugin).ok();
