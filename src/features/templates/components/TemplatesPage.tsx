@@ -9,7 +9,7 @@ import { Toast, type ToastNotice } from "../../../common/components/Toast";
 import { copyText } from "../../../common/lib/clipboard";
 import { LaunchDialog } from "./LaunchDialog";
 import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
-import { PageHead, ContextLine } from "../../../common/components/PageHead";
+import { PageHead } from "../../../common/components/PageHead";
 import "./TemplatesPage.css";
 
 export interface TemplatesPageProps {
@@ -271,9 +271,6 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           )}
         </div>
       </section>
-      <ContextLine icon={<Icon name="kit" size={15} />}>
-        Launching can use a different name or folder. The saved template stays unchanged.
-      </ContextLine>
       {selected && (
         <LaunchDialog
           key={selected.id}
