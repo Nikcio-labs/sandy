@@ -213,7 +213,7 @@ export default function Advanced() {
                   <div className="debug-log-older">
                     <button
                       type="button"
-                      className="ghost"
+                      className="btn"
                       onClick={() => setShowAll(true)}
                     >
                       Show older entries ({visible.length - rendered.length} hidden)
@@ -229,13 +229,13 @@ export default function Advanced() {
             </p>
           )}
           <div className="catalog-actions">
-            <button type="button" className="ghost" onClick={() => void refresh()} disabled={loading}>
+            <button type="button" className="btn" onClick={() => void refresh()} disabled={loading}>
               <Icon name="refresh" size={16} />
               Refresh
             </button>
             <button
               type="button"
-              className="ghost"
+              className="btn"
               onClick={() => void copyLog()}
               disabled={loading || !entries.length}
             >
@@ -243,7 +243,7 @@ export default function Advanced() {
             </button>
             <button
               type="button"
-              className="ghost"
+              className="btn"
               onClick={() => void copyLogDir()}
               disabled={loading}
               aria-label="Copy the diagnostic log folder path"
@@ -253,7 +253,7 @@ export default function Advanced() {
             </button>
             <button
               type="button"
-              className="ghost"
+              className="btn"
               onClick={() => void openLogDir()}
               disabled={loading}
               aria-label="Open the diagnostic log folder in the file manager"
@@ -261,7 +261,7 @@ export default function Advanced() {
               <Icon name="folder" size={16} />
               Open log folder
             </button>
-            <button type="button" className="ghost" onClick={() => void clear()} disabled={loading || !entries.length}>
+            <button type="button" className="btn" onClick={() => void clear()} disabled={loading || !entries.length}>
               <Icon name="trash" size={16} />
               Clear log
             </button>

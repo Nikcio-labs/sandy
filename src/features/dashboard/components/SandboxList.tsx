@@ -2,6 +2,7 @@ import type { SandboxInfo } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { Avatar } from "../../../common/components/Avatar";
 import { StatePill } from "../../../common/components/StatePill";
+import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { stateKind } from "../../../common/lib/sandboxState";
 import type { SandboxAction } from "../sandboxActions";
 
@@ -19,7 +20,6 @@ export function SandboxList({
   onSelect,
   onOpen,
   onCreate,
-  summary,
 }: {
   sandboxes: SandboxInfo[] | null;
   visible: SandboxInfo[];
@@ -31,134 +31,128 @@ export function SandboxList({
   search: string;
   onSearch: (value: string) => void;
   onRefresh: () => void;
-  onSelect: (name: string) => void;
+  /** Passing null deselects and closes the inspector. */
+  onSelect: (name: string | null) => void;
   onOpen: (sandbox: SandboxInfo) => void;
   onCreate: () => void;
-  summary: string;
 }) {
+  const loading = sandboxes === null;
   return (
-    <section className="card sandbox-card" aria-labelledby="sandboxes-title">
-      <div className="list-head">
-        <div>
-          <h2 id="sandboxes-title">Your Sandboxes</h2>
-          <p className="list-summary" role="status">
-            {sandboxes
-              ? summary
-              : !installed
-                ? "Install the CLI to see your sandboxes"
-                : error
-                  ? "Unable to load sandboxes"
-                  : "Finding your sandboxes…"}
-          </p>
-        </div>
-        <div className="list-controls">
-          <label className="search-field">
-            <Icon name="search" size={19} />
-            <input
-              aria-label="Search sandboxes"
-              placeholder="Search sandboxes…"
-              value={search}
-              onChange={(event) => onSearch(event.target.value)}
-            />
-          </label>
-          <button
-            className="icon-button refresh-button"
-            title="Refresh sandboxes"
-            aria-label="Refresh sandboxes"
-            disabled={refreshing || !installed}
-            onClick={onRefresh}
-          >
-            <Icon name="refresh" size={18} />
-          </button>
-        </div>
+    <section className="panel" aria-label="Local sandboxes" aria-busy={loading || refreshing}>
+      <div className="listhead">
+        <h2>All sandboxes</h2>
+        {sandboxes !== null && <span className="badge">{sandboxes.length}</span>}
+        <label className="search">
+          <Icon name="search" size={14} />
+          <input
+            aria-label="Search sandboxes"
+            placeholder="Search sandboxes…"
+            type="search"
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+          />
+        </label>
+        <button
+          className="iconbtn"
+          aria-label="Refresh sandboxes"
+          title="Refresh sandboxes"
+          disabled={refreshing || loading || !installed}
+          onClick={onRefresh}
+        >
+          <Icon name="refresh" size={16} />
+        </button>
       </div>
       {error && (
-        <div className="error-banner" role="alert">
-          <strong>Couldn’t refresh your sandboxes.</strong>
+        <ErrorBanner
+          title="Couldn’t refresh your sandboxes."
+          actionLabel="Try again"
+          disabled={refreshing}
+          onAction={onRefresh}
+        >
           <p>{error}</p>
-          <button className="ghost" disabled={refreshing} onClick={onRefresh}>
-            Try again
-          </button>
-        </div>
+        </ErrorBanner>
       )}
-      {sandboxes === null && !error && installed && (
+      {loading && !error && installed && (
         <div className="empty" role="status">
-          <span className="spinner" /> Loading your local sandboxes…
+          <p className="help">
+            <span className="spinner" aria-hidden="true" /> Loading local sandboxes…
+          </p>
         </div>
       )}
-      {visible.length === 0 && (sandboxes !== null || !installed) && (
+      {!loading && visible.length === 0 && (
         <div className="empty">
-          <span className="empty-icon">
-            <Icon name="box" size={32} />
+          <span className={`avatar ${search ? "sand" : ""}`}>
+            <Icon name={search ? "search" : "dune"} size={22} />
           </span>
-          <h3>{search ? "No matching sandboxes" : "A little room for your next big idea"}</h3>
+          <h3>{search ? "No matching sandboxes" : "Room for your next project"}</h3>
           <p>
             {search
-              ? "Try a different name, agent, or workspace."
-              : "Create a sandbox from a template and a project. Your local environments will appear here."}
+              ? "Try another name, agent, or workspace."
+              : "Choose an agent and a project folder, or start without a host folder."}
           </p>
-          {search && (
-            <button className="ghost" onClick={() => onSearch("")}>
+          {search ? (
+            <button className="btn" onClick={() => onSearch("")}>
               Clear search
             </button>
-          )}
-          {!search && (
-            <button className="primary" onClick={onCreate}>
+          ) : (
+            <button className="btn primary" onClick={onCreate}>
               Create sandbox
             </button>
           )}
         </div>
       )}
-      <div className="sbx-rows">
-        {visible.map((sandbox) => (
-          <div
-            key={sandbox.name}
-            className={`sbx-row ${selected === sandbox.name ? "selected" : ""}`}
-            aria-busy={pending.has(sandbox.name)}
-          >
-            <button
-              className="sandbox-select"
-              aria-label={`Show details for ${sandbox.name}`}
-              aria-pressed={selected === sandbox.name}
-              onClick={() => onSelect(sandbox.name)}
+      <div className="rows">
+        {visible.map((sandbox) => {
+          const running = stateKind(sandbox.state) === "running";
+          const busy = pending.has(sandbox.name);
+          return (
+            <div
+              key={sandbox.name}
+              className={`row ${selected === sandbox.name ? "selected" : ""}`}
+              aria-busy={busy}
             >
-              <Avatar name={sandbox.name} />
-              <span className="sbx-info">
-                <span className="sbx-name">
-                  {sandbox.name}
-                  {sandbox.agent && <span className="tag">{sandbox.agent}</span>}
+              <button
+                className="rowselect"
+                aria-label={`Show details for ${sandbox.name}`}
+                aria-pressed={selected === sandbox.name}
+                onClick={() => onSelect(selected === sandbox.name ? null : sandbox.name)}
+              >
+                <Avatar name={sandbox.name} />
+                <span className="rowinfo">
+                  <span className="rowname">{sandbox.name}</span>
+                  <span className="rowmeta">
+                    {sandbox.agent && <span className="agent">{sandbox.agent}</span>}
+                    {sandbox.workspace || "No host workspace"}
+                  </span>
                 </span>
-                <span className="sbx-sub" title={sandbox.workspace}>
-                  {sandbox.workspace || "Mountless"}
-                </span>
+                <StatePill state={sandbox.state} pending={busy} />
+              </button>
+              <span className="rowaction">
+                <button
+                  className={`btn small ${running ? "primary" : ""}`}
+                  disabled={busy || !installed}
+                  aria-label={
+                    busy
+                      ? `Working on ${sandbox.name}`
+                      : `${running ? "Open" : "Start"} ${sandbox.name}`
+                  }
+                  onClick={() => onOpen(sandbox)}
+                >
+                  {busy ? (
+                    <span className="spinner" aria-hidden="true" />
+                  ) : running ? (
+                    "Open"
+                  ) : (
+                    "Start"
+                  )}
+                </button>
               </span>
-              <StatePill state={sandbox.state} />
-            </button>
-            <button
-              className="primary row-action"
-              disabled={pending.has(sandbox.name) || !installed}
-              aria-label={
-                pending.has(sandbox.name)
-                  ? undefined
-                  : stateKind(sandbox.state) === "running"
-                    ? `Open ${sandbox.name}`
-                    : `Start ${sandbox.name}`
-              }
-              onClick={() => onOpen(sandbox)}
-            >
-              {pending.has(sandbox.name) ? (
-                <span className="spinner" aria-hidden="true" />
-              ) : stateKind(sandbox.state) === "running" ? (
-                "Open"
-              ) : (
-                "Start"
-              )}
-            </button>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
       {search && sandboxes !== null && (
-        <p className="search-results">
+        <p className="resultcount" role="status" hidden={!search}>
           Showing {visible.length} of {sandboxes.length} sandboxes
         </p>
       )}

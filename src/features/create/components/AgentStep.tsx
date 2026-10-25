@@ -24,7 +24,7 @@ export function AgentStep({
 }) {
   const id = useId();
   return (
-    <div className="card catalog-panel">
+    <div className="panel catalog-panel">
       <h2>Choose an agent or workload</h2>
       <p className="catalog-muted">
         Built-in agent shortcuts use kit v2. A v3 workload starts a v3-only environment. Remote kit
@@ -74,16 +74,16 @@ export function AgentStep({
               ? "Try a different search."
               : "Review the discovery notes, then check your enabled providers and references."}
           </p>
-          <button type="button" className="ghost" onClick={() => (search ? onSearch("") : onReviewSources())}>
+          <button type="button" className="btn" onClick={() => (search ? onSearch("") : onReviewSources())}>
             {search ? "Clear search" : "Review providers"}
           </button>
         </div>
       )}
       <div className="catalog-actions">
-        <button type="button" className="ghost" onClick={onBack}>
+        <button type="button" className="btn" onClick={onBack}>
           Back
         </button>
-        <button type="button" className="primary" disabled={!agent} onClick={onContinue}>
+        <button type="button" className="btn primary" disabled={!agent} onClick={onContinue}>
           Choose mixins <Icon name="arrow" size={16} />
         </button>
       </div>

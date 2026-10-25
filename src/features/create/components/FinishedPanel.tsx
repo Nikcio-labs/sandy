@@ -28,7 +28,7 @@ export function FinishedPanel({
   onClose: () => void;
 }) {
   return (
-    <div className="card catalog-panel catalog-finished">
+    <div className="panel catalog-panel catalog-finished">
       <span className={`empty-icon ${launched ? "green" : ""}`}>
         <Icon name={launched ? "check" : "template"} size={30} />
       </span>
@@ -58,7 +58,7 @@ export function FinishedPanel({
       </dl>
       <div className="catalog-section-heading">
         <h3>Saved YAML</h3>
-        <button type="button" className="ghost" disabled={busy} onClick={onCopy}>
+        <button type="button" className="btn" disabled={busy} onClick={onCopy}>
           <Icon name="clipboard" size={16} /> Copy YAML
         </button>
       </div>
@@ -78,7 +78,7 @@ export function FinishedPanel({
       )}
       <div className="catalog-actions">
         {!launched && (
-          <button type="button" className="primary" disabled={busy} onClick={onRetryLaunch}>
+          <button type="button" className="btn primary" disabled={busy} onClick={onRetryLaunch}>
             {busy ? (
               <>
                 <span className="spinner" /> Launching…
@@ -93,14 +93,14 @@ export function FinishedPanel({
         {onTemplates && (
           <button
             type="button"
-            className={launched ? "primary" : "ghost"}
+            className={launched ? "btn primary" : "btn"}
             disabled={busy}
             onClick={onTemplates}
           >
             View saved templates
           </button>
         )}
-        <button type="button" className="ghost" disabled={busy} onClick={onClose}>
+        <button type="button" className="btn" disabled={busy} onClick={onClose}>
           Done
         </button>
       </div>

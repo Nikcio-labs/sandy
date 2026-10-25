@@ -93,7 +93,8 @@ export function LaunchDialog({
         },
       );
       if (!mounted.current) return;
-      onLaunched(`${name.trim()} launched from ${template.name}.`, name.trim());      // The sandbox exists: the dialog's job is done and the dashboard takes
+      onLaunched(`${name.trim()} launched from ${template.name}.`, name.trim());
+      // The sandbox exists: the dialog's job is done and the dashboard takes
       // over. Close without waiting for the user to dismiss it.
       dialog.current?.close();
     } catch (failure) {
@@ -127,7 +128,7 @@ export function LaunchDialog({
           <h2 id={`${id}-launch-title`}>Launch {template.name}</h2>
           <button
             type="button"
-            className="icon-button"
+            className="iconbtn"
             aria-label="Close launch dialog"
             disabled={busy !== null}
             onClick={close}
@@ -138,7 +139,8 @@ export function LaunchDialog({
         <p className="catalog-muted" id={`${id}-launch-description`}>
           Choose a new name or workspace to reuse this environment. These choices apply to this
           launch.
-        </p>        {launchError && (
+        </p>
+        {launchError && (
           <ErrorBanner title="Couldn’t launch this sandbox.">
             <p>{launchError}</p>
             <span>Edit the details or try launching again.</span>
@@ -188,19 +190,19 @@ export function LaunchDialog({
                   placeholder="Absolute project path"
                   onChange={(event) => setWorkspace(event.target.value)}
                 />
-                <button type="button" className="ghost" onClick={browse}>
+                <button type="button" className="btn" onClick={browse}>
                   Browse…
                 </button>
               </div>
             </>
           )}
           <div className="catalog-actions">
-            <button type="button" className="ghost" onClick={close}>
+            <button type="button" className="btn" onClick={close}>
               Cancel
             </button>
             <button
               type="submit"
-              className="primary"
+              className="btn primary"
               disabled={!name.trim() || (!mountless && !workspace.trim())}
             >
               {busy === "launch" ? (

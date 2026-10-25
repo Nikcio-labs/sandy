@@ -46,7 +46,7 @@ export function ReviewStep({
   const id = useId();
   return (
     <form
-      className="card catalog-panel"
+      className="panel catalog-panel"
       onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const submitter = (event.nativeEvent as SubmitEvent).submitter;
@@ -105,7 +105,7 @@ export function ReviewStep({
                 aria-describedby={`${id}-workspace-help`}
                 onChange={(event) => onWorkspace(event.target.value)}
               />
-              <button type="button" className="ghost" onClick={() => onBrowse("workspace")}>
+              <button type="button" className="btn" onClick={() => onBrowse("workspace")}>
                 Browse…
               </button>
             </div>
@@ -128,7 +128,7 @@ export function ReviewStep({
                 aria-describedby={`${id}-path-help`}
                 onChange={(event) => onSavePath(event.target.value)}
               />
-              <button type="button" className="ghost" onClick={() => onBrowse("path")}>
+              <button type="button" className="btn" onClick={() => onBrowse("path")}>
                 Choose file…
               </button>
             </div>
@@ -136,7 +136,7 @@ export function ReviewStep({
               Leave blank to use Sandy’s managed templates outside your workspace.
             </p>
             {savePath && (
-              <button type="button" className="text-button" onClick={() => onSavePath("")}>
+              <button type="button" className="textbtn" onClick={() => onSavePath("")}>
                 Use managed storage
               </button>
             )}
@@ -179,14 +179,14 @@ export function ReviewStep({
           </p>
         </div>
         <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={onBack}>
+          <button type="button" className="btn" onClick={onBack}>
             Back
           </button>
           <button
             type="submit"
             name="action"
             value="save"
-            className="ghost"
+            className="btn"
             disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
             {editing ? "Update template" : "Save template"}
@@ -195,7 +195,7 @@ export function ReviewStep({
             type="submit"
             name="action"
             value="launch"
-            className="primary"
+            className="btn primary"
             disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
             {busy

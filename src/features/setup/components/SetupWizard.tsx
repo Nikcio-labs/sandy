@@ -111,7 +111,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
         ))}
       </ol>
       {finished ? (
-        <div className="card setup-finish">
+        <div className="panel setup-finish">
           <span className={`empty-icon ${allDone ? "green" : ""}`}>
             <Icon name={allDone ? "check" : "shield"} size={34} />
           </span>
@@ -126,12 +126,12 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
               : "Missing steps will still be here whenever you’re ready."}
           </p>
           <div className="wizard-actions">
-            <button className="primary" onClick={onDone}>
+            <button className="btn primary" onClick={onDone}>
               Go to home <Icon name="arrow" size={18} />
             </button>
             {!allDone && (
               <button
-                className="ghost"
+                className="btn"
                 onClick={() => {
                   setCurrent(SETUP_STEPS.findIndex((item) => !isDone(item)));
                   setFinished(false);
@@ -143,7 +143,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
           </div>
         </div>
       ) : (
-        <div className="card step-card" aria-busy={busy}>
+        <div className="panel step-card" aria-busy={busy}>
           <span className="empty-icon">
             <Icon name={step.icon} size={30} />
           </span>
@@ -186,7 +186,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
           <div className="wizard-actions">
             {current > 0 && (
               <button
-                className="ghost"
+                className="btn"
                 disabled={busy}
                 onClick={() => setCurrent((value) => value - 1)}
               >
@@ -195,21 +195,21 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
             )}
             {done && !failed ? (
               <>
-                <button className="primary" disabled={busy} onClick={next}>
+                <button className="btn primary" disabled={busy} onClick={next}>
                   {current === SETUP_STEPS.length - 1 ? "Finish setup" : "Continue"}
                   <Icon name="arrow" size={17} />
                 </button>
-                <button className="text-button" disabled={busy || needsCli} onClick={run}>
+                <button className="textbtn" disabled={busy || needsCli} onClick={run}>
                   Run again
                 </button>
               </>
             ) : (
               <>
-                <button className="primary" disabled={busy || needsCli} onClick={run}>
+                <button className="btn primary" disabled={busy || needsCli} onClick={run}>
                   {busy ? "Working…" : failed ? "Try again" : step.action}
                   {!busy && <Icon name="arrow" size={17} />}
                 </button>
-                <button className="text-button" disabled={busy} onClick={next}>
+                <button className="textbtn" disabled={busy} onClick={next}>
                   Skip for now
                 </button>
               </>
@@ -222,7 +222,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
           <span>
             <Icon name="shield" size={16} /> Your tools. Your computer. You’re in control.
           </span>
-          <button className="text-button" disabled={busy} onClick={onDone}>
+          <button className="textbtn" disabled={busy} onClick={onDone}>
             Set up later
           </button>
         </div>

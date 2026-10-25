@@ -1,0 +1,170 @@
+/*
+ * Global element styles: typography, forms, focus, and motion defaults.
+ *
+ * These rules apply by element selector so page markup needs no utility
+ * classes for baseline appearance. Component-level styles live in
+ * components.css and feature stylesheets.
+ */
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font: 14px/1.5 var(--body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--display);
+  font-weight: 600;
+  line-height: 1.16;
+  color: var(--ink);
+  margin: 0;
+}
+
+h2 {
+  font-size: 28px;
+  letter-spacing: -0.6px;
+}
+
+h3 {
+  font-size: 19px;
+  letter-spacing: -0.3px;
+}
+
+p {
+  margin: 0 0 12px;
+  max-width: 76ch;
+}
+
+a {
+  color: var(--brand-dark);
+  text-underline-offset: 3px;
+}
+
+code,
+pre {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
+
+pre {
+  margin: 12px 0;
+  padding: 16px;
+  border-radius: 9px;
+  background: #f1f3fa;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.75;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 120ms var(--out),
+    background-color 120ms ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+:where(button, a, input, select, textarea, summary) {
+  outline-offset: 3px;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+}
+
+input::placeholder {
+  color: var(--faint);
+  opacity: 1;
+}
+
+select {
+  height: 35px;
+  padding: 0 8px;
+  max-width: 180px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+summary {
+  cursor: pointer;
+}
+
+summary::marker {
+  color: var(--muted);
+}
+
+/* Press, dialog, and pane motion is removed together with all animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

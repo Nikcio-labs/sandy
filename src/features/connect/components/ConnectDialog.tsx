@@ -167,7 +167,7 @@ export default function ConnectDialog({
       }}
     >
       <button
-        className="icon-button dialog-close"
+        className="iconbtn dialogclose"
         aria-label="Close connection dialog"
         disabled={!!busy}
         onClick={close}
@@ -208,7 +208,7 @@ export default function ConnectDialog({
             </p>
             <button
               ref={terminalButton}
-              className="primary"
+              className="btn primary"
               disabled={!!busy || !running}
               onClick={() => void launchTerminal()}
             >

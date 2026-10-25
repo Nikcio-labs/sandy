@@ -77,7 +77,7 @@ export default function Updates() {
 
       {state.step === "idle" && !error && (
         <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={check} disabled={busy}>
+          <button type="button" className="btn" onClick={check} disabled={busy}>
             <Icon name="refresh" size={16} />
             Check for updates
           </button>
@@ -97,10 +97,10 @@ export default function Updates() {
             {state.notes && <span className="catalog-help"> {state.notes}</span>}
           </p>
           <div className="catalog-actions">
-            <button type="button" className="primary" onClick={() => void state.download()}>
+            <button type="button" className="btn primary" onClick={() => void state.download()}>
               Download update
             </button>
-            <button type="button" className="ghost" onClick={dismiss}>
+            <button type="button" className="btn" onClick={dismiss}>
               Not now
             </button>
           </div>
@@ -136,7 +136,7 @@ export default function Updates() {
             <strong>Sandy {state.version}</strong> is installed. Restart to start using it.
           </p>
           <div className="catalog-actions">
-            <button type="button" className="primary" onClick={() => void state.restart()}>
+            <button type="button" className="btn primary" onClick={() => void state.restart()}>
               Restart now
             </button>
           </div>

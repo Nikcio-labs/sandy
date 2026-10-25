@@ -3,9 +3,11 @@ import ReactDOM from "react-dom/client";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import App from "./App";
 import BootSplash from "./common/components/BootSplash";
-import "./styles/styles.css";
-import "./styles/templates.css";
+import "./styles/theme.css";
+import "./styles/base.css";
+import "./styles/components.css";
 import "./styles/dashboard.css";
+import "./styles/features.css";
 
 // The dedicated splash window (declared in tauri.conf.json with the label
 // `splash`) renders only the boot splash: a transparent, frameless window

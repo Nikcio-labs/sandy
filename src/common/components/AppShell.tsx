@@ -2,14 +2,14 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IconName } from "./Icon";
 import Icon from "./Icon";
 import logo from "../../assets/logo.png";
-export type View = "home" | "sandboxes" | "templates" | "settings" | "create" | "edit-template";
+
+export type View = "sandboxes" | "templates" | "settings" | "create" | "edit-template";
 
 const navigation: {
-  id: Exclude<View, "create">;
+  id: Exclude<View, "create" | "edit-template">;
   icon: IconName;
   label: string;
 }[] = [
-  { id: "home", icon: "home", label: "Home" },
   { id: "sandboxes", icon: "box", label: "Sandboxes" },
   { id: "templates", icon: "template", label: "Templates" },
   { id: "settings", icon: "settings", label: "Settings" },
@@ -27,8 +27,8 @@ function WindowControls() {
   // swallowed to avoid unhandled rejections, matching the splash close in
   // App.tsx.
   const controls: { label: string; action: () => void; icon: React.ReactNode }[] = [
-    { label: "Minimize window", action: () => window.minimize().catch(() => {}), icon: <span className="window-control-minimize" /> },
-    { label: "Maximize or restore window", action: () => window.toggleMaximize().catch(() => {}), icon: <span className="window-control-maximize" /> },
+    { label: "Minimize window", action: () => window.minimize().catch(() => {}), icon: <span className="wincontrol-minimize" /> },
+    { label: "Maximize or restore window", action: () => window.toggleMaximize().catch(() => {}), icon: <span className="wincontrol-maximize" /> },
     {
       label: "Close window",
       action: () => window.close().catch(() => {}),
@@ -37,12 +37,11 @@ function WindowControls() {
   ];
 
   return (
-    <div className="window-controls">
+    <div className="wincontrols">
       {controls.map((control) => (
         <button
           key={control.label}
           type="button"
-          className="window-control"
           aria-label={control.label}
           onClick={control.action}
         >
@@ -53,15 +52,15 @@ function WindowControls() {
   );
 }
 
-export function Topbar() {
+export function Titlebar() {
   return (
     // Draggable title bar. The "deep" value makes every non-interactive part
     // of the subtree draggable; interactive children (buttons) stay clickable
     // and double-click on the bar still toggles maximize (Tauri drag-region
     // script). Elements carrying the attribute must remain hit-testable, so
     // the bar itself never sets pointer-events: none.
-    <header className="topbar" data-tauri-drag-region="deep">
-      <div className="brand">
+    <header className="titlebar" data-tauri-drag-region="deep">
+      <div className="titlebrand">
         <img src={logo} alt="" />
         <span>Sandy</span>
       </div>
@@ -70,59 +69,52 @@ export function Topbar() {
   );
 }
 
-export function Sidebar({
+export function Rail({
   view,
   busy,
   checkingSetup,
   count,
   onNavigate,
-  onViewGuide,
 }: {
   view: View;
   busy: boolean;
   checkingSetup: boolean;
   count: number | null;
   onNavigate: (view: Exclude<View, "create" | "edit-template">) => void;
-  /** Replaces the guide link while the guide view is not built yet. */
-  onViewGuide: () => void;
 }) {
   return (
-    <aside className="sidebar">
-      <nav className="nav" aria-label="Main navigation">
-        {navigation.map((item) => (
-          <button
-            key={item.id}
-            className={`nav-item ${
-              view === item.id ||
-              (view === "create" && item.id === "home") ||
-              (view === "edit-template" && item.id === "templates")
-                ? "active"
-                : ""
-            }`}
-            aria-current={
-              view === item.id ||
-              (view === "create" && item.id === "home") ||
-              (view === "edit-template" && item.id === "templates")
-                ? "page"
-                : undefined
-            }
-            disabled={busy || checkingSetup}
-            onClick={() => onNavigate(item.id as Exclude<View, "create" | "edit-template">)}
-          >
-            <Icon name={item.icon} />
-            <span>{item.label}</span>
-            {item.id === "sandboxes" && count !== null && <span className="nav-count">{count}</span>}
-          </button>
-        ))}
+    <aside className="rail" aria-label="App navigation">
+      <nav style={{ display: "contents" }}>
+        {navigation.map((item) => {
+          const active =
+            view === item.id ||
+            (view === "create" && item.id === "templates") ||
+            (view === "edit-template" && item.id === "templates");
+          return (
+            <button
+              key={item.id}
+              className={item.id === "settings" ? "navsettings" : undefined}
+              aria-current={active ? "page" : undefined}
+              disabled={busy || checkingSetup}
+              onClick={() => onNavigate(item.id)}
+            >
+              <Icon name={item.icon} />
+              <span>{item.label}</span>
+              {item.id === "sandboxes" && count !== null && (
+                <span className="badge" style={{ marginLeft: "auto" }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
-      <div className="help-card">
-        <div className="help-title">
-          <Icon name="bulb" size={19} /> Need help?
-        </div>
-        <p>Check out our guide on how to use sandboxes.</p>
-        <button type="button" className="link-button" onClick={onViewGuide}>
-          View guide <Icon name="arrow" size={15} />
-        </button>
+      <div className="railfoot">
+        <span>
+          <i />
+          On this computer
+        </span>
+        Local sandboxes only
       </div>
     </aside>
   );

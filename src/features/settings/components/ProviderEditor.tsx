@@ -130,7 +130,7 @@ export function ProviderEditor({
         <span className="catalog-badge">GitHub</span>
         <button
           type="button"
-          className="text-button"
+          className="textbtn"
           onClick={onRemove}
           aria-label={`Remove ${provider.label || provider.repository}`}
         >
@@ -189,7 +189,7 @@ export function ProviderEditor({
         <div className="catalog-version-actions">
           <button
             type="button"
-            className="ghost"
+            className="btn"
             disabled={versions.loading || !repositoryIsValid(provider.repository)}
             onClick={() => void loadVersions(true)}
           >

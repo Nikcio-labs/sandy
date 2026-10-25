@@ -71,7 +71,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
 
   return (
     <section className="standalone-page catalog-page" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
-      <header className="page-head catalog-page-heading">
+      <header className="pagehead catalog-page-heading">
         <div>
           <span className="eyebrow">
             {editing ? "EDIT SAVED TEMPLATE" : "YOUR NEXT WORKSPACE"}
@@ -79,7 +79,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
           <h1 id={`${id}-title`}>
             {saved ? "Your template is ready" : editing ? "Edit template" : "Create a sandbox"}
           </h1>
-          <p className="page-sub">
+          <p className="help">
             {saved
               ? "A reusable starting point, saved on your computer."
               : editing
@@ -87,7 +87,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
                 : "Choose your tools. Bring your project. Make it yours."}
           </p>
         </div>
-        <button type="button" className="ghost" disabled={busy !== null} onClick={onClose}>
+        <button type="button" className="btn" disabled={busy !== null} onClick={onClose}>
           <Icon name="close" size={16} /> {saved ? "Close" : "Cancel"}
         </button>
       </header>
@@ -138,7 +138,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
       ) : (
         <>
           {step === 0 && (
-            <div className="card catalog-panel">
+            <div className="panel catalog-panel">
               <h2>Start with your kit sources</h2>
               <p className="catalog-muted">
                 Enable the providers you want to use and choose their versions. Discovery reads kit
@@ -159,13 +159,13 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
             </div>
           )}
           {step > 0 && !catalog && (
-            <div className="card catalog-panel">
+            <div className="panel catalog-panel">
               <p className="catalog-muted">
                 No discovery results. Review your kit sources and discover kits again.
               </p>
               <button
                 type="button"
-                className="primary"
+                className="btn primary"
                 disabled={busy !== null}
                 onClick={() => moveTo(0)}
               >
@@ -185,7 +185,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
                   </ul>
                   <button
                     type="button"
-                    className="text-button"
+                    className="textbtn"
                     disabled={busy !== null}
                     onClick={() => moveTo(0)}
                   >

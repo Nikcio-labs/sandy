@@ -158,7 +158,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
             <div className="catalog-provider-add">
               <button
                 type="button"
-                className="ghost"
+                className="btn"
                 onClick={() =>
                   update([
                     ...providers,
@@ -181,7 +181,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
               ) && (
                 <button
                   type="button"
-                  className="text-button"
+                  className="textbtn"
                   onClick={() =>
                     update([
                       ...providers,
@@ -201,7 +201,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
               )}
             </div>
             <div className="catalog-actions">
-              <button type="submit" className="primary" disabled={!dirty || saving}>
+              <button type="submit" className="btn primary" disabled={!dirty || saving}>
                 {saving ? "Saving providers…" : "Save providers"}
               </button>
               <span className="catalog-help" role="status">

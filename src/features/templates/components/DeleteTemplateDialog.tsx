@@ -72,7 +72,7 @@ export function DeleteTemplateDialog({
           <h2 id={`${id}-delete-title`}>Delete {template.name}?</h2>
           <button
             type="button"
-            className="icon-button"
+            className="iconbtn"
             aria-label="Close delete dialog"
             disabled={busy}
             onClick={close}
@@ -91,10 +91,10 @@ export function DeleteTemplateDialog({
           </ErrorBanner>
         )}
         <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={close} disabled={busy}>
+          <button type="button" className="btn" onClick={close} disabled={busy}>
             Cancel
           </button>
-          <button type="button" className="danger" onClick={remove} disabled={busy}>
+          <button type="button" className="btn danger" onClick={remove} disabled={busy}>
             {busy ? (
               <>
                 <span className="spinner" /> Deleting…

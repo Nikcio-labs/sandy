@@ -43,7 +43,7 @@ export function MixinStep({
   const selectedKits = [agent, ...mixins];
   return (
     <form
-      className="card catalog-panel"
+      className="panel catalog-panel"
       onSubmit={(event) => {
         event.preventDefault();
         onContinue();
@@ -128,7 +128,7 @@ export function MixinStep({
           {(search || providerFilter) && (
             <button
               type="button"
-              className="ghost"
+              className="btn"
               onClick={() => {
                 onSearch("");
                 onProviderFilter("");
@@ -148,7 +148,7 @@ export function MixinStep({
                 <span>{kit.name}</span>
                 <button
                   type="button"
-                  className="text-button"
+                  className="textbtn"
                   onClick={() => onRemoveMixin(kit)}
                   aria-label={`Remove ${kit.name}`}
                 >
@@ -166,10 +166,10 @@ export function MixinStep({
         onChange={onArgumentChange}
       />
       <div className="catalog-actions">
-        <button type="button" className="ghost" onClick={onBack}>
+        <button type="button" className="btn" onClick={onBack}>
           Back
         </button>
-        <button type="submit" className="primary">
+        <button type="submit" className="btn primary">
           Project details <Icon name="arrow" size={16} />
         </button>
       </div>

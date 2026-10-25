@@ -1,5 +1,4 @@
 import type { SetupStatus } from "../../../lib/sandbox";
-import Icon from "../../../common/components/Icon";
 import Providers from "./Providers";
 import Advanced from "./Advanced";
 import Updates from "./Updates";
@@ -24,9 +23,9 @@ export interface SettingsPageProps {
 }
 
 /**
- * The Settings area: setup summary or wizard, status banners, and provider
- * configuration. State orchestration stays in `App`; the wizard flow itself
- * lives in `features/setup`.
+ * The Settings area: setup summary or wizard, status banners, and the
+ * Updates / Kit providers / Advanced cards. State orchestration stays in
+ * `App`; the wizard flow itself lives in `features/setup`.
  */
 export default function SettingsPage({
   status,
@@ -43,31 +42,33 @@ export default function SettingsPage({
   onStepDone,
 }: SettingsPageProps) {
   return (
-    <div className="page standalone-page settings-page">
-      <div className="page-head">
-        <h1>Settings</h1>
-        <p className="page-sub">Make Sandy feel at home on your computer.</p>
-      </div>
+    <div className="settingshome">
+      <header className="pagehead">
+        <div>
+          <h1>Settings</h1>
+          <p>Sources, host access, and the details behind your sandboxes.</p>
+        </div>
+      </header>
       {statusError && (
-        <div className="error-banner" role="alert">
+        <div className="banner error" role="alert">
           <strong>We couldn’t check your setup.</strong>
           <p>{statusError}</p>
-          <button className="ghost" disabled={busy || checkingSetup} onClick={() => void onCheckSetup()}>
+          <button className="btn small" disabled={busy || checkingSetup} onClick={() => void onCheckSetup()}>
             Try again
           </button>
         </div>
       )}
       {!!status?.issues?.length && (
-        <div className="error-banner" role="status">
+        <div className="banner error" role="status">
           <strong>Some setup checks are temporarily unavailable.</strong>
           <p>{status.issues.join("\n")}</p>
-          <button className="ghost" disabled={busy || checkingSetup} onClick={() => void onCheckSetup()}>
+          <button className="btn small" disabled={busy || checkingSetup} onClick={() => void onCheckSetup()}>
             Check again
           </button>
         </div>
       )}
       {!!status?.warnings?.length && (
-        <div className="warning-banner" role="status">
+        <div className="banner" role="status">
           <strong>A setup check may be a false alarm.</strong>
           {status.warnings.map((warning) => (
             <p key={warning}>{warning}</p>
@@ -91,53 +92,51 @@ export default function SettingsPage({
           onStepDone={onStepDone}
         />
       ) : (
-        <section className="card setup-summary" aria-busy={checkingSetup}>
-          <span className="empty-icon green">
-            <Icon name="shield" size={28} />
-          </span>
-          <div>
-            <h2>
-              {status &&
-              [status.signed_in, status.image_paste_on, status.ssh_set_up].some(
-                (value) => value === null,
-              )
-                ? "Setup status is temporarily unavailable"
-                : isSetupComplete(status)
-                  ? "You’re all set"
-                  : "Let’s get you set up"}
-            </h2>
+        <section className="panel setup-summary" aria-busy={checkingSetup}>
+          <div className="updatecard">
+            <div className="split">
+              <h2>
+                {status &&
+                [status.signed_in, status.image_paste_on, status.ssh_set_up].some(
+                  (value) => value === null,
+                )
+                  ? "Setup status is temporarily unavailable"
+                  : isSetupComplete(status)
+                    ? "You’re all set"
+                    : "Let’s get you set up"}
+              </h2>
+              <button className="btn primary" disabled={busy || checkingSetup} onClick={onOpenSetup}>
+                {checkingSetup ? (
+                  <>
+                    <span className="spinner" /> Checking setup…
+                  </>
+                ) : (
+                  <>
+                    {isSetupComplete(status) ? "Review setup" : "Continue setup"}
+                  </>
+                )}
+              </button>
+            </div>
             <p>
               {isSetupComplete(status)
                 ? "Your local sandbox tools are configured and ready to use."
                 : "A few simple steps to get your sandbox tools ready."}
             </p>
           </div>
-          <button className="primary" disabled={busy || checkingSetup} onClick={onOpenSetup}>
-            {checkingSetup ? (
-              <>
-                <span className="spinner" /> Checking setup…
-              </>
-            ) : (
-              <>
-                {isSetupComplete(status) ? "Review setup" : "Continue setup"}
-                <Icon name="arrow" size={17} />
-              </>
-            )}
-          </button>
         </section>
       )}
       {active && (
-        <>
-          <div className="card settings-info">
+        <div className="settings-stack">
+          <div className="panel settings-card">
             <Updates />
           </div>
-          <div className="card settings-info">
+          <div className="panel settings-card">
             <Providers disabled={busy || checkingSetup} />
           </div>
-          <div className="card settings-info">
+          <div className="panel settings-card">
             <Advanced />
           </div>
-        </>
+        </div>
       )}
     </div>
   );

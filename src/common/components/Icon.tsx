@@ -41,6 +41,20 @@ const paths = {
   book: <path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15" />,
   arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
   chevron: <path d="m7 10 5 5 5-5" />,
+  back: <path d="m15 5-7 7 7 7" />,
+  dune: (
+    <>
+      <path d="M2 19c3-7 7-12 10-12s7 5 10 12z" />
+      <path d="M8 19c2-4 5-7 8-7" />
+    </>
+  ),
+  plus: <path d="M12 4v16M4 12h16" />,
+  kit: (
+    <>
+      <path d="m3 7 9-4 9 4-9 4z" />
+      <path d="m3 12 9 4 9-4M3 17l9 4 9-4" />
+    </>
+  ),
   search: (
     <>
       <circle cx="10.5" cy="10.5" r="6.5" />
@@ -67,6 +81,12 @@ const paths = {
     </>
   ),
   stop: <circle cx="12" cy="12" r="7" />,
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6m0-11v1" />
+    </>
+  ),
   refresh: (
     <>
       <path d="M21 12a9 9 0 1 1-2.64-6.36L21 8" />

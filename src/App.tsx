@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { getCurrentWindow, Window } from "@tauri-apps/api/window";
-import { Sidebar, Topbar } from "./common/components/AppShell";
+import { Rail, Titlebar } from "./common/components/AppShell";
 import type { View } from "./common/components/AppShell";
 import BootSplash from "./common/components/BootSplash";
-import { ComingSoonDialog } from "./common/components/ComingSoonDialog";
 import { useSetupStatus } from "./common/hooks/useSetupStatus";
-import DashboardPage from "./features/dashboard/components/DashboardPage";
+import SandboxesPage from "./features/dashboard/components/SandboxesPage";
 import TemplatesPage from "./features/templates/components/TemplatesPage";
 import CreatePage from "./features/create/components/CreatePage";
 import SettingsPage from "./features/settings/components/SettingsPage";
@@ -17,10 +16,9 @@ const revealMainWindow = async () => {
 };
 
 export default function App() {
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>("sandboxes");
   // The wizard's edit mode targets one saved template per visit.
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
-  const [guideDialogOpen, setGuideDialogOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupSession, setSetupSession] = useState(0);
   const [count, setCount] = useState<number | null>(null);
@@ -63,7 +61,7 @@ export default function App() {
 
   const finishSetup = () => {
     setSetupOpen(false);
-    setView("home");
+    setView("sandboxes");
   };
 
   const navigate = (next: Exclude<View, "create" | "edit-template">) => {
@@ -76,28 +74,27 @@ export default function App() {
 
   return (
     <div className="shell">
-      <Topbar />
-      <div className="body">
-        <Sidebar
+      <Titlebar />
+      <div className="app">
+        <Rail
           view={view}
           busy={busy}
           checkingSetup={checkingSetup}
           count={count}
           onNavigate={navigate}
-          onViewGuide={() => setGuideDialogOpen(true)}
         />
-        <main className="content" id="main-content">
-          {(view === "home" || view === "sandboxes") && (
-            <DashboardPage
-              home={view === "home"}
+        <main className="main" id="main-content">
+          {(view === "sandboxes" || view === "create") && (
+            <SandboxesPage
               status={status}
               pendingSelection={pendingSelection}
               onPendingSelectionHandled={() => setPendingSelection(null)}
               onGoSettings={() => setView("settings")}
-              onGoTemplates={() => setView("templates")}
               onCreate={() => setView("create")}
               onCheckSetup={checkSetup}
               onCount={setCount}
+              createOpen={view === "create"}
+              onBack={() => setView("sandboxes")}
             />
           )}
           {view === "templates" && (
@@ -112,13 +109,6 @@ export default function App() {
                 setPendingSelection(sandbox);
                 setView("sandboxes");
               }}
-            />
-          )}
-          {view === "create" && (
-            <CreatePage
-              onClose={() => setView("home")}
-              onTemplates={() => setView("templates")}
-              onBusyChange={setBusy}
             />
           )}
           {view === "edit-template" && editingTemplate && (
@@ -154,9 +144,6 @@ export default function App() {
           </div>
         </main>
       </div>
-      {guideDialogOpen && (
-        <ComingSoonDialog feature="View guide" onClose={() => setGuideDialogOpen(false)} />
-      )}
     </div>
   );
 }
