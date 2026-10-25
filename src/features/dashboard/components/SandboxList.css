@@ -158,11 +158,3 @@
   }
 }
 
-/* The in-place create wizard replaces the list; Back returns to it. */
-.createhost {
-  max-width: 1040px;
-}
-
-.createhost > .textbtn {
-  margin-bottom: 14px;
-}

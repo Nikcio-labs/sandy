@@ -8,7 +8,6 @@ import type { SandboxAction } from "../sandboxActions";
 import { stateKind } from "../../../common/lib/sandboxState";
 import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
 import ConnectDialog from "../../connect/components/ConnectDialog";
-import CreatePage from "../../create/components/CreatePage";
 import { PageHead, ContextLine } from "../../../common/components/PageHead";
 
 export interface SandboxesPageProps {
@@ -20,9 +19,6 @@ export interface SandboxesPageProps {
   onCreate: () => void;
   onCheckSetup: () => Promise<SetupStatus | null>;
   onCount: (count: number) => void;
-  /** The create wizard is shown in place of the sandbox list. */
-  createOpen: boolean;
-  onBack: () => void;
 }
 
 const actionLabels: Record<SandboxAction, string> = {
@@ -40,8 +36,6 @@ export default function SandboxesPage({
   onCreate,
   onCheckSetup,
   onCount,
-  createOpen,
-  onBack,
 }: SandboxesPageProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [connecting, setConnecting] = useState<SandboxInfo | null>(null);
@@ -124,66 +118,60 @@ export default function SandboxesPage({
 
   return (
     <div>
-      {createOpen ? (
-        <CreateHost onBack={onBack} />
-      ) : (
-        <>
-          <PageHead
-            title="Your sandboxes"
-            subtitle={subtitle}
-            action={
-              <button className="btn primary" onClick={onCreate}>
-                <Icon name="create" size={16} />
-                <span>Create sandbox</span>
-              </button>
-            }
-          />
-          {needsSetup && (
-            <div className="banner">
-              <strong>Finish setting up Sandy to create sandboxes.</strong>
-              <p>Your existing sandboxes are still listed below.</p>
-              <button className="btn small" onClick={onGoSettings}>
-                Finish setup
-              </button>
-            </div>
-          )}
-          <div className={`board ${detail ? "" : "no-detail"}`}>
-            <div>
-              <SandboxList
-                sandboxes={sandboxes}
-                visible={visible}
-                error={error}
-                refreshing={refreshing}
-                installed={installed}
-                selected={selected}
-                pending={pending}
-                actionLabels={actionLabels}
-                search={search}
-                onSearch={setSearch}
-                onRefresh={() => void refresh()}
-                onSelect={selectSandbox}
-                onOpen={runPrimaryAction}
-                onCreate={onCreate}
-              />
-              <ContextLine icon={<Icon name="shield" size={15} />}>
-                Each sandbox has its own microVM and Docker daemon.
-              </ContextLine>
-            </div>
-            {detail && (
-              <SandboxInspector
-                detail={detail}
-                pending={detailPending}
-                running={detailRunning}
-                installed={installed}
-                onAction={(action) => void runAction(detail.name, action).catch(() => {})}
-                onOpen={() => runPrimaryAction(detail)}
-                onClose={() => selectSandbox(null)}
-                actionLabels={actionLabels}
-              />
-            )}
-          </div>
-        </>
+      <PageHead
+        title="Your sandboxes"
+        subtitle={subtitle}
+        action={
+          <button className="btn primary" onClick={onCreate}>
+            <Icon name="create" size={16} />
+            <span>Create sandbox</span>
+          </button>
+        }
+      />
+      {needsSetup && (
+        <div className="banner">
+          <strong>Finish setting up Sandy to create sandboxes.</strong>
+          <p>Your existing sandboxes are still listed below.</p>
+          <button className="btn small" onClick={onGoSettings}>
+            Finish setup
+          </button>
+        </div>
       )}
+      <div className={`board ${detail ? "" : "no-detail"}`}>
+        <div>
+          <SandboxList
+            sandboxes={sandboxes}
+            visible={visible}
+            error={error}
+            refreshing={refreshing}
+            installed={installed}
+            selected={selected}
+            pending={pending}
+            actionLabels={actionLabels}
+            search={search}
+            onSearch={setSearch}
+            onRefresh={() => void refresh()}
+            onSelect={selectSandbox}
+            onOpen={runPrimaryAction}
+            onCreate={onCreate}
+          />
+          <ContextLine icon={<Icon name="shield" size={15} />}>
+            Each sandbox has its own microVM and Docker daemon.
+          </ContextLine>
+        </div>
+        {detail && (
+          <SandboxInspector
+            detail={detail}
+            pending={detailPending}
+            running={detailRunning}
+            installed={installed}
+            onAction={(action) => void runAction(detail.name, action).catch(() => {})}
+            onOpen={() => runPrimaryAction(detail)}
+            onClose={() => selectSandbox(null)}
+            actionLabels={actionLabels}
+          />
+        )}
+      </div>
       <div className="toasts" aria-live="polite" aria-atomic="true">
         {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       </div>
@@ -197,22 +185,6 @@ export default function SandboxesPage({
           onClose={() => setConnecting(null)}
         />
       )}
-    </div>
-  );
-}
-
-/**
- * The in-place create wizard replaces the sandbox list as page content, so
- * "Create sandbox" needs no separate navigation entry and Back restores the
- * list with its previous selection intact.
- */
-function CreateHost({ onBack }: { onBack: () => void }) {
-  return (
-    <div className="createhost">
-      <button type="button" className="textbtn" onClick={onBack}>
-        <Icon name="back" size={15} /> Back to sandboxes
-      </button>
-      <CreatePage onClose={onBack} />
     </div>
   );
 }

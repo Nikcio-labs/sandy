@@ -1,0 +1,27 @@
+/*
+ * The create dialog: wide modal chrome on top of the shared .appdialog.
+ * The wizard body keeps its own page styles; only the host frame lives here.
+ */
+
+.appdialog-wide {
+  width: min(880px, calc(100vw - 48px));
+  max-height: calc(100dvh - 90px);
+  padding: 24px 26px;
+  overflow-y: auto;
+}
+
+/* The floating close button overlaps the wizard's heading row. */
+.appdialog-wide .dialogclose {
+  z-index: 5;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+@media (max-width: 720px) {
+  .appdialog-wide {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 40px);
+    padding: 18px 14px;
+  }
+}

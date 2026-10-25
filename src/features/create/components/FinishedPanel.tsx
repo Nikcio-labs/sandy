@@ -13,6 +13,7 @@ export function FinishedPanel({
   onCopy,
   onTemplates,
   onClose,
+  onLaunched,
 }: {
   saved: SavedTemplate;
   launched: boolean;
@@ -26,6 +27,7 @@ export function FinishedPanel({
   onCopy: () => void;
   onTemplates?: () => void;
   onClose: () => void;
+  onLaunched?: (sandbox: string) => void;
 }) {
   return (
     <div className="panel catalog-panel catalog-finished">
@@ -98,6 +100,16 @@ export function FinishedPanel({
             onClick={onTemplates}
           >
             View saved templates
+          </button>
+        )}
+        {launched && onLaunched && !onTemplates && (
+          <button
+            type="button"
+            className="btn primary"
+            disabled={busy}
+            onClick={() => onLaunched(saved.name)}
+          >
+            Show sandbox
           </button>
         )}
         <button type="button" className="btn" disabled={busy} onClick={onClose}>

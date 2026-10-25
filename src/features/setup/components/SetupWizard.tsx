@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
-import { SETUP_STEPS } from "../../setup/setupSteps";
+import { SETUP_STEPS, REQUIRED_STEPS } from "../../setup/setupSteps";
 import type { SetupStep } from "../../setup/setupSteps";
 import "./SetupWizard.css";
 
@@ -27,6 +27,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
   const busy = Object.values(states).includes("running");
   const isDone = (item: SetupStep) => item.isDone(status) || states[item.id] === "done";
   const completed = SETUP_STEPS.filter(isDone).length;
+  const requiredDone = REQUIRED_STEPS.every(isDone);
   const allDone = completed === SETUP_STEPS.length;
   const done = isDone(step);
   const failed = states[step.id] === "error";
@@ -66,30 +67,30 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
           <span className="eyebrow">YOUR LOCAL WORKSPACE</span>
           <h2 id="setup-title">
             {finished
-              ? allDone
+              ? requiredDone
                 ? "You’re ready to make something great"
                 : "Pick up where you left off"
               : "A warm welcome to Sandy"}
           </h2>
           <p>
             {finished
-              ? allDone
-                ? "Your tools are configured. Let’s take a look at your sandboxes."
+              ? requiredDone
+                ? "Your tools are configured. The optional extras can wait in Settings."
                 : "You can use Sandy now and finish the remaining steps in Settings."
-              : "A few simple steps, and you’ll be right at home. We’ve checked what’s already configured."}
+              : "Install and sign in to get started — the rest is optional, whenever you need it."}
           </p>
         </div>
-        <span className="setup-progress-label">{completed} of 4 ready</span>
+        <span className="setup-progress-label">{completed} of {SETUP_STEPS.length} ready</span>
       </div>
       <div
         className="progress-track"
         role="progressbar"
         aria-label="Setup progress"
         aria-valuemin={0}
-        aria-valuemax={4}
+        aria-valuemax={SETUP_STEPS.length}
         aria-valuenow={completed}
       >
-        <span style={{ width: `${(completed / 4) * 100}%` }} />
+        <span style={{ width: `${(completed / SETUP_STEPS.length) * 100}%` }} />
       </div>
       <ol className="steps" aria-label="Setup steps">
         {SETUP_STEPS.map((item, index) => (
@@ -106,23 +107,28 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
               <span className="step-number">
                 {isDone(item) ? <Icon name="check" size={16} /> : index + 1}
               </span>
-              <span>{item.label}</span>
+              <span>
+                {item.label}
+                {item.optional && <em className="step-optional">optional</em>}
+              </span>
             </button>
           </li>
         ))}
       </ol>
       {finished ? (
         <div className="panel setup-finish">
-          <span className={`empty-icon ${allDone ? "green" : ""}`}>
-            <Icon name={allDone ? "check" : "shield"} size={34} />
+          <span className={`empty-icon ${requiredDone ? "green" : ""}`}>
+            <Icon name={requiredDone ? "check" : "shield"} size={34} />
           </span>
           <h3>
-            {allDone
-              ? "All set. All yours."
-              : `${4 - completed} step${4 - completed === 1 ? "" : "s"} left for later`}
+            {requiredDone
+              ? allDone
+                ? "All set. All yours."
+                : "Ready — extras available later"
+              : `${REQUIRED_STEPS.filter((item) => !isDone(item)).length} step${REQUIRED_STEPS.filter((item) => !isDone(item)).length === 1 ? "" : "s"} left for later`}
           </h3>
           <p>
-            {allDone
+            {requiredDone
               ? "Your sandbox workspace is ready to explore."
               : "Missing steps will still be here whenever you’re ready."}
           </p>
@@ -148,7 +154,10 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
           <span className="empty-icon">
             <Icon name={step.icon} size={30} />
           </span>
-          <span className="eyebrow">STEP {current + 1} OF 4</span>
+          <span className="eyebrow">
+            STEP {current + 1} OF {SETUP_STEPS.length}
+            {step.optional ? " · OPTIONAL" : ""}
+          </span>
           <h3>{step.title}</h3>
           <p className="step-description">{step.description}</p>
           <div className="command">
@@ -211,7 +220,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
                   {!busy && <Icon name="arrow" size={17} />}
                 </button>
                 <button className="textbtn" disabled={busy} onClick={next}>
-                  Skip for now
+                  {step.optional ? "Skip for now" : "Decide later"}
                 </button>
               </>
             )}

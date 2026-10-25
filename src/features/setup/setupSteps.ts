@@ -12,6 +12,11 @@ export interface SetupStep {
   icon: IconName;
   isDone: (status: SetupStatus | null) => boolean;
   run: () => Promise<string | void>;
+  /**
+   * Optional host-access extras the user can defer. Only required steps
+   * gate "ready" routing and the dashboard's setup banner.
+   */
+  optional?: boolean;
 }
 
 export const SETUP_STEPS: SetupStep[] = [
@@ -50,6 +55,7 @@ export const SETUP_STEPS: SetupStep[] = [
     icon: "clipboard",
     isDone: (status) => !!status?.image_paste_on,
     run: enableImagePaste,
+    optional: true,
   },
   {
     id: "ssh",
@@ -62,9 +68,13 @@ export const SETUP_STEPS: SetupStep[] = [
     icon: "key",
     isDone: (status) => !!status?.ssh_set_up,
     run: setupSsh,
+    optional: true,
   },
 ];
 
+/** Required steps decide first-open routing; optional ones never block. */
+export const REQUIRED_STEPS = SETUP_STEPS.filter((step) => !step.optional);
+
 export function isSetupComplete(status: SetupStatus | null) {
-  return SETUP_STEPS.every((step) => step.isDone(status));
+  return REQUIRED_STEPS.every((step) => step.isDone(status));
 }

@@ -6,7 +6,7 @@ import BootSplash from "./common/components/BootSplash";
 import { useSetupStatus } from "./common/hooks/useSetupStatus";
 import SandboxesPage from "./features/dashboard/components/SandboxesPage";
 import TemplatesPage from "./features/templates/components/TemplatesPage";
-import CreatePage from "./features/create/components/CreatePage";
+import CreateDialog from "./features/create/components/CreateDialog";
 import SettingsPage from "./features/settings/components/SettingsPage";
 
 const revealMainWindow = async () => {
@@ -17,8 +17,9 @@ const revealMainWindow = async () => {
 
 export default function App() {
   const [view, setView] = useState<View>("sandboxes");
-  // The wizard's edit mode targets one saved template per visit.
-  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
+  // The create wizard is a modal dialog over the current page. Edit mode
+  // targets one saved template per visit.
+  const [createDialog, setCreateDialog] = useState<{ templateId?: string } | null>(null);
   const [setupOpen, setSetupOpen] = useState(false);
   const [setupSession, setSetupSession] = useState(0);
   const [count, setCount] = useState<number | null>(null);
@@ -49,9 +50,7 @@ export default function App() {
     }
     if (
       status &&
-      [status.sbx_installed, status.signed_in, status.image_paste_on, status.ssh_set_up].some(
-        (value) => value === false,
-      )
+      [status.sbx_installed, status.signed_in].some((value) => value === false)
     ) {
       setView("settings");
       setSetupOpen(true);
@@ -64,7 +63,7 @@ export default function App() {
     setView("sandboxes");
   };
 
-  const navigate = (next: Exclude<View, "create" | "edit-template">) => {
+  const navigate = (next: View) => {
     setView(next);
   };
 
@@ -74,7 +73,11 @@ export default function App() {
 
   return (
     <div className="shell">
-      <Titlebar view={view} />
+      <Titlebar
+        view={
+          createDialog ? (createDialog.templateId ? "edit-template" : "create") : view
+        }
+      />
       <div className="app">
         <Rail
           view={view}
@@ -84,40 +87,26 @@ export default function App() {
           onNavigate={navigate}
         />
         <main className="main" id="main-content">
-          {(view === "sandboxes" || view === "create") && (
+          {view === "sandboxes" && (
             <SandboxesPage
               status={status}
               pendingSelection={pendingSelection}
               onPendingSelectionHandled={() => setPendingSelection(null)}
               onGoSettings={() => setView("settings")}
-              onCreate={() => setView("create")}
+              onCreate={() => setCreateDialog({})}
               onCheckSetup={checkSetup}
               onCount={setCount}
-              createOpen={view === "create"}
-              onBack={() => setView("sandboxes")}
             />
           )}
           {view === "templates" && (
             <TemplatesPage
-              onCreate={() => setView("create")}
-              onEdit={(templateId) => {
-                setEditingTemplate(templateId);
-                setView("edit-template");
-              }}
+              onCreate={() => setCreateDialog({})}
+              onEdit={(templateId) => setCreateDialog({ templateId })}
               onBusyChange={setBusy}
               onLaunched={(sandbox) => {
                 setPendingSelection(sandbox);
                 setView("sandboxes");
               }}
-            />
-          )}
-          {view === "edit-template" && editingTemplate && (
-            <CreatePage
-              key={editingTemplate}
-              templateId={editingTemplate}
-              onClose={() => setView("templates")}
-              onTemplates={() => setView("templates")}
-              onBusyChange={setBusy}
             />
           )}
           <div hidden={view !== "settings"}>
@@ -144,6 +133,19 @@ export default function App() {
           </div>
         </main>
       </div>
+      {createDialog && (
+        <CreateDialog
+          key={createDialog.templateId ?? "create"}
+          templateId={createDialog.templateId}
+          onBusyChange={setBusy}
+          onClose={() => setCreateDialog(null)}
+          onLaunched={(sandbox) => {
+            setPendingSelection(sandbox);
+            setView("sandboxes");
+            setCreateDialog(null);
+          }}
+        />
+      )}
     </div>
   );
 }

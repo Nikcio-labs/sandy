@@ -4,10 +4,10 @@ import Icon from "./Icon";
 import logo from "../../assets/logo.png";
 import "./AppShell.css";
 
-export type View = "sandboxes" | "templates" | "settings" | "create" | "edit-template";
+export type View = "sandboxes" | "templates" | "settings";
 
 const navigation: {
-  id: Exclude<View, "create" | "edit-template">;
+  id: View;
   icon: IconName;
   label: string;
 }[] = [
@@ -16,7 +16,7 @@ const navigation: {
   { id: "settings", icon: "settings", label: "Settings" },
 ];
 
-const titles: Record<View, string> = {
+const titles: Record<View | "create" | "edit-template", string> = {
   sandboxes: "Your sandboxes",
   templates: "Templates",
   settings: "Settings",
@@ -61,7 +61,10 @@ function WindowControls() {
   );
 }
 
-export function Titlebar({ view }: { view: View }) {
+/** Title-bar label: pages, plus the modal wizard states layered over them. */
+export type TitleView = View | "create" | "edit-template";
+
+export function Titlebar({ view }: { view: TitleView }) {
   return (
     // Draggable title bar. The "deep" value makes every non-interactive part
     // of the subtree draggable; interactive children (buttons) stay clickable
@@ -92,16 +95,13 @@ export function Rail({
   busy: boolean;
   checkingSetup: boolean;
   count: number | null;
-  onNavigate: (view: Exclude<View, "create" | "edit-template">) => void;
+  onNavigate: (view: View) => void;
 }) {
   return (
     <aside className="rail" aria-label="App navigation">
       <nav className="railnav">
         {navigation.map((item) => {
-          const active =
-            view === item.id ||
-            (view === "create" && item.id === "templates") ||
-            (view === "edit-template" && item.id === "templates");
+          const active = view === item.id;
           return (
             <button
               key={item.id}

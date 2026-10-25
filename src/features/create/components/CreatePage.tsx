@@ -15,15 +15,26 @@ export interface CreatePageProps {
   onClose: () => void;
   onTemplates?: () => void;
   onBusyChange?: (busy: boolean) => void;
+  /** Called with the sandbox name after the wizard launches one. */
+  onLaunched?: (sandbox: string) => void;
   /** Present when the wizard edits an existing template instead of creating one. */
   templateId?: string;
+  /** Dialog mode: the host dialog owns the close affordance and title. */
+  inDialog?: boolean;
 }
 
 const STEPS = ["Providers", "Agent or workload", "Mixins & inputs", "Project & review"];
 
-export default function CreatePage({ onClose, onTemplates, onBusyChange, templateId }: CreatePageProps) {
+export default function CreatePage({
+  onClose,
+  onTemplates,
+  onBusyChange,
+  onLaunched,
+  templateId,
+  inDialog = false,
+}: CreatePageProps) {
   const id = useId();
-  const flow = useCreateFlow({ onBusyChange, templateId });
+  const flow = useCreateFlow({ onBusyChange, templateId, onLaunched });
   const {
     editing,
     step,
@@ -72,13 +83,17 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
   } = flow;
 
   return (
-    <section className="standalone-page catalog-page" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
+    <section
+      className={`catalog-page ${inDialog ? "catalog-page-dialog" : "standalone-page"}`}
+      aria-labelledby={`${id}-title`}
+      aria-busy={busy !== null}
+    >
       <header className="pagehead sectionhead catalog-page-heading">
         <div>
           <span className="eyebrow">
             {editing ? "EDIT SAVED TEMPLATE" : "YOUR NEXT WORKSPACE"}
           </span>
-          <h1 id={`${id}-title`}>
+          <h1 id={`${id}-title`} className={inDialog ? "catalog-dialog-title" : undefined}>
             {saved ? "Your template is ready" : editing ? "Edit template" : "Create a sandbox"}
           </h1>
           <p className="help">
@@ -89,9 +104,26 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
                 : "Choose your tools. Bring your project. Make it yours."}
           </p>
         </div>
-        <button type="button" className="btn" disabled={busy !== null} onClick={onClose}>
-          <Icon name="close" size={16} /> {saved ? "Close" : "Cancel"}
-        </button>
+        {!inDialog && (
+          <button type="button" className="btn" disabled={busy !== null} onClick={onClose}>
+            <Icon name="close" size={16} /> {saved ? "Close" : "Cancel"}
+          </button>
+        )}
+        {inDialog && (
+          /* Hidden affordance the host dialog presses on Escape so the
+             wizard's discard guard still runs. */
+          <button
+            type="button"
+            className="sr-only"
+            data-wizard-cancel
+            disabled={busy !== null}
+            onClick={() => {
+              if (saved || step === 0) onClose();
+            }}
+          >
+            Cancel wizard
+          </button>
+        )}
       </header>
       {!saved && (
         <ol className="steps" aria-label="Sandbox creation steps">
@@ -136,6 +168,7 @@ export default function CreatePage({ onClose, onTemplates, onBusyChange, templat
           onCopy={() => void copy()}
           onTemplates={onTemplates}
           onClose={onClose}
+          onLaunched={onLaunched}
         />
       ) : (
         <>
