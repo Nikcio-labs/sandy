@@ -1,0 +1,106 @@
+/*
+ * Settings → Sandbox settings: the CLI-true settings editor. Rows follow
+ * the concept's two-column setting grid: description and metadata badges
+ * on the left, typed control and apply/reset actions on the right.
+ */
+
+.pane-section {
+  min-width: 0;
+}
+
+.pane-toolbar {
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.pane-search {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+}
+
+.settinglist {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 260px);
+  gap: 18px;
+  align-items: start;
+}
+
+.setting:last-child {
+  border-bottom: 0;
+}
+
+.settinginfo strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.settinginfo p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 5px 0;
+}
+
+.settingbadges .badge {
+  font-size: 9px;
+}
+
+.settingbadges {
+  margin-top: 7px;
+}
+
+.settingcontrols {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settingvalue {
+  font-size: 12px;
+  padding: 7px;
+}
+
+textarea.settingvalue {
+  min-height: 72px;
+  font-family: var(--mono);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.settingapply {
+  flex-basis: 100%;
+  justify-content: flex-end;
+}
+
+.setting-error {
+  margin: 0;
+  color: var(--red);
+}
+
+@media (max-width: 720px) {
+  .setting {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .settingcontrols {
+    justify-content: flex-start;
+  }
+
+  .settingapply {
+    justify-content: flex-start;
+  }
+}

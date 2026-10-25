@@ -115,6 +115,31 @@ async fn remove_sandbox(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn list_settings() -> Result<Vec<sbx::SettingRecord>, String> {
+    logged(
+        "list_settings",
+        async move { blocking(sbx::list_settings).await },
+    )
+    .await
+}
+
+#[tauri::command]
+async fn set_setting(key: String, value_json: String) -> Result<String, String> {
+    logged("set_setting", async move {
+        blocking(move || sbx::set_setting(&key, &value_json)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn unset_setting(key: String) -> Result<String, String> {
+    logged("unset_setting", async move {
+        blocking(move || sbx::unset_setting(&key)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn open_terminal(name: String) -> Result<(), String> {
     logged("open_terminal", async move {
         blocking(move || sbx::open_terminal(&name)).await
@@ -341,6 +366,9 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         stop_sandbox,
         restart_sandbox,
         remove_sandbox,
+        list_settings,
+        set_setting,
+        unset_setting,
         open_terminal,
         connection_info,
         get_providers,
