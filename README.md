@@ -8,21 +8,23 @@ A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with
 
 ## What it does
 
-- **Sandboxes** — see your local sandboxes and manage them.
-- **Open** — connect to a running sandbox.
-- **Create** — create your own sandboxes with an intuitive picker interface.
-- **Templates** — save predefined environments and relaunch them later with a different name or workspace.
-- **Setup** — Guided setup process helping you get started.
+- **Sandboxes** - see your local sandboxes and manage them.
+- **Open** - connect to a running sandbox.
+- **Create** - create your own sandboxes with an intuitive picker interface.
+- **Templates** - save predefined environments and relaunch them later with a different name or workspace.
+- **Setup** - Guided setup process helping you get started.
 
 ## Installing Sandy
 
-Download the installer for your platform from the [releases page](https://github.com/nikcio/sandy/releases) — Sandy is built and attached automatically whenever a release is published:
+Download the installer for your platform from the [releases page](https://github.com/nikcio/sandy/releases):
 
 | Platform | File |
 | -------- | ---- |
 | macOS (Apple silicon) | `.dmg` |
 | Windows | `.msi` or `.exe` |
 | Linux | `.AppImage` or `.deb` |
+
+[Releases page](https://github.com/nikcio/sandy/releases)
 
 ## Building from source
 
