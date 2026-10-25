@@ -107,10 +107,3 @@ pub(super) fn option_from_descriptor(
         arguments,
     })
 }
-
-pub(super) fn is_kit_tag(value: &Value) -> bool {
-    value["content_type"] == "sbx_kit"
-        || value["media_type"]
-            .as_str()
-            .is_some_and(|m| m.starts_with("application/vnd.docker.sandbox.kit.v"))
-}

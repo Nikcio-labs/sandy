@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Provider } from "../../../lib/catalog";
-import { getProviders, saveProviders, isHubSearchProvider } from "../../../lib/catalog";
+import { getProviders, saveProviders } from "../../../lib/catalog";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { normalizeRepository, repositoryIsValid } from "../providerRepository";
 import { ProviderEditor } from "./ProviderEditor";
@@ -19,22 +19,16 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [newKind, setNewKind] = useState<Provider["kind"]>("github");
   const [reload, setReload] = useState(0);
   const callbacks = useRef({ onChange, onDirtyChange });
   callbacks.current = { onChange, onDirtyChange };
   const lock = useRef(false);
   const id = useId();
   const dirty = providers !== null && JSON.stringify(providers) !== saved;
-  // An empty GitHub reference is valid: discovery resolves it to the latest tag.
+  // An empty reference is valid: discovery resolves it to the latest tag.
   const incomplete =
     providers?.some(
-      (provider) =>
-        provider.enabled &&
-        (isHubSearchProvider(provider)
-          ? !repositoryIsValid(provider.repository, provider.kind)
-          : !repositoryIsValid(provider.repository, provider.kind) ||
-            (provider.kind === "dockerhub" && !provider.reference.trim())),
+      (provider) => provider.enabled && !repositoryIsValid(provider.repository),
     ) ?? false;
 
   useEffect(() => {
@@ -74,14 +68,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
     if (lock.current || !providers) return;
     if (
       providers.some(
-        (provider) =>
-          !provider.label.trim() ||
-          !repositoryIsValid(provider.repository, provider.kind) ||
-          // An empty GitHub reference is valid: discovery resolves it to the latest tag.
-          (provider.kind === "dockerhub" &&
-            provider.enabled &&
-            !isHubSearchProvider(provider) &&
-            !provider.reference.trim()),
+        (provider) => !provider.label.trim() || !repositoryIsValid(provider.repository),
       )
     ) {
       setError("Give each provider a name and a valid repository before saving.");
@@ -96,7 +83,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
         providers.map((provider) => ({
           ...provider,
           label: provider.label.trim(),
-          repository: normalizeRepository(provider.repository, provider.kind),
+          repository: normalizeRepository(provider.repository),
           reference: provider.reference.trim(),
         })),
       );
@@ -165,22 +152,10 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
             ))}
             {!providers.length && (
               <p className="catalog-empty-note">
-                No providers configured. Add a GitHub repository or a Docker Hub provider to get
-                started.
+                No providers configured. Add a GitHub repository to get started.
               </p>
             )}
             <div className="catalog-provider-add">
-              <label className="catalog-field" htmlFor={`${id}-kind`}>
-                Provider type
-                <select
-                  id={`${id}-kind`}
-                  value={newKind}
-                  onChange={(event) => setNewKind(event.target.value as Provider["kind"])}
-                >
-                  <option value="github">GitHub</option>
-                  <option value="dockerhub">Docker Hub</option>
-                </select>
-              </label>
               <button
                 type="button"
                 className="ghost"
@@ -190,7 +165,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
                     {
                       id: crypto.randomUUID(),
                       label: "",
-                      kind: newKind,
+                      kind: "github",
                       repository: "",
                       reference: "",
                       enabled: true,
@@ -202,8 +177,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
               </button>
               {!providers.some(
                 (provider) =>
-                  normalizeRepository(provider.repository, provider.kind) ===
-                    "nikcio/docker-sandboxing" && provider.kind === "github",
+                  normalizeRepository(provider.repository) === "nikcio/docker-sandboxing",
               ) && (
                 <button
                   type="button"

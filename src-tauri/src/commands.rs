@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use tauri::Manager;
 
-use crate::{catalog, diaglog, environments, sbx, setup};
+use crate::{catalog, environments, logging, sbx, setup};
 
 /// Log every Tauri command outcome (command name, ok/error, and the error
 /// text on failure). Successes carry no detail; the domain loggers already
@@ -20,15 +20,7 @@ where
     E: std::fmt::Display,
 {
     let result = work.await;
-    match &result {
-        Ok(_) => crate::diaglog::write_record("command", command, None, Some("ok")),
-        Err(error) => crate::diaglog::write_record(
-            "command",
-            command,
-            Some(&error.to_string()),
-            Some("error"),
-        ),
-    }
+    logging::command_call(command, &result);
     result
 }
 
@@ -43,7 +35,6 @@ async fn blocking<T: Send + 'static>(
 fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_data_dir().map_err(|error| error.to_string())
 }
-
 #[tauri::command]
 async fn check_setup() -> Result<setup::SetupStatus, String> {
     logged(
@@ -161,20 +152,29 @@ async fn save_providers(
 }
 
 #[tauri::command]
-async fn provider_versions(provider: catalog::Provider) -> Result<Vec<String>, String> {
+async fn provider_versions(
+    app: tauri::AppHandle,
+    provider: catalog::Provider,
+    refresh: Option<bool>,
+) -> Result<Vec<String>, String> {
     logged("provider_versions", async move {
-        blocking(move || catalog::provider_versions(provider)).await
+        let root = data_dir(&app)?;
+        blocking(move || catalog::provider_versions(&root, provider, refresh.unwrap_or(false)))
+            .await
     })
     .await
 }
 
 #[tauri::command]
 async fn discover_kits(
+    app: tauri::AppHandle,
     providers: Vec<catalog::Provider>,
-    query: Option<String>,
+    refresh: Option<bool>,
 ) -> Result<catalog::Catalog, String> {
     logged("discover_kits", async move {
-        blocking(move || catalog::discover_kits(providers, query)).await
+        let root = data_dir(&app)?;
+        let refresh = refresh.unwrap_or(false);
+        blocking(move || catalog::discover_kits(&root, providers, refresh)).await
     })
     .await
 }
@@ -205,6 +205,31 @@ async fn template_warnings(app: tauri::AppHandle) -> Result<Vec<String>, String>
     logged("template_warnings", async move {
         let root = data_dir(&app)?;
         blocking(move || environments::template_warnings(&root)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn read_template_details(
+    app: tauri::AppHandle,
+    id: String,
+) -> Result<environments::TemplateDetails, String> {
+    logged("read_template_details", async move {
+        let root = data_dir(&app)?;
+        blocking(move || environments::read_template_details(&root, &id)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn update_template(
+    app: tauri::AppHandle,
+    id: String,
+    request: environments::UpdateTemplateRequest,
+) -> Result<environments::SavedTemplate, String> {
+    logged("update_template", async move {
+        let root = data_dir(&app)?;
+        blocking(move || environments::update_template(&root, &id, request)).await
     })
     .await
 }
@@ -270,7 +295,7 @@ async fn pick_template_path(app: tauri::AppHandle) -> Result<Option<String>, Str
 async fn read_debug_log(app: tauri::AppHandle) -> Result<String, String> {
     let root = data_dir(&app)?;
     blocking(move || {
-        let path = diaglog::log_path(&root);
+        let path = logging::log_path(&root);
         std::fs::read_to_string(&path).or_else(|error| match error.kind() {
             // A missing file is an empty log, not a failure: nothing has
             // been logged yet (or the user cleared it).
@@ -294,7 +319,7 @@ async fn debug_log_dir(app: tauri::AppHandle) -> Result<String, String> {
 async fn clear_debug_log(app: tauri::AppHandle) -> Result<(), String> {
     let root = data_dir(&app)?;
     blocking(move || {
-        let path = diaglog::log_path(&root);
+        let path = logging::log_path(&root);
         match std::fs::remove_file(&path) {
             Ok(()) => Ok(()),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -325,6 +350,8 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         save_template,
         list_templates,
         template_warnings,
+        read_template_details,
+        update_template,
         delete_template,
         launch_template,
         allow_source,

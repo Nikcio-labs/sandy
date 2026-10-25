@@ -7,7 +7,6 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use super::MAX_BODY;
-use super::descriptor::is_kit_tag;
 use reqwest::blocking::Client;
 use serde_json::Value;
 
@@ -16,9 +15,6 @@ pub(super) struct Api {
     pub(super) client: Client,
     pub(super) github: String,
     pub(super) raw: String,
-    pub(super) hub: String,
-    pub(super) registry: String,
-    pub(super) auth: String,
 }
 
 impl Api {
@@ -32,9 +28,6 @@ impl Api {
                 .map_err(|e| e.to_string())?,
             github: "https://api.github.com".into(),
             raw: "https://raw.githubusercontent.com".into(),
-            hub: "https://hub.docker.com".into(),
-            registry: "https://registry-1.docker.io".into(),
-            auth: "https://auth.docker.io/token".into(),
         })
     }
 
@@ -61,7 +54,7 @@ impl Api {
             return Ok((body.clone(), digest.clone()));
         }
         let result = self.request_uncached(url, token);
-        crate::diaglog::http_call("GET", url, &result);
+        crate::logging::http_call("GET", url, &result);
         let (body, digest) = result?;
         let mut entries = cache.lock().map_err(|e| e.to_string())?;
         if entries.len() > 1024 {
@@ -133,23 +126,5 @@ impl Api {
             }
         }
         Err("GitHub repository has over 10,000 tags; choose a reference directly".into())
-    }
-
-    pub(super) fn hub_tags(&self, repository: &str) -> Result<Vec<Value>, String> {
-        let mut tags = Vec::new();
-        for page in 1..=100 {
-            let value = self.json(&format!(
-                "{}/v2/repositories/{repository}/tags?page_size=100&page={page}",
-                self.hub
-            ))?;
-            let entries = value["results"]
-                .as_array()
-                .ok_or("Hub tags response has no results")?;
-            tags.extend(entries.iter().filter(|v| is_kit_tag(v)).cloned());
-            if value["next"].as_str().is_none_or(str::is_empty) {
-                return Ok(tags);
-            }
-        }
-        Err("Docker Hub repository has over 10,000 tags; choose a tag directly".into())
     }
 }

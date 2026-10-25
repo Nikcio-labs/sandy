@@ -14,24 +14,34 @@ import {
   isCompatibleMixin,
   resolvedArguments,
 } from "../../../lib/kit";
-import { launchTemplate, saveTemplate } from "../../../lib/templates";
-import type { SavedTemplate, SaveTemplateRequest } from "../../../lib/templates";
+import {
+  launchTemplate,
+  readTemplateDetails,
+  saveTemplate,
+  updateTemplate,
+} from "../../../lib/templates";
+import type {
+  SavedTemplate,
+  SaveTemplateRequest,
+  UpdateTemplateRequest,
+} from "../../../lib/templates";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import { useBusyReporting } from "../../../common/hooks/useBusyReporting";
 
 export interface CreateFlowOptions {
   onBusyChange?: (busy: boolean) => void;
+  /** Present when the wizard edits an existing template instead of creating one. */
+  templateId?: string;
 }
 
 /**
  * The create-wizard state machine: kit discovery, agent/mixin selection,
  * template saving, and launching. The page component only renders steps.
  */
-export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
+export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
   const mounted = useMountedRef();
   const [step, setStep] = useState(0);
   const [providers, setProviders] = useState<Provider[] | null>(null);
-  const [hubQuery, setHubQuery] = useState("");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [agent, setAgent] = useState<KitOption | null>(null);
   const [mixins, setMixins] = useState<KitOption[]>([]);
@@ -43,13 +53,18 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
   const [workspace, setWorkspace] = useState("");
   const [mountless, setMountless] = useState(false);
   const [savePath, setSavePath] = useState("");
-  const [busy, setBusy] = useState<"discover" | "save" | "launch" | "workspace" | "path" | null>(null);
+  const [busy, setBusy] = useState<
+    "discover" | "save" | "launch" | "workspace" | "path" | "load" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<SavedTemplate | null>(null);
   const [launched, setLaunched] = useState(false);
   const [launchOutput, setLaunchOutput] = useState("");
   const [copyNotice, setCopyNotice] = useState("");
   const lock = useRef(false);
+  // The id stays for the whole visit, so a provider reset (which drops the
+  // saved kit metadata) still saves back to the same template.
+  const [editingId] = useState(templateId ?? null);
 
   // Load the saved provider configuration up front. The Providers editor still
   // reports changes back; this only guarantees step 0 can render (with a
@@ -67,6 +82,60 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
       active = false;
     };
   }, []);
+
+  // Edit mode: prefill everything from the saved template, then refresh the
+  // catalog in the background so the selection menus show all discovered
+  // kits, not only the template's saved ones. The saved kit metadata is
+  // merged into the discovery result so the current selections survive even
+  // when the provider now resolves to a newer revision.
+  useEffect(() => {
+    if (!templateId) return;
+    let active = true;
+    setBusy("load");
+    readTemplateDetails(templateId)
+      .then(async (details) => {
+        if (!active) return;
+        const savedKits = [details.agent, ...details.mixins];
+        // The saved kits are immediately usable as the catalog; the
+        // background discovery below replaces it with the full snapshot.
+        setCatalog({ kits: savedKits, warnings: [] });
+        setAgent(details.agent);
+        setMixins(details.mixins);
+        setValues(details.arguments);
+        setName(details.template.name);
+        setWorkspace(details.template.workspace);
+        setMountless(!details.template.workspace);
+        setStep(1);
+        try {
+          // The edit wizard never edits providers: discovery uses the saved
+          // configuration as-is, with no persistence round-trip.
+          const persisted = await getProviders();
+          const result = await discoverKits(persisted);
+          if (!active) return;
+          const { kits, warnings } = verifiedFrom(result);
+          for (const kit of savedKits) {
+            if (!kits.some((fresh) => fresh.source === kit.source)) kits.push(kit);
+          }
+          setCatalog({ kits, warnings });
+        } catch (failure) {
+          if (!active) return;
+          // Discovery failed: the saved kits seeded above remain the catalog.
+          setCatalog({
+            kits: savedKits,
+            warnings: [`Discovery failed: ${String(failure)}`],
+          });
+        }
+      })
+      .catch((failure) => {
+        if (active) setError(String(failure));
+      })
+      .finally(() => {
+        if (active) setBusy(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [templateId]);
 
   useBusyReporting(busy !== null, onBusyChange);
 
@@ -102,6 +171,16 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
         ...(savePath.trim() ? { save_path: savePath.trim() } : {}),
       }
     : null;
+  const updateRequest: UpdateTemplateRequest | null =
+    editingId && agent
+      ? {
+          name: name.trim(),
+          workspace: mountless ? "" : workspace.trim(),
+          agent,
+          mixins,
+          arguments: resolvedArguments(selectedKits, values),
+        }
+      : null;
 
   const moveTo = (next: number) => {
     setError(null);
@@ -114,7 +193,68 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     setStep(next);
   };
 
-  const discover = async () => {
+  // Shared verification of a discovery result: drop kits without usable
+  // metadata, report them, and add the documented built-ins when the CLI did
+  // not report its own.
+  const verifiedFrom = (result: Catalog): { kits: KitOption[]; warnings: string[] } => {
+    const seen = new Set<string>();
+    const verified = result.kits.filter((kit) => {
+      if (!hasKitMetadata(kit) || seen.has(kit.id)) return false;
+      seen.add(kit.id);
+      return true;
+    });
+    const skipped = result.kits.length - verified.length;
+    const usedBuiltinFallback = !verified.some(
+      (kit) => kit.provider_id === "builtin" && kit.kind === "agent",
+    );
+    if (usedBuiltinFallback) {
+      verified.push(...BUILTIN_AGENTS);
+    }
+    return {
+      kits: verified,
+      warnings: [
+        ...result.warnings,
+        ...(usedBuiltinFallback
+          ? [
+              "Built-in agent shortcuts are from Docker’s documentation because the CLI did not report its available agents. These v2 shortcuts have not been verified against this installation.",
+            ]
+          : []),
+        ...(skipped
+          ? [
+              `${skipped} entries with incomplete, unsupported, or duplicate kit metadata were excluded.`,
+            ]
+          : []),
+      ],
+    };
+  };
+
+  // Discovery is a new snapshot. Keep selections whose kits are still in the
+  // catalog (matched by source); the rest cannot carry stale source
+  // references and are dropped. Kit ids embed the source, so a refreshed
+  // catalog can re-issue ids (a new GitHub commit, for example); entered
+  // values are remapped onto the fresh ids instead of being dropped.
+  const mergeSelections = (nextKits: KitOption[]) => {
+    const matchBySource = (kit: KitOption) => nextKits.find((fresh) => fresh.source === kit.source);
+    setAgent((previous) => (previous ? (matchBySource(previous) ?? null) : null));
+    setMixins((previous) =>
+      previous
+        .map((mixin) => matchBySource(mixin))
+        .filter((mixin): mixin is KitOption => mixin !== null),
+    );
+    setValues((previous) => {
+      const previousKits = [...(agent ? [agent] : []), ...mixins];
+      if (!previousKits.length) return previous;
+      const next: KitArguments = {};
+      for (const kit of previousKits) {
+        const fresh = matchBySource(kit);
+        const entered = previous[kit.id];
+        if (fresh && entered) next[fresh.id] = entered;
+      }
+      return next;
+    });
+  };
+
+  const discover = async (refresh = false) => {
     // Provider edits are persisted by saveProviders below, so unsaved changes
     // do not need to block discovery.
     if (lock.current || !providers) return;
@@ -124,41 +264,11 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     try {
       // Defaults from get_providers may not have a file yet. Persist before discovery.
       const persistedProviders = await saveProviders(providers);
-      const result = await discoverKits(persistedProviders, hubQuery);
+      const result = await discoverKits(persistedProviders, refresh);
       if (!mounted.current) return;
-      const seen = new Set<string>();
-      const verified = result.kits.filter((kit) => {
-        if (!hasKitMetadata(kit) || seen.has(kit.id)) return false;
-        seen.add(kit.id);
-        return true;
-      });
-      const skipped = result.kits.length - verified.length;
-      const usedBuiltinFallback = !verified.some(
-        (kit) => kit.provider_id === "builtin" && kit.kind === "agent",
-      );
-      if (usedBuiltinFallback) {
-        verified.push(...BUILTIN_AGENTS);
-      }
-      setCatalog({
-        kits: verified,
-        warnings: [
-          ...result.warnings,
-          ...(usedBuiltinFallback
-            ? [
-                "Built-in agent shortcuts are from Docker’s documentation because the CLI did not report its available agents. These v2 shortcuts have not been verified against this installation.",
-              ]
-            : []),
-          ...(skipped
-            ? [
-                `${skipped} entries with incomplete, unsupported, or duplicate kit metadata were excluded.`,
-              ]
-            : []),
-        ],
-      });
-      // Discovery is a new snapshot. Old selections cannot carry stale source references.
-      setAgent(null);
-      setMixins([]);
-      setValues({});
+      const { kits, warnings } = verifiedFrom(result);
+      setCatalog({ kits, warnings });
+      mergeSelections(kits);
       setProviderFilter("");
       setStep(1);
     } catch (failure) {
@@ -223,13 +333,15 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     setError(null);
     let persisted = false;
     try {
-      const template = await saveTemplate(request);
+      const result = editingId
+        ? await updateTemplate(editingId, updateRequest!)
+        : await saveTemplate(request);
       persisted = true;
       if (!mounted.current) return;
-      setSaved(template);
+      setSaved(result);
       if (shouldLaunch) {
         setBusy("launch");
-        await launch(template);
+        await launch(result);
       }
     } catch (failure) {
       if (mounted.current) {
@@ -277,9 +389,21 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     if (changed && catalog) {
       setCatalog(null);
       setStep(0);
-      setError(
-        "Provider changes need a new discovery. Review your sources and discover kits again.",
-      );
+      if (editingId) {
+        // The edited template's catalog is the saved kit metadata; a real
+        // discovery is the only way to verify alternative kits. The id stays:
+        // re-selecting kits after discovery updates the same template.
+        setAgent(null);
+        setMixins([]);
+        setValues({});
+        setError(
+          "Provider changes need a new discovery. This template stays in edit mode: re-select its kits and save to update it.",
+        );
+      } else {
+        setError(
+          "Provider changes need a new discovery. Review your sources and discover kits again.",
+        );
+      }
     }
   };
 
@@ -308,7 +432,11 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     }));
   };
 
+  const editing = editingId !== null;
+
   return {
+    /** True when the wizard edits an existing template instead of creating one. */
+    editing,
     // Wizard position and shared feedback state.
     step,
     moveTo,
@@ -319,8 +447,6 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     values,
     // Step 0: providers and discovery.
     providers,
-    hubQuery,
-    setHubQuery,
     catalog,
     onProvidersChange,
     discover,
@@ -346,6 +472,7 @@ export function useCreateFlow({ onBusyChange }: CreateFlowOptions) {
     // Step 3: project details and review.
     inputValid,
     request,
+    updateRequest,
     name,
     setName,
     workspace,

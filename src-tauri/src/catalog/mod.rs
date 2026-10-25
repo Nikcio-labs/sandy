@@ -1,23 +1,18 @@
 //! Public provider discovery. GitHub uses HTTPS APIs, never a local git/curl install.
-//! Hub discovery uses its typed catalog and small OCI manifests, never image layers.
 //! Blocking entry points belong on Tauri's blocking worker pool.
 //!
 //! Verified public interfaces:
 //! - GitHub /repos/{owner}/{repo}/tags and /git/trees/{commit}?recursive=1.
-//! - Hub /api/search/v3/catalog/search?type=sbx_kit&from=0&size=24;
-//!   the older /v2/search/repositories endpoint ignores the type filter.
-//! - Hub /v2/repositories/{namespace}/{repo}/tags exposes content_type,
-//!   media_type, and version tag names. The search provider has no global version.
 //! - V2 OCI artifactType is application/vnd.docker.sandbox.kit.v2, with a
 //!   application/vnd.docker.sandbox.kit.v2.spec+yaml config. V3 uses ordinary
 //!   image manifests with vnd.docker.sandbox.kit.descriptor annotations.
 //! - sbx kit inspect REFERENCE --json currently normalizes v3 workload to
 //!   kind=sandbox; raw authored v3 descriptors have kind=workload and no name.
 
+mod cache;
 mod descriptor;
 mod github;
 mod http;
-mod hub;
 mod store;
 mod types;
 
@@ -32,10 +27,11 @@ pub(crate) use store::{github_repository, unique_id, write_json};
 pub use types::KitArgument;
 pub use types::{Catalog, KitOption, Provider};
 
+use std::path::Path;
+
 use self::github::discover_github;
 use self::http::Api;
-use self::hub::discover_hub;
-use self::store::{hub_repository, validate_provider};
+use self::store::validate_provider;
 
 /// The built-in agents as documented on
 /// <https://docs.docker.com/ai/sandboxes/agents/>.
@@ -53,29 +49,53 @@ pub(crate) const BUILTIN_AGENTS: &[&str] = &[
     "shell",
 ];
 
-pub fn provider_versions(provider: Provider) -> Result<Vec<String>, String> {
-    versions_with(&Api::public()?, &provider)
+/// Cached-first version list for one provider. Without `refresh` the network
+/// is never touched: a cached list for this exact provider configuration is
+/// served as-is, and only a miss (never fetched, providers changed) fetches
+/// live — and then stores the result.
+pub fn provider_versions(
+    root: &Path,
+    provider: Provider,
+    refresh: bool,
+) -> Result<Vec<String>, String> {
+    validate_provider(&provider)?;
+    if !refresh && let Some(values) = cache::read_versions(root, &provider) {
+        return Ok(values);
+    }
+    let values = versions_with(&Api::public()?, &provider)?;
+    cache::write_versions(root, &provider, &values);
+    Ok(values)
 }
 
 fn versions_with(api: &Api, provider: &Provider) -> Result<Vec<String>, String> {
     validate_provider(provider)?;
-    let values = if provider.kind == "github" {
-        api.github_tags(&github_repository(&provider.repository)?)?
-    } else if let Some(repository) = hub_repository(&provider.repository)? {
-        api.hub_tags(&repository)?
-    } else {
-        return Ok(Vec::new()); // The search provider has per-repository tags, not a global version.
-    };
+    let repository = github_repository(&provider.repository)?;
+    let values = api.github_tags(&repository)?;
     Ok(values
         .iter()
         .filter_map(|v| v["name"].as_str().map(String::from))
         .collect())
 }
 
-/// `query` narrows Docker Hub's remote search. GitHub repositories and installed
-/// built-ins remain available; the frontend can filter their complete metadata.
-pub fn discover_kits(providers: Vec<Provider>, query: Option<String>) -> Result<Catalog, String> {
-    let mut catalog = discover_with(&Api::public()?, &providers, query.as_deref().unwrap_or(""))?;
+/// Cache-first: when a discovery result is cached for this exact provider
+/// configuration, it is served and the network is never touched. `refresh`
+/// bypasses the cache (and updates it). A cache miss fetches live and stores
+/// the result, so GitHub is called at most once per configuration change.
+pub fn discover_kits(
+    root: &Path,
+    providers: Vec<Provider>,
+    refresh: bool,
+) -> Result<Catalog, String> {
+    // Validate before the cache lookup: an invalid configuration is an error
+    // even when a cached result exists for it.
+    for provider in &providers {
+        validate_provider(provider)?;
+    }
+    if !refresh && let Some(cached) = cache::read_catalog(root, &providers) {
+        return Ok(cached);
+    }
+    let mut catalog = discover_with(&Api::public()?, &providers)?;
+    cache::write_catalog(root, &providers, &catalog);
     // The built-ins are documented v2 shortcuts, not guessed registry repositories.
     for name in BUILTIN_AGENTS {
         let description = format!("Built-in {name} agent (v2)");
@@ -94,13 +114,12 @@ pub fn discover_kits(providers: Vec<Provider>, query: Option<String>) -> Result<
     Ok(catalog)
 }
 
-fn discover_with(api: &Api, providers: &[Provider], query: &str) -> Result<Catalog, String> {
+fn discover_with(api: &Api, providers: &[Provider]) -> Result<Catalog, String> {
     let mut catalog = Catalog::default();
     for provider in providers.iter().filter(|p| p.enabled) {
         let result = validate_provider(provider).and_then(|_| match provider.kind.as_str() {
             "github" => discover_github(api, provider),
-            "dockerhub" => discover_hub(api, provider, query),
-            _ => unreachable!(),
+            other => Err(format!("Unsupported provider kind: {other}")),
         });
         match result {
             Ok(mut found) => {
@@ -140,8 +159,6 @@ fn encoded(value: &str) -> String {
 fn encoded_path(value: &str) -> String {
     encoded(value).replace('+', "%20")
 }
-
-const DESCRIPTOR: &str = "vnd.docker.sandbox.kit.descriptor";
 
 const MAX_BODY: u64 = 12 * 1024 * 1024;
 const METADATA_BATCH: usize = 4;

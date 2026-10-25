@@ -8,6 +8,7 @@ export function FinishedPanel({
   busy,
   error,
   copyNotice,
+  edited,
   onRetryLaunch,
   onCopy,
   onTemplates,
@@ -19,6 +20,8 @@ export function FinishedPanel({
   busy: boolean;
   error: string | null;
   copyNotice: string;
+  /** Editing saved over the existing file instead of creating a new one. */
+  edited?: boolean;
   onRetryLaunch: () => void;
   onCopy: () => void;
   onTemplates?: () => void;
@@ -29,13 +32,15 @@ export function FinishedPanel({
       <span className={`empty-icon ${launched ? "green" : ""}`}>
         <Icon name={launched ? "check" : "template"} size={30} />
       </span>
-      <h2>{launched ? "Sandbox launched" : "Template saved"}</h2>
+      <h2>{launched ? "Sandbox launched" : edited ? "Template updated" : "Template saved"}</h2>
       <p className="catalog-muted">
         {busy
           ? "Launching your sandbox…"
           : launched
             ? `${saved.name} is ready in your sandboxes.`
-            : "You can launch this template now, or reuse it from Templates later."}
+            : edited
+              ? `${saved.name} was saved over its existing file. You can launch it now, or reuse it from Templates later.`
+              : "You can launch this template now, or reuse it from Templates later."}
       </p>
       <dl className="catalog-review-grid">
         <dt>Name</dt>
