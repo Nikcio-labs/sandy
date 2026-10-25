@@ -11,7 +11,7 @@
   color: var(--muted);
   padding: 3px 7px;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
   font-weight: 600;
   white-space: nowrap;
@@ -31,6 +31,6 @@
   border-radius: 20px;
   color: var(--muted);
   background: var(--surface);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }

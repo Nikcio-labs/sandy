@@ -25,14 +25,14 @@
 
 .setup-heading p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   margin: 0;
   max-width: 580px;
 }
 
 .setup-progress-label {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -51,7 +51,7 @@
   color: var(--muted);
   line-height: 1.85;
   max-width: 620px;
-  font-size: 13px;
+  font-size: 14px;
   margin-bottom: 23px;
 }
 
@@ -63,7 +63,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   color: var(--muted);
   margin: 0;
@@ -89,7 +89,7 @@
 
 .step-output {
   margin-top: 18px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -103,7 +103,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -126,7 +126,7 @@
 
 .setup-finish p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 @media (max-width: 720px) {

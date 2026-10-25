@@ -22,14 +22,14 @@
 }
 
 .updatecard p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
 }
 
 /* SSH check details disclosure under the setup banners. */
 .explanation-details {
   margin-bottom: 20px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -83,7 +83,7 @@
 
 .setlink small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .setlink > svg:first-child {
@@ -115,7 +115,7 @@
 }
 
 .paneintro {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   margin-bottom: 18px;
 }

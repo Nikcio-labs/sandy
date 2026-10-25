@@ -27,7 +27,7 @@
   border: 0;
   border-bottom: 2px solid var(--line);
   border-radius: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   text-align: left;
 }
@@ -55,14 +55,14 @@
   place-items: center;
   background: #eef0f8;
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* "Optional" tag next to non-blocking setup step labels. */
 .step-optional {
   display: block;
   font-style: normal;
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--faint);

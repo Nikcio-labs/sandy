@@ -35,7 +35,7 @@
 
 .wintitle {
   margin-left: 18px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   border-left: 1px solid var(--line);
   padding-left: 18px;
@@ -53,6 +53,12 @@
   background: transparent;
   color: var(--muted);
   transition: none;
+  /* Grid centering keeps the plain-geometry glyphs (minimize/maximize)
+     optically centered like the SVG close glyph, which inline layout
+     left-aligned. */
+  display: grid;
+  place-items: center;
+  padding: 0;
 }
 
 .wincontrols button:hover {
@@ -115,7 +121,7 @@
   padding: 10px 12px;
   text-align: left;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 550;
 }
 
@@ -145,7 +151,7 @@
 .rail .railfoot {
   border-top: 1px solid var(--line);
   padding: 12px 10px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 

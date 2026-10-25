@@ -4,8 +4,11 @@
  */
 
 .appdialog-wide {
-  width: min(880px, calc(100vw - 48px));
-  max-height: calc(100dvh - 90px);
+  /* Sized relative to the app window (the dialog's containing viewport),
+     matching the study's dialog footprint, not the full browser window. */
+  width: min(980px, calc(100vw - 120px));
+  height: calc(100dvh - 90px);
+  max-height: none;
   padding: 24px 26px;
   overflow-y: auto;
 }
@@ -18,10 +21,17 @@
   border-radius: 8px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .appdialog-wide {
-    width: calc(100vw - 20px);
-    max-height: calc(100dvh - 40px);
+    width: calc(100vw - 32px);
+    height: calc(100dvh - 40px);
     padding: 18px 14px;
   }
+}
+
+/* The close button must land where a pointer expects it on touch-like
+   targets; keep its glyph optically centered in the 32px button. */
+.appdialog-wide .dialogclose svg {
+  display: block;
+  margin: 0 auto;
 }

@@ -39,7 +39,7 @@
 
 .settinginfo strong {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.1px;
   overflow-wrap: anywhere;
@@ -47,7 +47,7 @@
 }
 
 .settinginfo p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   margin: 5px 0;
 }
@@ -115,15 +115,24 @@
 }
 
 .settingvalue {
-  font-size: 12px;
-  padding: 7px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--field-border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  padding: 8px 10px;
+  font-weight: 400;
 }
 
 textarea.settingvalue {
-  min-height: 72px;
+  min-height: 76px;
   font-family: var(--mono);
+  font-size: 14px;
   white-space: pre;
   overflow-x: auto;
+  line-height: 1.7;
 }
 
 .setting-error {

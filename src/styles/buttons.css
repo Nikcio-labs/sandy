@@ -19,7 +19,7 @@
   background: var(--surface);
   border: 1px solid var(--line-strong);
   padding: 8px 13px;
-  font-size: 13px;
+  font-size: 14px;
   min-height: 35px;
   white-space: nowrap;
 }
@@ -49,7 +49,7 @@
   color: var(--brand-dark);
   border: 0;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   padding: 6px 0;
 }
 

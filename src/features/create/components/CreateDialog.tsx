@@ -46,12 +46,16 @@ export default function CreateDialog({ onClose, onBusyChange, onLaunched, templa
           ?.click();
       }}
       onClose={close}
+      onClick={(event) => {
+        // A click on the backdrop (the dialog padding box outside the
+        // content) dismisses, as in the design study's overlay.
+        if (event.target === dialog.current) close();
+      }}
     >
       <button
         type="button"
         className="iconbtn dialogclose"
         aria-label="Close create dialog"
-        disabled={onBusyChange === undefined ? false : undefined}
         onClick={close}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

@@ -19,6 +19,11 @@
   overflow-y: auto;
 }
 
+/* Every app dialog closes on a backdrop click, as in the study. */
+.appdialog[data-backdrop-close="true"] {
+  cursor: default;
+}
+
 .appdialog h2 {
   font-size: 25px;
   letter-spacing: -0.6px;
