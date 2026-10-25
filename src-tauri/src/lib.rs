@@ -9,6 +9,14 @@ mod setup;
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind, log};
 use tauri_plugin_window_state::{Builder as WindowStateBuilder, StateFlags};
+use time::OffsetDateTime;
+use time::format_description::FormatItem;
+use time::macros::format_description;
+
+// Mirrors the plugin's default desktop timestamp format so the stdout
+// target keeps its shape after `clear_format()` below.
+const STDOUT_TIME_FORMAT: &[FormatItem<'static>] =
+    format_description!("[[[year]-[month]-[day]][[[hour]:[minute]:[second]]");
 
 // App entry point: there is no caller to return an error to, so a fatal
 // startup failure may panic.
@@ -50,9 +58,6 @@ pub fn run() {
                             path: root,
                             file_name: Some(logging::LOG_STEM.into()),
                         })
-                        // JSON Lines, one object per record, parsed by the
-                        // Settings log viewer; the plugin's default format
-                        // is human-readable prose.
                         .format(|out, message, record| {
                             out.finish(format_args!(
                                 "{}",
@@ -66,14 +71,29 @@ pub fn run() {
                     ]
                 },
             );
-            let mut targets = vec![Target::new(TargetKind::Stdout)];
+            let stdout_target = Target::new(TargetKind::Stdout).format(|out, message, record| {
+                out.finish(format_args!(
+                    "{}[{}][{}] {}",
+                    OffsetDateTime::now_utc()
+                        .format(&STDOUT_TIME_FORMAT)
+                        .unwrap_or_default(),
+                    record.target(),
+                    record.level(),
+                    message
+                ))
+            });
+            let mut targets = vec![stdout_target];
             targets.extend(file_targets);
             let log_builder = tauri_plugin_log::Builder::new()
                 .targets(targets)
                 // Dependency crates (reqwest, hyper, ...) log at Info and
                 // would bury the app's own records without this.
                 .level(log::LevelFilter::Info)
-                .max_file_size(10 * 1024 * 1024);
+                .max_file_size(10 * 1024 * 1024)
+                // The plugin formats each record once at the builder level,
+                // prefix included, so every target's formatter would receive
+                // the prose header instead of the raw message.
+                .clear_format();
             if let Ok((plugin, max_level, logger)) = log_builder.split(app.handle()) {
                 app.handle().plugin(plugin).ok();
                 let _ = tauri_plugin_log::attach_logger(max_level, logger);
