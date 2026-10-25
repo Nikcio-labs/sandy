@@ -44,6 +44,66 @@ async fn check_setup() -> Result<setup::SetupStatus, String> {
     .await
 }
 
+/// Force the next `check_setup` to run for real (a setup action may have
+/// changed the verdict).
+#[tauri::command]
+async fn invalidate_setup() -> Result<(), String> {
+    logged("invalidate_setup", async move {
+        setup::invalidate_check();
+        Ok(())
+    })
+    .await
+}
+
+/// Reveal the main window after first-run setup. Called from the setup
+/// window, which would otherwise leave the app invisible behind its own
+/// close; the splash is closed here too because the setup window may
+/// finish without ever having shown itself (setup already complete).
+#[tauri::command]
+async fn reveal_main(app: tauri::AppHandle) -> Result<(), String> {
+    logged("reveal_main", async move {
+        let main = app
+            .get_webview_window("main")
+            .ok_or_else(|| "main window is missing".to_string())?;
+        main.show().map_err(|error| error.to_string())?;
+        main.set_focus().map_err(|error| error.to_string())?;
+        if let Some(splash) = app.get_webview_window("splash") {
+            let _ = splash.close();
+        }
+        Ok(())
+    })
+    .await
+}
+
+/// Close the boot splash. The setup window calls this before showing the
+/// wizard: the splash is always-on-top and would cover it, and the setup
+/// window's capability does not grant closing other windows.
+#[tauri::command]
+async fn close_splash(app: tauri::AppHandle) -> Result<(), String> {
+    logged("close_splash", async move {
+        if let Some(splash) = app.get_webview_window("splash") {
+            let _ = splash.close();
+        }
+        Ok(())
+    })
+    .await
+}
+
+/// Reopen the setup window from the main window (e.g. the sandboxes page's
+/// setup banner after the user skipped first-run setup). The setup window
+/// re-runs its check when focused.
+#[tauri::command]
+async fn open_setup_window(app: tauri::AppHandle) -> Result<(), String> {
+    logged("open_setup_window", async move {
+        let setup = app
+            .get_webview_window("setup")
+            .ok_or_else(|| "setup window is missing".to_string())?;
+        setup.show().map_err(|error| error.to_string())?;
+        setup.set_focus().map_err(|error| error.to_string())
+    })
+    .await
+}
+
 #[tauri::command]
 async fn install_sbx() -> Result<String, String> {
     logged("install_sbx", async move {
@@ -356,6 +416,10 @@ async fn clear_debug_log(app: tauri::AppHandle) -> Result<(), String> {
 pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
     Box::new(tauri::generate_handler![
         check_setup,
+        invalidate_setup,
+        reveal_main,
+        close_splash,
+        open_setup_window,
         install_sbx,
         enable_image_paste,
         setup_ssh,

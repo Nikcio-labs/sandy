@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SetupStatus } from "../../lib/sandbox";
 import { checkSetup } from "../../lib/sandbox";
 
@@ -15,45 +15,25 @@ export interface SetupStatusState {
    * user request. The sandbox list polls `sbx ls` on its own.
    */
   checkSetup: () => Promise<SetupStatus | null>;
-  /** Whether a setup check is needed before the wizard opens. */
-  checkingSetup: boolean;
-  openSetup: () => Promise<SetupStatus | null>;
-  /** Steps confirmed done by the wizard, trusted briefly while checks settle. */
-  onStepDone: (step: string) => void;
 }
 
-type CompletedStep = "sbx_installed" | "signed_in" | "image_paste_on" | "ssh_set_up";
-
 /**
- * The setup-status state machine: one setup check at startup decides the
- * landing view (setup wizard when incomplete), and later checks run only
- * when setup-relevant actions run — wizard steps, the connect dialog's SSH
- * check, the Settings "check again" buttons. Trusts recent wizard
- * confirmations for a grace period. Nothing polls: setup state only changes
- * through setup actions, and the sandbox list has its own `sbx ls` refresh.
+ * The setup-status state machine: one setup check at startup decides whether
+ * the main window can reveal (incomplete setup hands the screen to the
+ * dedicated setup window), and later checks run only when setup-relevant
+ * actions run — the connect dialog's SSH check, the Settings "check again"
+ * buttons. Nothing polls: setup state only changes through setup actions,
+ * and the sandbox list has its own `sbx ls` refresh.
  */
 export function useSetupStatus(): SetupStatusState {
   const [status, setStatus] = useState<SetupStatus | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [checkingSetup, setCheckingSetup] = useState(false);
-  const openingSetup = useRef(false);
-  const completedSteps = useRef(new Map<CompletedStep, number>());
 
   const checkSetupNow = useCallback(async () => {
     try {
       const next = await checkSetup();
-      // Successful commands are authoritative while the daemon's checks settle.
-      // Drop each confirmation once observed, or after a short grace period, so
-      // later logout/configuration changes still appear accurately.
-      for (const [key, expires] of completedSteps.current) {
-        if (next[key] === true || Date.now() >= expires) {
-          completedSteps.current.delete(key);
-        } else {
-          next[key] = true;
-        }
-      }
       // A temporarily unavailable check must not erase a previously verified result.
       setStatus((previous) =>
         previous && next.sbx_installed
@@ -84,33 +64,6 @@ export function useSetupStatus(): SetupStatusState {
     };
   }, [checkSetupNow]);
 
-  const openSetup = async () => {
-    if (openingSetup.current || busy) return null;
-    openingSetup.current = true;
-    setCheckingSetup(true);
-    try {
-      return await checkSetupNow();
-    } finally {
-      openingSetup.current = false;
-      setCheckingSetup(false);
-    }
-  };
-
-  const onStepDone = (step: string) => {
-    const key = (
-      {
-        install: "sbx_installed",
-        login: "signed_in",
-        imagepaste: "image_paste_on",
-        ssh: "ssh_set_up",
-      } as const
-    )[step as "install" | "login" | "imagepaste" | "ssh"];
-    if (key) {
-      completedSteps.current.set(key, Date.now() + 30_000);
-      setStatus((previous) => (previous ? { ...previous, [key]: true } : previous));
-    }
-  };
-
   return {
     status,
     statusError,
@@ -118,8 +71,5 @@ export function useSetupStatus(): SetupStatusState {
     busy,
     setBusy,
     checkSetup: checkSetupNow,
-    checkingSetup,
-    openSetup,
-    onStepDone,
   };
 }

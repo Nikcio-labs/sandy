@@ -1,44 +1,11 @@
 /*
- * The Settings page layout: the home column width, the setup card, and the
- * nested pane (home list → back-navigated pane) from the design study.
- * Owned by SettingsPage; pane contents own their internal styles.
+ * The Settings page layout: the home column width and the nested pane
+ * (home list → back-navigated pane) from the design study. Owned by
+ * SettingsPage; pane contents own their internal styles.
  */
 
 .settingshome {
   max-width: 780px;
-}
-
-.updatecard {
-  padding: 21px;
-}
-
-.updatecard:last-child {
-  border-bottom: 0;
-}
-
-.updatecard h2 {
-  font-size: 19px;
-  margin-bottom: 6px;
-}
-
-.updatecard p {
-  font-size: 14px;
-  color: var(--muted);
-}
-
-/* SSH check details disclosure under the setup banners. */
-.explanation-details {
-  margin-bottom: 20px;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.explanation-details summary {
-  color: var(--brand-dark);
-}
-
-.explanation-details pre {
-  max-height: 200px;
 }
 
 /* Home → pane navigation. One card holds Updates and the link rows,

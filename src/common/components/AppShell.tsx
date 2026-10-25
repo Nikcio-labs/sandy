@@ -89,13 +89,11 @@ export function Titlebar({ view }: { view: TitleView }) {
 export function Rail({
   view,
   busy,
-  checkingSetup,
   count,
   onNavigate,
 }: {
   view: View;
   busy: boolean;
-  checkingSetup: boolean;
   count: number | null;
   onNavigate: (view: View) => void;
 }) {
@@ -112,7 +110,7 @@ export function Rail({
               key={item.id}
               className={item.id === "settings" ? "navsettings" : undefined}
               aria-current={active ? "page" : undefined}
-              disabled={busy || checkingSetup}
+              disabled={busy}
               onClick={() => onNavigate(item.id)}
             >
               <Icon name={item.icon} />

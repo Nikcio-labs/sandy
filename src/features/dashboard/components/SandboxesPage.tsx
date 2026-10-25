@@ -7,6 +7,7 @@ import { SandboxInspector } from "./SandboxInspector";
 import type { SandboxAction } from "../sandboxActions";
 import { stateKind } from "../../../common/lib/sandboxState";
 import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
+import { openSetupWindow } from "../../../lib/sandbox";
 import ConnectDialog from "../../connect/components/ConnectDialog";
 import { PageHead } from "../../../common/components/PageHead";
 
@@ -15,7 +16,6 @@ export interface SandboxesPageProps {
   /** A sandbox to select and inspect once the list reports it (launch handoff). */
   pendingSelection?: string | null;
   onPendingSelectionHandled?: () => void;
-  onGoSettings: () => void;
   onCreate: () => void;
   onCheckSetup: () => Promise<SetupStatus | null>;
   onCount: (count: number) => void;
@@ -32,7 +32,6 @@ export default function SandboxesPage({
   status,
   pendingSelection,
   onPendingSelectionHandled,
-  onGoSettings,
   onCreate,
   onCheckSetup,
   onCount,
@@ -132,7 +131,12 @@ export default function SandboxesPage({
         <div className="banner">
           <strong>Finish setting up Sandy to create sandboxes.</strong>
           <p>Your existing sandboxes are still listed below.</p>
-          <button className="btn small" onClick={onGoSettings}>
+          <button
+            className="btn small"
+            onClick={() => {
+              void openSetupWindow().catch(() => {});
+            }}
+          >
             Finish setup
           </button>
         </div>

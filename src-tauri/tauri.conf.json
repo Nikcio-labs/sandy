@@ -38,6 +38,18 @@
         "center": true,
         "visible": false,
         "decorations": false
+      },
+      {
+        "label": "setup",
+        "title": "Sandy",
+        "width": 720,
+        "height": 640,
+        "minWidth": 560,
+        "minHeight": 480,
+        "center": true,
+        "visible": false,
+        "resizable": true,
+        "decorations": false
       }
     ],
     "security": {

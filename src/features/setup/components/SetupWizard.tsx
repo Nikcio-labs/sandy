@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
+import { invalidateSetup } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { SETUP_STEPS, REQUIRED_STEPS } from "../../setup/setupSteps";
 import type { SetupStep } from "../../setup/setupSteps";
@@ -44,6 +45,9 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
         ...previous,
         [step.id]: typeof output === "string" ? output : "",
       }));
+      // The step's CLI action may have changed the verdict; the cached
+      // boot-time status must not answer the follow-up check.
+      await invalidateSetup();
       await onCheckSetup();
       onStepDone?.(step.id);
       setStates((previous) => ({ ...previous, [step.id]: "done" }));
