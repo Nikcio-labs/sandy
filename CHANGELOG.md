@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/Nikcio-labs/sandy/compare/v0.3.0...v0.3.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* sign Microsoft Store bundle build ([#52](https://github.com/Nikcio-labs/sandy/issues/52)) ([677f75f](https://github.com/Nikcio-labs/sandy/commit/677f75f7df5c9575859201609449a6cc1e63ca8c))
+
 ## [0.3.0](https://github.com/Nikcio-labs/sandy/compare/v0.2.2...v0.3.0) (2026-10-25)
 
 
