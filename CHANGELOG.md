@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/Nikcio-labs/sandy/compare/v0.3.1...v0.3.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* **ci:** preserve msi/nsis layout when stashing Windows installers ([#55](https://github.com/Nikcio-labs/sandy/issues/55)) ([2e85f10](https://github.com/Nikcio-labs/sandy/commit/2e85f10b4677ed8e5a6bcf46da4b4603cc42a2e1))
+
 ## [0.3.1](https://github.com/Nikcio-labs/sandy/compare/v0.3.0...v0.3.1) (2026-10-25)
 
 
