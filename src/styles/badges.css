@@ -22,14 +22,15 @@
   color: var(--brand-dark);
 }
 
-/* Rounded brand pill with a visible border, for counts and metadata that
-   should read as selectable-chip-like rather than plain labels. */
+/* Rounded pill with a visible border, for counts and metadata that
+   should read as selectable-chip-like rather than plain labels. The
+   concept keeps version/metadata pills neutral. */
 .badge.pill {
   padding: 4px 9px;
-  border: 1px solid var(--brand-border);
+  border: 1px solid var(--line-strong);
   border-radius: 20px;
-  color: var(--brand-dark);
-  background: var(--brand-soft);
+  color: var(--muted);
+  background: var(--surface);
   font-size: 12px;
   font-weight: 500;
 }

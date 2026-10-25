@@ -55,23 +55,48 @@
 
 /* ---- Method options ---- */
 
-.connection-options {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/* Segmented method track, as in the concept: one gray rail, the active
+   segment lifts to a white tab with violet text. */
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border-radius: 9px;
   margin: 21px 0;
 }
 
-/* Connection option cards lead with their icon, not a check mark. */
-.connection-options .option::after {
-  display: none;
+.segmented button {
+  flex: 1;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.connection-options small {
-  font-size: 12px;
-  color: var(--muted);
+.segmented button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--brand-dark);
+  box-shadow: 0 1px 3px #141a3d15;
 }
 
 .connection-method {
   margin-bottom: 22px;
+}
+
+/* The terminal hand-off guide sits on the concept's tinted panel. */
+.connection-method .connectguide {
+  padding: 15px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.connection-method .connectguide h3 {
+  margin-bottom: 8px;
 }
 
 .connection-note {
@@ -156,6 +181,16 @@
 .connection-server {
   border-top: 1px solid var(--line);
   padding-top: 17px;
+}
+
+/* Dialog footer with the closing action, as in the concept. */
+.connect-dialog .dialogfoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
 
 .connection-server-head {

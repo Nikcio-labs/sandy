@@ -201,7 +201,7 @@ export default function ConnectDialog({
         aria-labelledby="connection-method-title"
       >
         {method === "terminal" ? (
-          <>
+          <div className="connectguide">
             <h3 id="connection-method-title">Your sandbox, in a terminal</h3>
             <p>
               Open a Bash session in your computer’s terminal. This uses the sandbox CLI and does
@@ -220,7 +220,7 @@ export default function ConnectDialog({
               )}
               {busy === "terminal" ? "Opening terminal…" : "Open Terminal"}
             </button>
-          </>
+          </div>
         ) : (
           <>
             <h3 id="connection-method-title">
@@ -247,6 +247,12 @@ export default function ConnectDialog({
         onReload={() => void loadInfo()}
         onCopy={copy}
       />
+
+      <div className="dialogfoot">
+        <button type="button" className="btn" disabled={!!busy} onClick={close}>
+          Done
+        </button>
+      </div>
 
       <div className="connection-feedback" aria-live="polite" aria-atomic="true">
         {feedback && (

@@ -39,9 +39,9 @@
 
 .settinginfo strong {
   display: block;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.1px;
   overflow-wrap: anywhere;
   user-select: text;
 }
@@ -60,12 +60,25 @@
   margin-top: 7px;
 }
 
+/* Source and restart markers stay neutral; violet is reserved for
+   interactive accents. */
+.settingbadges .badge.violet {
+  background: var(--surface-sunken);
+  color: var(--muted);
+}
+
 .settingcontrols {
   display: flex;
   align-items: center;
   justify-content: end;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* Keep the control and its actions on one tidy baseline like the concept's
+   two-column grid; the actions never wrap under the input. */
+.settingapply {
+  flex-shrink: 0;
 }
 
 .settingvalue {
@@ -78,11 +91,6 @@ textarea.settingvalue {
   font-family: var(--mono);
   white-space: pre;
   overflow-x: auto;
-}
-
-.settingapply {
-  flex-basis: 100%;
-  justify-content: flex-end;
 }
 
 .setting-error {

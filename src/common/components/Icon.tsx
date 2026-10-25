@@ -41,6 +41,7 @@ const paths = {
   book: <path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15" />,
   arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
   chevron: <path d="m7 10 5 5 5-5" />,
+  "chevron-right": <path d="m9 5 7 7-7 7" />,
   back: <path d="m15 5-7 7 7 7" />,
   dune: (
     <>

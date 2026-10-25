@@ -74,8 +74,8 @@ await page.getByRole("button", { name: /Discover kits/ }).first().click();
 await page.waitForTimeout(700);
 await expectText("08-agent-step", "Choose an agent or workload");
 await shot("08-agent-step");
-// Agent choices are radio option cards; pick the discovered claude kit.
-await page.locator('dialog .option input[name$="agent"]').first().check();
+// Agent choices are radio option cards (input visually hidden); click the card label.
+await page.locator("dialog .option").first().click();
 await page.locator("dialog").getByRole("button", { name: /Choose mixins/ }).click();
 await expectText("09-mixin-step", "Make it your own");
 await shot("09-mixin-step");

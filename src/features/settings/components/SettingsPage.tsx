@@ -172,7 +172,7 @@ export default function SettingsPage({
                       <strong>{item.label}</strong>
                       <small>{item.description}</small>
                     </span>
-                    <Icon name="chevron" size={16} />
+                    <Icon name="chevron-right" size={16} />
                   </button>
                 ))}
               </div>

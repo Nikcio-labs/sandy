@@ -4,6 +4,22 @@
  */
 import { installPreviewMock } from "./previewMock";
 import "./previewGate";
+// The production entry owns this stylesheet list; the preview must match it.
+import "./styles/theme.css";
+import "./styles/base.css";
+import "./styles/buttons.css";
+import "./styles/badges.css";
+import "./styles/avatar.css";
+import "./styles/panels.css";
+import "./styles/layout.css";
+import "./styles/banner.css";
+import "./styles/forms.css";
+import "./styles/dialog.css";
+import "./styles/primitives.css";
+import "./styles/options.css";
+import "./styles/feedback.css";
+import "./styles/groups.css";
+import "./styles/steps.css";
 
 installPreviewMock();
 
