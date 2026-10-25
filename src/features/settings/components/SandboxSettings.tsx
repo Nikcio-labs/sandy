@@ -197,17 +197,27 @@ function SettingRow({
         {setting.error ? (
           <p className="help setting-error">{setting.error}</p>
         ) : setting.type === "bool" ? (
-          <button
-            type="button"
-            className="switch"
-            role="switch"
-            aria-checked={setting.value === true}
-            aria-label={setting.key}
-            disabled={busy}
-            onClick={() => onApply(false)}
-          >
-            <span />
-          </button>
+          <div className="actions settingbool">
+            <button
+              type="button"
+              className="switch"
+              role="switch"
+              aria-checked={setting.value === true}
+              aria-label={setting.key}
+              disabled={busy}
+              onClick={() => onApply(false)}
+            >
+              <span />
+            </button>
+            <button
+              type="button"
+              className="btn small"
+              disabled={busy || !overridden}
+              onClick={() => onApply(true)}
+            >
+              Reset
+            </button>
+          </div>
         ) : setting.options ? (
           <select
             aria-label={setting.key}

@@ -135,6 +135,7 @@ export function SandboxList({
                   <span className="rowname">{sandbox.name}</span>
                   <span className="rowmeta">
                     {sandbox.agent && <span className="agent">{sandbox.agent}</span>}
+                    {sandbox.agent && <span aria-hidden="true">·</span>}{" "}
                     {sandbox.workspace || "No host workspace"}
                   </span>
                 </span>

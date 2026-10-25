@@ -91,24 +91,17 @@
 }
 
 .rowmeta .agent {
-  margin-right: 8px;
+  margin-right: 6px;
   color: #495175;
-}
-
-/* Whitespace between text nodes collapses in JSX output; keep the visual
-   gap between the agent name and the workspace path explicit. */
-.rowmeta .agent::after {
-  content: "·";
-  margin-left: 8px;
-  color: var(--faint);
 }
 
 .rowmeta .agent:only-child {
   margin-right: 0;
 }
 
-.rowmeta .agent:only-child::after {
-  content: none;
+.rowmeta > [aria-hidden] {
+  margin-right: 6px;
+  color: var(--faint);
 }
 
 .rowaction {

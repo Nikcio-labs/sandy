@@ -28,6 +28,7 @@
   border-radius: 10px;
   background: #e9e8f7;
   overflow: hidden;
+  margin: 14px 0;
 }
 
 .progress-track > span {

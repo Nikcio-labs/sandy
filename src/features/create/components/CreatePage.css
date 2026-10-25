@@ -15,6 +15,12 @@
   max-width: 1040px;
 }
 
+/* In the dialog host the wizard spans the dialog instead of the centered
+   page column, so the option grid fills the visible width. */
+.catalog-page-dialog {
+  max-width: none;
+}
+
 .catalog-panel {
   padding: 20px;
   min-width: 0;
