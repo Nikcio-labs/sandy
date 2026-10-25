@@ -8,7 +8,7 @@ import type { SandboxAction } from "../sandboxActions";
 import { stateKind } from "../../../common/lib/sandboxState";
 import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
 import ConnectDialog from "../../connect/components/ConnectDialog";
-import { PageHead, ContextLine } from "../../../common/components/PageHead";
+import { PageHead } from "../../../common/components/PageHead";
 
 export interface SandboxesPageProps {
   status: SetupStatus | null;
@@ -155,9 +155,6 @@ export default function SandboxesPage({
             onOpen={runPrimaryAction}
             onCreate={onCreate}
           />
-          <ContextLine icon={<Icon name="shield" size={15} />}>
-            Each sandbox has its own microVM and Docker daemon.
-          </ContextLine>
         </div>
         {detail && (
           <SandboxInspector
