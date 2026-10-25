@@ -151,14 +151,15 @@ where
     }
 }
 
-/// Record a Tauri command outcome; error text becomes the detail part.
+/// Record a failed Tauri command. Successes are not logged: the domain
+/// loggers (`cli_call`, `http_call`) already record the underlying work, so
+/// an entry per command would only repeat those lines and clutter the log.
 pub(crate) fn command_call<E>(command: &str, result: &Result<impl Sized, E>)
 where
     E: std::fmt::Display,
 {
-    match result {
-        Ok(_) => log::info!(target: "command", "{command}"),
-        Err(error) => log::error!(target: "command", "{command}\n{error}"),
+    if let Err(error) = result {
+        log::error!(target: "command", "{command}\n{error}");
     }
 }
 

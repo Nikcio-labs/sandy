@@ -9,9 +9,9 @@ use tauri::Manager;
 
 use crate::{catalog, environments, logging, sbx, setup};
 
-/// Log every Tauri command outcome (command name, ok/error, and the error
-/// text on failure). Successes carry no detail; the domain loggers already
-/// recorded the underlying CLI/HTTP work.
+/// Log failed Tauri commands (command name and error text). Successes are
+/// silent; the domain loggers already recorded the underlying CLI/HTTP work,
+/// so a success entry per command would only duplicate those lines.
 async fn logged<T, E>(
     command: &'static str,
     work: impl Future<Output = Result<T, E>>,
