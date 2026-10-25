@@ -116,10 +116,9 @@ async fn remove_sandbox(name: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn list_settings() -> Result<Vec<sbx::SettingRecord>, String> {
-    logged(
-        "list_settings",
-        async move { blocking(sbx::list_settings).await },
-    )
+    logged("list_settings", async move {
+        blocking(sbx::list_settings).await
+    })
     .await
 }
 

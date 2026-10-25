@@ -54,12 +54,15 @@ pub fn list_settings() -> Result<Vec<SettingRecord>, String> {
                 source: string("source").unwrap_or_else(|| "default".into()),
                 env_var: string("env_var"),
                 requires_restart: entry.get("requires_restart").and_then(|v| v.as_bool()),
-                options: entry.get("options").and_then(|v| v.as_array()).map(|array| {
-                    array
-                        .iter()
-                        .filter_map(|v| v.as_str().map(String::from))
-                        .collect()
-                }),
+                options: entry
+                    .get("options")
+                    .and_then(|v| v.as_array())
+                    .map(|array| {
+                        array
+                            .iter()
+                            .filter_map(|v| v.as_str().map(String::from))
+                            .collect()
+                    }),
                 error: string("error"),
             })
         })
@@ -85,13 +88,13 @@ pub fn unset_setting(key: &str) -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
+    // The test module matches the crate's test lint allowances (see mod.rs).
+    #[allow(clippy::unwrap_used)]
     #[test]
     fn set_setting_passes_key_and_value_as_separate_arguments() {
         // The test asserts through the command builder, not a live CLI.
-        let command = crate::sbx::cli::sbx_command(&["settings", "set", "proxy", "http://p:1"])
-            .unwrap();
+        let command =
+            crate::sbx::cli::sbx_command(&["settings", "set", "proxy", "http://p:1"]).unwrap();
         assert_eq!(
             command.get_args().collect::<Vec<_>>(),
             ["settings", "set", "proxy", "http://p:1"]
