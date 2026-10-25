@@ -1,0 +1,8 @@
+/*
+ * The launch dialog's launch-progress console area, owned by LaunchDialog.
+ * Dialog chrome itself comes from the shared .appdialog component.
+ */
+
+.catalog-launch-progress {
+  margin-top: 16px;
+}

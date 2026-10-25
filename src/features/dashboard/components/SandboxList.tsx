@@ -5,6 +5,7 @@ import { StatePill } from "../../../common/components/StatePill";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { stateKind } from "../../../common/lib/sandboxState";
 import type { SandboxAction } from "../sandboxActions";
+import "./SandboxList.css";
 
 export function SandboxList({
   sandboxes,
@@ -88,7 +89,7 @@ export function SandboxList({
               </div>
             </div>
           ))}
-          <p className="help listnotice">Loading local sandboxes…</p>
+          <p className="help panelnotice">Loading local sandboxes…</p>
         </div>
       )}
       {!loading && visible.length === 0 && (

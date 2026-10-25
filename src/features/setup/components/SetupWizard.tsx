@@ -3,6 +3,7 @@ import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { SETUP_STEPS } from "../../setup/setupSteps";
 import type { SetupStep } from "../../setup/setupSteps";
+import "./SetupWizard.css";
 
 interface Props {
   status: SetupStatus | null;
@@ -125,7 +126,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
               ? "Your sandbox workspace is ready to explore."
               : "Missing steps will still be here whenever you’re ready."}
           </p>
-          <div className="actionbar wizard-actions">
+          <div className="actionbar">
             <button className="btn primary" onClick={onDone}>
               Go to home <Icon name="arrow" size={18} />
             </button>
@@ -183,7 +184,7 @@ export default function SetupWizard({ status, onCheckSetup, onDone, onBusyChange
               <pre>{outputs[step.id]}</pre>
             </details>
           )}
-          <div className="actionbar wizard-actions">
+          <div className="actionbar">
             {current > 0 && (
               <button
                 className="btn"

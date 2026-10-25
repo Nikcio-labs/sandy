@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import "./Toast.css";
 
 export type ToastNotice = { kind: "success" | "error"; text: string };
 

@@ -9,6 +9,7 @@ import { MixinStep } from "./MixinStep";
 import { ReviewStep } from "./ReviewStep";
 import { FinishedPanel } from "./FinishedPanel";
 import { RecipeAside } from "./RecipeAside";
+import "./CreatePage.css";
 
 export interface CreatePageProps {
   onClose: () => void;

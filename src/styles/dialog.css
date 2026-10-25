@@ -1,0 +1,49 @@
+/*
+ * Dialogs: .appdialog (native <dialog> chrome shared by every modal) with
+ * its floating .dialogclose button, plus the .dialogclose positioning used
+ * by the standalone feature dialog.
+ */
+
+/* Native <dialog> chrome shared by every modal: panel surface, floating
+   close button, and the study's dimmed blurred backdrop. */
+.appdialog {
+  position: relative;
+  width: min(570px, calc(100vw - 36px));
+  max-height: calc(100dvh - 50px);
+  padding: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 22px 65px #141a3d38;
+  overflow-y: auto;
+}
+
+.appdialog h2 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin: 0 35px 7px 0;
+  overflow-wrap: anywhere;
+}
+
+.appdialog::backdrop {
+  background: #141a3d50;
+  backdrop-filter: blur(3px);
+}
+
+@starting-style {
+  .appdialog:not([open]) {
+    opacity: 0;
+  }
+
+  .appdialog[open] {
+    opacity: 0;
+    transform: scale(0.97) translateY(5px);
+  }
+}
+
+.dialogclose {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+}

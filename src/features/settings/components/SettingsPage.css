@@ -1,0 +1,46 @@
+/*
+ * The Settings page layout: the home column width, the stacked cards, and
+ * the update card. Owned by SettingsPage and Updates.
+ */
+
+.settingshome {
+  max-width: 780px;
+}
+
+/* Stacked cards on the Settings page (Updates, Kit providers, Advanced). */
+.settings-stack > .panel {
+  margin-top: 17px;
+}
+
+.updatecard {
+  padding: 21px;
+}
+
+.updatecard:last-child {
+  border-bottom: 0;
+}
+
+.updatecard h2 {
+  font-size: 19px;
+  margin-bottom: 6px;
+}
+
+.updatecard p {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* SSH check details disclosure under the setup banners. */
+.explanation-details {
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.explanation-details summary {
+  color: var(--brand-dark);
+}
+
+.explanation-details pre {
+  max-height: 200px;
+}

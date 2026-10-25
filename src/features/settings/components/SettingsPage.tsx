@@ -4,6 +4,8 @@ import Advanced from "./Advanced";
 import Updates from "./Updates";
 import SetupWizard from "../../setup/components/SetupWizard";
 import { isSetupComplete } from "../../setup/setupSteps";
+import { PageHead } from "../../../common/components/PageHead";
+import "./SettingsPage.css";
 export interface SettingsPageProps {
   status: SetupStatus | null;
   statusError: string | null;
@@ -43,12 +45,7 @@ export default function SettingsPage({
 }: SettingsPageProps) {
   return (
     <div className="settingshome">
-      <header className="pagehead">
-        <div>
-          <h1>Settings</h1>
-          <p>Sources, host access, and the details behind your sandboxes.</p>
-        </div>
-      </header>
+      <PageHead title="Settings" subtitle="Sources, host access, and the details behind your sandboxes." />
       {statusError && (
         <div className="banner error" role="alert">
           <strong>We couldn’t check your setup.</strong>

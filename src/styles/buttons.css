@@ -1,0 +1,73 @@
+/*
+ * Button components: .btn (boxed, with .primary/.danger/.small variants),
+ * .iconbtn (square icon-only), and .textbtn (borderless inline action).
+ */
+
+.btn,
+.iconbtn,
+.textbtn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  padding: 8px 13px;
+  font-size: 12px;
+  min-height: 35px;
+  white-space: nowrap;
+}
+
+.btn.primary {
+  color: #fff;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: var(--brand-dark);
+}
+
+.btn.danger {
+  color: var(--red);
+  border-color: var(--red-border);
+  background: var(--red-soft);
+}
+
+.btn.small {
+  min-height: 30px;
+  padding: 5px 10px;
+}
+
+.textbtn {
+  color: var(--brand-dark);
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  padding: 6px 0;
+}
+
+.textbtn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.iconbtn {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.btn:hover:not(.primary):not(.danger):not(:disabled),
+.iconbtn:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}

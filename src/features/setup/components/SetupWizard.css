@@ -1,0 +1,141 @@
+/*
+ * The setup wizard flow: heading, step cards, finish card, and footer.
+ * The step tabs themselves are the shared .steps component.
+ */
+
+.setup-flow {
+  margin-top: 0;
+}
+
+.setup-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.setup-heading > div {
+  flex: 1;
+}
+
+.setup-heading h2 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin: 0 0 9px;
+}
+
+.setup-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 580px;
+}
+
+.setup-progress-label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.step-card {
+  padding: 25px;
+}
+
+.step-card h3 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin-bottom: 13px;
+}
+
+.step-description {
+  color: var(--muted);
+  line-height: 1.85;
+  max-width: 620px;
+  font-size: 13px;
+  margin-bottom: 23px;
+}
+
+.step-feedback {
+  margin: 18px 0;
+}
+
+.step-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0;
+}
+
+.success {
+  color: var(--green);
+}
+
+.failure {
+  color: var(--red);
+}
+
+.failure pre {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+/* The setup wizard centers its actions in the finish state. */
+.setup-finish .actionbar {
+  justify-content: center;
+}
+
+.step-output {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.step-output summary {
+  cursor: pointer;
+}
+
+.setup-footer {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.setup-footer > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-finish {
+  text-align: center;
+  padding: 40px 26px;
+}
+
+.setup-finish h3 {
+  font-size: 25px;
+  margin: 4px 0 12px;
+  letter-spacing: -0.5px;
+}
+
+.setup-finish p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .step-card {
+    padding: 20px 16px;
+  }
+
+  .setup-heading h2,
+  .step-card h3 {
+    font-size: 22px;
+  }
+}

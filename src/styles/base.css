@@ -141,6 +141,13 @@ input::placeholder {
   opacity: 1;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--brand);
+  width: 15px;
+  height: 15px;
+}
+
 select {
   height: 35px;
   padding: 0 8px;

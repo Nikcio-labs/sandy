@@ -1,4 +1,5 @@
 import { stateKind } from "../lib/sandboxState";
+import "./StatePill.css";
 
 export function StatePill({ state, pending }: { state: string; pending?: boolean | string }) {
   const label = state.replace(/^[•○]\s*/, "").trim() || "Unknown";

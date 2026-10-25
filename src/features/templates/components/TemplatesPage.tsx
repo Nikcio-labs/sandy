@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
 import { listTemplates, templateWarnings } from "../../../lib/templates";
 import Icon from "../../../common/components/Icon";
@@ -9,6 +9,8 @@ import { Toast, type ToastNotice } from "../../../common/components/Toast";
 import { copyText } from "../../../common/lib/clipboard";
 import { LaunchDialog } from "./LaunchDialog";
 import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
+import { PageHead, ContextLine } from "../../../common/components/PageHead";
+import "./TemplatesPage.css";
 
 export interface TemplatesPageProps {
   onCreate: () => void;
@@ -20,7 +22,6 @@ export interface TemplatesPageProps {
 }
 
 export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunched }: TemplatesPageProps) {
-  const id = useId();
   const mounted = useMountedRef();
   const [templates, setTemplates] = useState<SavedTemplate[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,15 +95,15 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
 
   return (
     <div>
-      <header className="pagehead">
-        <div>
-          <h1 id={`${id}-title`}>Templates</h1>
-          <p>Saved environments. New sandbox, same starting point.</p>
-        </div>
-        <button type="button" className="btn primary" onClick={onCreate}>
-          <Icon name="create" size={16} /> <span>Create template</span>
-        </button>
-      </header>
+      <PageHead
+        title="Templates"
+        subtitle="Saved environments. New sandbox, same starting point."
+        action={
+          <button type="button" className="btn primary" onClick={onCreate}>
+            <Icon name="create" size={16} /> <span>Create template</span>
+          </button>
+        }
+      />
       <section className="panel" aria-busy={loading}>
         <div className="listhead">
           <h2>Saved on this computer</h2>
@@ -270,10 +271,9 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           )}
         </div>
       </section>
-      <p className="contextline">
-        <Icon name="kit" size={15} />
+      <ContextLine icon={<Icon name="kit" size={15} />}>
         Launching can use a different name or folder. The saved template stays unchanged.
-      </p>
+      </ContextLine>
       {selected && (
         <LaunchDialog
           key={selected.id}

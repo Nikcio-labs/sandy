@@ -1,0 +1,220 @@
+/*
+ * The create wizard page: in-place page layout, step navigation, discovery
+ * warnings, and the wizard grid with the environment summary rail. Owned by
+ * CreatePage and RecipeAside; the shared components.css vocabulary covers
+ * panels, fields, option cards, and action bars.
+ */
+
+/* The create wizard replaces the page content in-place under the shared
+   .main padding, so unlike a routed page it centers itself. */
+.standalone-page {
+  margin: 0 auto;
+}
+
+.catalog-page {
+  max-width: 1040px;
+}
+
+.catalog-panel {
+  padding: 20px;
+  min-width: 0;
+}
+
+/* The create page's pagehead lets its title block wrap on narrow windows
+   while the Cancel button keeps its size. */
+.catalog-page-heading > div {
+  min-width: 200px;
+}
+
+.catalog-page-heading > button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .catalog-page-heading > div {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  .catalog-panel {
+    padding: 15px;
+  }
+}
+
+.catalog-choice-group {
+  margin-top: 24px;
+}
+
+.catalog-choice-group > legend {
+  font-size: 14px;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+
+/* ---- The wizard's environment summary rail ---- */
+
+.wizardgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 192px;
+  gap: 24px;
+  align-items: start;
+}
+
+.recipe {
+  border-left: 1px solid var(--line);
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.recipe h3 {
+  font-size: 17px;
+  margin-bottom: 14px;
+}
+
+.recipe p {
+  margin-bottom: 9px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.recipe strong {
+  color: var(--ink);
+}
+
+.recipe p:has(> svg) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recipe p:has(> svg) svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recipemark {
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #b8b0ef;
+  border-radius: 11px;
+  background: var(--brand-faint);
+  color: var(--brand-dark);
+  margin-bottom: 17px;
+}
+
+.recipemark svg {
+  width: 35px;
+  height: 35px;
+}
+
+@media (max-width: 720px) {
+  .wizardgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recipe {
+    display: none;
+  }
+}
+
+/* ---- Review and finished states ---- */
+
+.catalog-selected,
+.catalog-kit-inputs,
+.catalog-review {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  margin-top: 27px;
+}
+
+.catalog-finished > .help.intro {
+  max-width: 650px;
+}
+
+.catalog-selected ol {
+  padding-left: 24px;
+  font-size: 12px;
+}
+
+.catalog-selected li {
+  margin: 8px 0;
+  padding-left: 5px;
+}
+
+.catalog-selected li > span {
+  display: inline-block;
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+
+.catalog-selected li > button {
+  margin-left: 18px;
+}
+
+.catalog-required {
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.catalog-review-grid {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px 18px;
+  margin: 18px 0 23px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.catalog-review-grid dt {
+  color: var(--muted);
+}
+
+.catalog-review-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.catalog-reference-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 24px;
+}
+
+.catalog-reference-list li {
+  padding: 11px 13px;
+  margin-top: 7px;
+  background: var(--surface-soft);
+  border: 1px solid #e6eafa;
+  border-radius: 8px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.catalog-reference-list code {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+pre.catalog-yaml {
+  max-height: 430px;
+  padding: 18px;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+
+.catalog-output {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 15px 0;
+}
+
+.catalog-output summary {
+  font-weight: 550;
+}

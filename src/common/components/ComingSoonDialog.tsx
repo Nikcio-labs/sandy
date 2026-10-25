@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import Icon from "./Icon";
+import "./ComingSoonDialog.css";
 
 export function ComingSoonDialog({
   feature,

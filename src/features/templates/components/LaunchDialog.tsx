@@ -8,6 +8,7 @@ import { pickWorkspace } from "../../../lib/catalog";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
+import "./LaunchDialog.css";
 
 export function LaunchDialog({
   template,

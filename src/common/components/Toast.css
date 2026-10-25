@@ -1,0 +1,56 @@
+/*
+ * Toast notifications: the stacked container and the individual toast card
+ * with entry/exit motion, rendered by the Toast component.
+ */
+
+.toasts {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 40;
+  display: flex;
+  align-items: end;
+  flex-direction: column;
+  gap: 7px;
+  pointer-events: none;
+  max-width: min(380px, calc(100% - 36px));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #cdd9d3;
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 5px 18px #141a3d18;
+  font-size: 12px;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 160ms ease,
+    transform 180ms var(--out);
+}
+
+.toast > svg {
+  color: var(--green);
+  width: 16px;
+}
+
+.toast.error > svg {
+  color: var(--red);
+}
+
+.toast.leaving {
+  opacity: 0;
+  transform: translateY(7px);
+}
+
+@starting-style {
+  .toast {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}

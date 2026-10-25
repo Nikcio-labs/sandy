@@ -1,0 +1,35 @@
+/*
+ * Badges: neutral labels (.badge) with .violet and .pill variants, used
+ * across list heads, cards, and section headings.
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface-sunken);
+  color: var(--muted);
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-size: 10px;
+  line-height: 1.5;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge.violet {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+/* Rounded brand pill with a visible border, for counts and metadata that
+   should read as selectable-chip-like rather than plain labels. */
+.badge.pill {
+  padding: 4px 9px;
+  border: 1px solid var(--brand-border);
+  border-radius: 20px;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  font-size: 11px;
+  font-weight: 500;
+}

@@ -9,6 +9,7 @@ import { stateKind } from "../../../common/lib/sandboxState";
 import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
 import ConnectDialog from "../../connect/components/ConnectDialog";
 import CreatePage from "../../create/components/CreatePage";
+import { PageHead, ContextLine } from "../../../common/components/PageHead";
 
 export interface SandboxesPageProps {
   status: SetupStatus | null;
@@ -127,16 +128,16 @@ export default function SandboxesPage({
         <CreateHost onBack={onBack} />
       ) : (
         <>
-          <div className="pagehead">
-            <div>
-              <h1>Your sandboxes</h1>
-              <p role="status">{subtitle}</p>
-            </div>
-            <button className="btn primary" onClick={onCreate}>
-              <Icon name="create" size={16} />
-              <span>Create sandbox</span>
-            </button>
-          </div>
+          <PageHead
+            title="Your sandboxes"
+            subtitle={subtitle}
+            action={
+              <button className="btn primary" onClick={onCreate}>
+                <Icon name="create" size={16} />
+                <span>Create sandbox</span>
+              </button>
+            }
+          />
           {needsSetup && (
             <div className="banner">
               <strong>Finish setting up Sandy to create sandboxes.</strong>
@@ -164,10 +165,9 @@ export default function SandboxesPage({
                 onOpen={runPrimaryAction}
                 onCreate={onCreate}
               />
-              <p className="contextline">
-                <Icon name="shield" size={15} />
+              <ContextLine icon={<Icon name="shield" size={15} />}>
                 Each sandbox has its own microVM and Docker daemon.
-              </p>
+              </ContextLine>
             </div>
             {detail && (
               <SandboxInspector

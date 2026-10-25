@@ -1,0 +1,63 @@
+/*
+ * The templates list: saved-template articles and their inline preview,
+ * owned by TemplatesPage.
+ */
+
+.template {
+  padding: 19px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.template:last-child {
+  border-bottom: 0;
+}
+
+.template h3 {
+  font-size: 19px;
+  margin-bottom: 7px;
+  overflow-wrap: anywhere;
+}
+
+.template-details {
+  grid-template-columns: 80px 1fr;
+  margin: 15px 0;
+}
+
+.template-output summary {
+  font-size: 12px;
+  color: var(--brand-dark);
+}
+
+.template-output pre {
+  max-height: 430px;
+  margin-top: 10px;
+  tab-size: 2;
+}
+
+.templatelist {
+  display: flex;
+  flex-direction: column;
+}
+
+.templatebadges {
+  margin-top: 6px;
+}
+
+@media (max-width: 720px) {
+  .template {
+    padding: 16px 14px;
+  }
+
+  .template > .split {
+    flex-wrap: wrap;
+  }
+
+  .template-details {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .template-details dd {
+    margin-bottom: 7px;
+  }
+}

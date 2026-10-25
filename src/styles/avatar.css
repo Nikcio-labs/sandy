@@ -1,0 +1,30 @@
+/*
+ * Avatar tiles: rounded icon squares with a stable per-name tint,
+ * rendered by the Avatar component.
+ */
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 10px;
+  color: var(--brand-dark);
+  background: #ebe7ff;
+  flex-shrink: 0;
+}
+
+.avatar.blue {
+  color: #28648b;
+  background: #e6f2fa;
+}
+
+.avatar.sand {
+  color: var(--sand);
+  background: var(--sand-soft);
+}
+
+.avatar.green {
+  color: var(--green);
+  background: var(--green-soft);
+}

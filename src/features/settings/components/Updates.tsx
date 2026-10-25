@@ -3,6 +3,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 import { useUpdater } from "../../../common/hooks/useUpdater";
+import "./Updates.css";
 
 // Settings mounts and unmounts this card on every navigation; the automatic
 // check runs once per app session, like the startup setup check.

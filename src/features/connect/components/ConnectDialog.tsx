@@ -10,6 +10,7 @@ import { EditorSteps } from "./EditorSteps";
 import { ServerInfo } from "./ServerInfo";
 import type { Method } from "./ConnectionMethods";
 import type { Feedback } from "./ServerInfo";
+import "./ConnectDialog.css";
 
 export interface ConnectDialogProps {
   sandbox: SandboxInfo;

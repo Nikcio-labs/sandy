@@ -4,6 +4,7 @@ import { clearDebugLog, readDebugLog, debugLogDir, type DebugLogEntry } from "..
 import { copyText } from "../../../common/lib/clipboard";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
+import "./Advanced.css";
 
 type LevelFilter = "all" | "errors";
 

@@ -2,6 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IconName } from "./Icon";
 import Icon from "./Icon";
 import logo from "../../assets/logo.png";
+import "./AppShell.css";
 
 export type View = "sandboxes" | "templates" | "settings" | "create" | "edit-template";
 

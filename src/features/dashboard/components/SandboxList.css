@@ -1,0 +1,168 @@
+/*
+ * The sandbox board: the list-plus-inspector grid and the sandbox row.
+ * Owned by SandboxesPage (board) and SandboxList (rows).
+ */
+
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 275px;
+  gap: 17px;
+  align-items: start;
+}
+
+.board.no-detail {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1050px) and (max-width: 1230px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 1049px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px 0 0;
+  min-height: 86px;
+  border-bottom: 1px solid #eef0f8;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row.selected {
+  background: #f4f2ff;
+  box-shadow: inset 3px 0 var(--brand);
+}
+
+.rowselect {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 17px 0 17px 15px;
+}
+
+.rowselect:active {
+  transform: none !important;
+}
+
+.rowinfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowname {
+  font: 600 15px var(--display);
+  letter-spacing: -0.2px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowmeta {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowmeta .agent {
+  margin-right: 8px;
+  color: #495175;
+}
+
+.rowmeta .agent:only-child {
+  margin-right: 0;
+}
+
+.rowaction {
+  min-width: 57px;
+  display: inline-flex;
+}
+
+@media (min-width: 1050px) and (max-width: 1230px) {
+  .rowselect {
+    gap: 8px;
+  }
+
+  .rowmeta .agent {
+    display: none;
+  }
+
+  .row {
+    gap: 6px;
+    padding-right: 8px;
+  }
+}
+
+@media (max-width: 720px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-right: 7px;
+  }
+
+  .rowselect {
+    padding: 16px 5px 16px 12px;
+    gap: 8px;
+  }
+
+  .rowselect .avatar {
+    display: none;
+  }
+
+  .rowselect .state {
+    margin-left: 3px;
+  }
+
+  .rowmeta .agent {
+    display: none;
+  }
+
+  .rowname {
+    font-size: 14px;
+  }
+
+  .rowmeta {
+    font-size: 10px;
+    max-width: 145px;
+  }
+
+  .rowaction {
+    padding: 5px 8px;
+    min-width: 45px;
+  }
+}
+
+/* The in-place create wizard replaces the list; Back returns to it. */
+.createhost {
+  max-width: 1040px;
+}
+
+.createhost > .textbtn {
+  margin-bottom: 14px;
+}

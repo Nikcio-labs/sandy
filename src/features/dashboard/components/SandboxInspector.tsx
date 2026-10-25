@@ -3,6 +3,7 @@ import Icon from "../../../common/components/Icon";
 import { Avatar } from "../../../common/components/Avatar";
 import { StatePill } from "../../../common/components/StatePill";
 import type { SandboxAction } from "../sandboxActions";
+import "./SandboxInspector.css";
 
 export function SandboxInspector({
   detail,
