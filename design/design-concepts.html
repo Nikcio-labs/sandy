@@ -197,8 +197,39 @@
   .tplavatar svg { width: 20px; height: 20px; }  .tplavatar.pa { background: linear-gradient(135deg, #fdf3e2, #fbe6c4); color: #c97f1b; }
   .tplavatar.pb { background: linear-gradient(135deg, #ece7ff, #ddd4ff); color: #4b3fd6; }
   .tplavatar.pc { background: linear-gradient(135deg, #dff0ff, #c9e4ff); color: #1f6fb8; }
-  .tplactions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex: none; }
+  .tplactions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex: none; padding-left: 16px; }
   .tplactions .btn { pointer-events: auto; }
+
+  /* In-window templates page: right-edge action column, matching the sandbox
+     rows' grid so Launch lines up with Open/Start across all rows. */
+  .tplcard .tplhead { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; align-items: center; }
+  .tplcard .tplactions { margin-left: 0; justify-self: end; }
+
+  /* Settings page */
+  .setrow { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; }
+  .settitle { font-family: var(--font-display); font-weight: 650; font-size: 14.5px; letter-spacing: -0.2px; }
+  .setdesc { font-size: 12.5px; color: var(--muted); margin-top: 2px; max-width: 52ch; }
+  .setdesc code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; background: #f4f5fb; padding: 1px 6px; border-radius: 5px; color: #3c3480; }
+  .provrow {
+    display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-top: 1px solid var(--hairline);
+    font-size: 13px; font-weight: 550; color: var(--ink);
+  }
+  .pdot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .pdot.ok { background: var(--green-dot); box-shadow: 0 0 0 3px var(--green-soft); }
+  .provstate { margin-left: auto; font-size: 12px; font-weight: 600; }
+  .provstate.ok { color: var(--green); }
+  .switch {
+    width: 38px; height: 22px; border-radius: 999px; border: 0; background: #cdd5ea; cursor: pointer;
+    position: relative; flex: none; padding: 0; transition: background 180ms ease;
+  }
+  .switch .knob {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(23, 30, 66, 0.25); transition: transform 180ms var(--ease-out);
+  }
+  .switch.on { background: var(--primary); }
+  .switch.on .knob { transform: translateX(16px); }
+  .switch:active .knob { transform: translateX(0) scale(0.92); }
+  .switch.on:active .knob { transform: translateX(16px) scale(0.92); }
 
   /* ============ Proposed design tokens ============ */
   .proposal {
@@ -380,6 +411,7 @@
     position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   }
   .btn:active { transform: scale(0.97); }
+  .btn[hidden] { display: none; }
   .btn:focus-visible { outline: 2px solid #a49bff; outline-offset: 2px; }
   .btn.primary { background: var(--primary); color: #fff; }
   .btn.primary:hover { background: var(--primary-deep); }
@@ -580,16 +612,16 @@
         </div>
         <div class="app" style="min-height: 560px;">
           <aside class="rail">
-            <a href="#" class="active" onclick="return false">
+            <a href="#" class="active" data-page="home" onclick="return false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
               Home</a>
-            <a href="#" onclick="return false">
+            <a href="#" data-page="sandboxes" onclick="return false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg>
               Sandboxes</a>
-            <a href="#" onclick="return false">
+            <a href="#" data-page="templates" onclick="return false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
               Templates</a>
-            <a href="#" onclick="return false">
+            <a href="#" data-page="settings" onclick="return false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4.4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4.4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>
               Settings</a>
           </aside>
@@ -600,13 +632,16 @@
                 <h1 style="font-size: 24px;" id="winH1">Welcome back</h1>
                 <div class="sub" id="winSub">2 sandboxes are running and ready to open.</div>
               </div>
-              <div class="viewtabs" id="viewTabs" role="tablist">
-                <span class="vtpill" id="vtPill"></span>
-                <button class="vt" role="tab" aria-selected="true">Home</button>
-                <button class="vt" role="tab" aria-selected="false">Sandboxes</button>
-              </div>
+              <button class="btn primary" id="pageAction">
+                <span class="swap visible">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                  <span id="pageActionLabel">Create sandbox</span>
+                </span>
+                <span class="swap hidden" data-swap id="pageActionDone">Opened</span>
+              </button>
             </div>
 
+            <div class="appPage" data-page="sandboxes" data-home="true">
             <div class="withinspector">
               <div>
                 <div class="homeactions" id="homeActions">
@@ -664,12 +699,111 @@
                 </dl>
               </aside>
             </div>
+            </div>
+
+            <div class="appPage" data-page="templates" hidden>
+              <div class="listcard">
+                <div class="listhead">
+                  <h2>Saved templates</h2>
+                  <span class="count">3</span>
+                </div>
+                <div id="tplList">
+                  <div class="tplcard" data-open="false">
+                    <button class="tplhead" aria-expanded="false">
+                      <div class="tplavatar pa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg></div>
+                      <div style="min-width:0">
+                        <div class="tplname">Next.js portfolio</div>
+                        <div class="tplmeta"><span class="tplpill dust">Popular</span><span class="tplpill">Node 22</span></div>
+                      </div>
+                      <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                      <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                    </button>
+                    <div class="tplbody"><div><div class="inner">
+                      Launches a Next.js dev server with hot reload. Files stay on this machine.
+                      <pre>image: node:22
+ports:
+  - 3000:3000
+command: npm run dev
+mount: ~/code/portfolio</pre>
+                    </div></div></div>
+                  </div>
+
+                  <div class="tplcard" data-open="false">
+                    <button class="tplhead" aria-expanded="false">
+                      <div class="tplavatar pb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg></div>
+                      <div style="min-width:0">
+                        <div class="tplname">Python lab</div>
+                        <div class="tplmeta"><span class="tplpill">Python 3.12</span><span class="tplpill">Jupyter</span></div>
+                      </div>
+                      <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                      <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                    </button>
+                    <div class="tplbody"><div><div class="inner">
+                      Jupyter environment for experiments. Nothing is saved unless you mount a folder.
+                      <pre>image: python:3.12
+ports:
+  - 8888:8888
+command: jupyter lab --no-browser</pre>
+                    </div></div></div>
+                  </div>
+
+                  <div class="tplcard" data-open="false">
+                    <button class="tplhead" aria-expanded="false">
+                      <div class="tplavatar pc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg></div>
+                      <div style="min-width:0">
+                        <div class="tplname">Docs writer</div>
+                        <div class="tplmeta"><span class="tplpill">Static</span></div>
+                      </div>
+                      <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                      <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                    </button>
+                    <div class="tplbody"><div><div class="inner">
+                      Plain container with the docs folder mounted for writing and preview builds.
+                      <pre>image: alpine:3.20
+mount: ~/writing/handbook
+command: sh</pre>
+                    </div></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="appPage" data-page="settings" hidden>
+              <div class="listcard" style="margin-bottom: 12px;">
+                <div class="setrow">
+                  <div>
+                    <div class="settitle">Updates</div>
+                    <div class="setdesc">Sandy checks for updates automatically and installs them in the background.</div>
+                  </div>
+                  <button class="switch on" id="updSwitch" role="switch" aria-checked="true" aria-label="Automatic updates"><span class="knob"></span></button>
+                </div>
+              </div>
+              <div class="listcard" style="margin-bottom: 12px;">
+                <div class="setrow">
+                  <div>
+                    <div class="settitle">Providers</div>
+                    <div class="setdesc">Agents that Sandy connects to your sandboxes.</div>
+                  </div>
+                </div>
+                <div class="provrow"><span class="pdot ok"></span>Claude Code<span class="provstate ok">Connected</span></div>
+                <div class="provrow"><span class="pdot ok"></span>Codex<span class="provstate ok">Connected</span></div>
+              </div>
+              <div class="listcard">
+                <div class="setrow">
+                  <div>
+                    <div class="settitle">sbx CLI</div>
+                    <div class="setdesc">Installed at <code>v2.4.1</code>. Logs help diagnose problems with Docker.</div>
+                  </div>
+                  <button class="btn ghost small" id="logsBtn">Open logs</button>
+                </div>
+              </div>
+            </div>
           </main>
         </div>
       </div>
     </div>
 
-    <p class="note"><b>Try:</b> hover the window controls — close tints red, maximize morphs to its restore glyph when clicked. Switch Home/Sandboxes to see the pill slide and the headline change. Selecting a row swaps the inspector instantly — sandbox switching is high-frequency, so it never animates. Press Start on a stopped row and watch row + inspector + subtitle update together.</p>
+    <p class="note"><b>Try:</b> navigate with the sidebar — every page lives in this one window, the headline crossfades, the titlebar title follows, and the top-right action button changes per page (none on Settings). Window controls: close tints red, maximize morphs to its restore glyph. Selecting a row swaps the inspector instantly — high-frequency actions never animate. Press Start on a stopped row and watch row + inspector + subtitle update together.</p>
   </section>
 
   <!-- ================= STATES ================= -->
@@ -996,15 +1130,6 @@ command: sh</pre>
     st.style.color = d.state === "running" ? "var(--green)" : "var(--muted)";
     document.getElementById("insPrimary").textContent = d.state === "running" ? "Open" : "Start";
   }
-  function syncSubtitle() {
-    const sub = document.getElementById("winSub");
-    if (!sub) return;
-    const running = DATA.filter(d => d.state === "running").length;
-    const stopped = DATA.length - running;
-    sub.textContent = document.getElementById("viewTabs").getAttribute("data-view") === "sandboxes"
-      ? running + " running · " + stopped + " stopped · stored locally on this machine"
-      : running === 0 ? "All sandboxes are stopped." : running === 1 ? "1 sandbox is running and ready to open." : running + " sandboxes are running and ready to open.";
-  }
 
   /* Row selection + inspector sync */
   rows.addEventListener("click", (e) => {
@@ -1065,40 +1190,50 @@ command: sh</pre>
   });
   document.addEventListener("click", () => { if (openMenu) { openMenu.dataset.open = "false"; openMenu = null; } });
 
-  /* ---------- App window: view tabs + window controls ---------- */
-  const viewTabs = document.getElementById("viewTabs");
-  if (viewTabs) {
-    const vtPill = document.getElementById("vtPill");
-    const vts = [...viewTabs.querySelectorAll(".vt")];
-    const moveVtPill = () => {
-      const t = vts[+(viewTabs.dataset.view === "sandboxes" ? 1 : 0)];
-      vtPill.style.left = t.offsetLeft + "px";
-      vtPill.style.width = t.offsetWidth + "px";
-    };
-    vts.forEach((t, i) => t.addEventListener("click", () => {
-      const view = i === 1 ? "sandboxes" : "home";
-      if (viewTabs.dataset.view === view) return;
-      viewTabs.dataset.view = view;
-      vts.forEach((x, j) => x.setAttribute("aria-selected", String(j === i)));
-      moveVtPill();
-      const h1 = document.getElementById("winH1");
-      const cross = (fn) => {
-        if (reduce) return fn();
-        h1.style.transition = "opacity 130ms ease, filter 130ms ease";
-        h1.style.opacity = "0"; h1.style.filter = "blur(2px)";
-        setTimeout(() => { fn(); h1.style.opacity = ""; h1.style.filter = ""; }, 130);
-      };
-      cross(() => {
-        h1.textContent = view === "home" ? "Welcome back" : "Your sandboxes";
-        document.getElementById("winTitle").textContent = view === "home" ? "Home" : "Sandboxes";
-        document.getElementById("homeActions").style.display = view === "home" ? "" : "none";
-        syncSubtitle();
-      });
-    }));
-    addEventListener("resize", moveVtPill);
-    requestAnimationFrame(moveVtPill);
-    syncSubtitle();
+  /* ---------- App window: sidebar navigation + window controls ---------- */
+  const PAGES = {
+    home:      { title: "Home",      h1: "Welcome back",   sub: () => { const r = DATA.filter(d => d.state === "running").length; return r === 0 ? "All sandboxes are stopped." : r === 1 ? "1 sandbox is running and ready to open." : r + " sandboxes are running and ready to open."; }, action: { label: "Create sandbox", done: "Wizard opened" } },
+    sandboxes: { title: "Sandboxes", h1: "Your sandboxes", sub: () => { const r = DATA.filter(d => d.state === "running").length; return r + " running · " + (DATA.length - r) + " stopped · stored locally on this machine"; }, action: { label: "Create sandbox", done: "Wizard opened" } },
+    templates: { title: "Templates", h1: "Templates",      sub: () => "Reusable environments, ready to launch.", action: { label: "New template", done: "Draft opened" } },
+    settings:  { title: "Settings",  h1: "Settings",       sub: () => "Local CLI, providers, and updates.", action: null },
+  };
+  let currentPage = "home";
+  const navLinks = [...document.querySelectorAll('.rail a[data-page]')];
+  const winH1 = document.getElementById("winH1");
+
+  function syncSubtitle() {
+    const p = PAGES[currentPage];
+    document.getElementById("winSub").textContent = p.sub();
+    const pa = document.getElementById("pageAction");
+    if (p.action) {
+      pa.hidden = false;
+      const lbl = document.getElementById("pageActionLabel");
+      const done = document.getElementById("pageActionDone");
+      if (lbl.textContent !== p.action.label) { lbl.textContent = p.action.label; done.textContent = p.action.done; }
+    } else pa.hidden = true;
   }
+
+  function showPage(id) {
+    if (!PAGES[id] || id === currentPage) return;
+    currentPage = id;
+    navLinks.forEach(a => a.classList.toggle("active", a.dataset.page === id));
+    document.querySelectorAll(".appPage").forEach(p => {
+      p.hidden = p.dataset.page !== id;
+      if (p.dataset.home) p.hidden = id !== "home" && id !== "sandboxes";
+    });
+    document.getElementById("homeActions").style.display = id === "home" ? "" : "none";
+    const apply = () => {
+      winH1.textContent = PAGES[id].h1;
+      document.getElementById("winTitle").textContent = PAGES[id].title;
+      syncSubtitle();
+    };
+    if (reduce) return apply();
+    winH1.style.transition = "opacity 130ms ease, filter 130ms ease";
+    winH1.style.opacity = "0"; winH1.style.filter = "blur(2px)";
+    setTimeout(() => { apply(); winH1.style.opacity = ""; winH1.style.filter = ""; }, 130);
+  }
+  navLinks.forEach(a => a.addEventListener("click", (e) => { e.preventDefault(); showPage(a.dataset.page); }));
+  syncSubtitle();
 
   const maxBtn = document.getElementById("maxBtn");
   if (maxBtn) maxBtn.addEventListener("click", () => {
