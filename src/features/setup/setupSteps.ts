@@ -1,5 +1,5 @@
 import type { SetupStatus } from "../../lib/sandbox";
-import { login, enableImagePaste, setupSsh, openInstallerTerminal } from "../../lib/sandbox";
+import { login, enableImagePaste, openInstallerTerminal } from "../../lib/sandbox";
 import type { IconName } from "../../common/components/Icon";
 
 export interface SetupStep {
@@ -24,6 +24,11 @@ export interface SetupStep {
    * gate "ready" routing and the dashboard's setup banner.
    */
   optional?: boolean;
+  /**
+   * The step's command is an `sbx` call, which only works once the user has
+   * signed in; the wizard blocks running it before the sign-in step.
+   */
+  requiresLogin?: boolean;
 }
 
 export const SETUP_STEPS: SetupStep[] = [
@@ -35,20 +40,22 @@ export const SETUP_STEPS: SetupStep[] = [
     guide: [
       "The installer opens in a terminal.",
       "Enter your password if it is requested.",
-      "Come back here when it finishes.",
+      "When it prints “Install finished.”, click Check install.",
     ],
     action: "Install sbx",
     icon: "terminal",
     isDone: (status) => !!status?.sbx_installed,
     // The install runs in a visible terminal: sudo and winget prompts need a
-    // real console the user can answer, so Sandy cannot capture it.
+    // real console the user can answer, so Sandy cannot capture it. SSH
+    // setup is part of the install script, so there is no separate step.
     run: openInstallerTerminal,
   },
   {
     id: "login",
     label: "Sign in",
     title: "Sign in to Docker",
-    description: "Your browser opens to connect your Docker account, and Sandy picks up the result.",
+    description:
+      "Your browser opens to connect your Docker account. Sandy picks up the result and sets up SSH access for you.",
     command: "sbx login",
     action: "Sign in",
     icon: "user",
@@ -66,18 +73,7 @@ export const SETUP_STEPS: SetupStep[] = [
     isDone: (status) => !!status?.image_paste_on,
     run: enableImagePaste,
     optional: true,
-  },
-  {
-    id: "ssh",
-    label: "SSH",
-    title: "Set up SSH access",
-    description: "Reach sandboxes from your editor or terminal at <name>.sbx.",
-    command: "sbx setup ssh",
-    action: "Set up SSH",
-    icon: "key",
-    isDone: (status) => !!status?.ssh_set_up,
-    run: setupSsh,
-    optional: true,
+    requiresLogin: true,
   },
 ];
 

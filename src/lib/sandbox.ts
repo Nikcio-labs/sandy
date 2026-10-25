@@ -45,6 +45,8 @@ export const checkSetup = shareInFlight(() => invoke<SetupStatus>("check_setup")
 export const revealMain = () => invoke<void>("reveal_main");
 /** Close the boot splash from the setup window before the wizard shows. */
 export const closeSplash = () => invoke<void>("close_splash");
+/** Quit the whole app from the setup window's close button. */
+export const quitApp = () => invoke<void>("quit_app");
 /** Reopen the setup window after the user skipped first-run setup. */
 export const openSetupWindow = () => invoke<void>("open_setup_window");
 /** Open the sbx installer in a visible terminal (sudo/winget prompts). */

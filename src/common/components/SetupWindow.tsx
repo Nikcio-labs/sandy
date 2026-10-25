@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { emit } from "@tauri-apps/api/event";
 import type { SetupStatus } from "../../lib/sandbox";
-import { checkSetup, closeSplash, revealMain } from "../../lib/sandbox";import { isSetupComplete } from "../../features/setup/setupSteps";
+import { checkSetup, closeSplash, quitApp, revealMain } from "../../lib/sandbox";
+import { SETUP_STEPS, isSetupComplete } from "../../features/setup/setupSteps";
 import SetupWizard from "../../features/setup/components/SetupWizard";
+import Icon from "../../common/components/Icon";
 import logo from "../../assets/logo.png";
 import "./SetupWindow.css";
 
@@ -40,15 +42,20 @@ export default function SetupWindow() {
       setStatus(next);
       setDecided(true);
       if (next && isSetupComplete(next)) {
-        handOff(false);
-      } else {
-        wizardShown.current = true;
-        // First run: drop the splash (always-on-top, it would cover the
-        // wizard) and step forward. Reopened later: already visible.
-        void closeSplash()
-          .catch(() => {})
-          .then(() => getCurrentWindow().show());
+        // Boot with nothing to do: hand straight off. After a wizard pass
+        // (or a reopened window), only hand off when no unfinished step is
+        // left to show — the optional last step deserves its screen time.
+        if (!wizardShown.current || SETUP_STEPS.every((step) => step.isDone(next))) {
+          handOff(false);
+        }
+        return;
       }
+      wizardShown.current = true;
+      // First run: drop the splash (always-on-top, it would cover the
+      // wizard) and step forward. Reopened later: already visible.
+      void closeSplash()
+        .catch(() => {})
+        .then(() => getCurrentWindow().show());
     },
     [handOff],
   );
@@ -99,6 +106,16 @@ export default function SetupWindow() {
       <header className="setupwindow-bar" data-tauri-drag-region>
         <img src={logo} alt="" />
         <span>Sandy</span>
+        {/* Closing the window alone would reveal the main window (the
+        destroyed-window fallback); quitting is the user's intent here. */}
+        <button
+          type="button"
+          className="iconbtn setupwindow-close"
+          aria-label="Quit Sandy"
+          onClick={() => void quitApp().catch(() => {})}
+        >
+          <Icon name="close" size={16} />
+        </button>
       </header>
       <div className="setupwindow-body">
         <SetupWizard

@@ -93,6 +93,18 @@ async fn open_setup_window(app: tauri::AppHandle) -> Result<(), String> {
     .await
 }
 
+/// Quit the app from the setup window's close button. Closing the window
+/// alone would reveal the main window (the destroyed-window fallback), so
+/// quitting must exit the whole process.
+#[tauri::command]
+async fn quit_app(app: tauri::AppHandle) -> Result<(), String> {
+    logged("quit_app", async move {
+        app.exit(0);
+        Ok(())
+    })
+    .await
+}
+
 #[tauri::command]
 async fn open_installer_terminal() -> Result<(), String> {
     logged("open_installer_terminal", async move {
@@ -409,6 +421,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         close_splash,
         open_setup_window,
         open_installer_terminal,
+        quit_app,
         enable_image_paste,
         setup_ssh,
         login,

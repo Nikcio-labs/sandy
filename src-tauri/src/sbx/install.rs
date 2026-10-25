@@ -17,8 +17,8 @@ use super::cli::is_sbx_installed;
 #[cfg(target_os = "linux")]
 use super::terminal::spawn_terminal;
 
-/// Open a terminal that runs the platform's installer. A terminal that is
-/// already installed needs no install; the wizard skips straight past.
+/// Open a terminal that runs the platform's installer. An already installed
+/// CLI needs no install; the wizard skips straight past.
 pub fn open_installer_terminal() -> Result<(), String> {
     if is_sbx_installed() {
         return Ok(());
@@ -42,11 +42,11 @@ pub fn open_installer_terminal() -> Result<(), String> {
 }
 
 /// macOS: Homebrew is the documented install path. The install command is
-/// one line: AppleScript string literals cannot span lines.
+/// one line per statement: AppleScript string literals cannot span lines.
 #[cfg(target_os = "macos")]
 fn open_macos_installer() -> Result<(), String> {
     use super::terminal::{applescript_quote, shell_quote};
-    let script = "if ! command -v brew >/dev/null 2>&1; then echo \"Homebrew is required to install sbx. Install it from https://brew.sh and try this step again.\"; else brew install docker/tap/sbx && echo \"sbx installed. You can close this window.\" || echo \"Installation failed. You can close this window and try again.\"; fi";
+    let script = "if ! command -v brew >/dev/null 2>&1; then echo \"Homebrew is required to install sbx. Install it from https://brew.sh and try this step again.\"; else brew install docker/tap/sbx; echo; if command -v sbx >/dev/null 2>&1; then echo \"Install finished. You can close this window.\"; else echo \"Installation failed. Scroll up for details.\"; fi; fi; echo \"Press Enter to close this window.\"; read _";
     let applescript = format!(
         "tell application \"Terminal\"\nactivate\ndo script {}\nend tell",
         applescript_quote(&format!("exec {}", shell_quote(script)))
@@ -69,12 +69,14 @@ fn open_macos_installer() -> Result<(), String> {
 }
 
 /// Windows: WinGet installs the per-user MSI; the terminal stays open
-/// (`-NoExit`) so confirmation prompts and output remain readable.
+/// (`-NoExit`) so confirmation prompts and output remain readable. sbx is
+/// called by full path: the installer's PATH change only reaches processes
+/// started afterwards.
 #[cfg(target_os = "windows")]
 fn open_windows_installer() -> Result<(), String> {
     use std::os::windows::process::CommandExt;
 
-    let script = "winget install -h Docker.sbx; echo ''; echo 'You can close this window and return to Sandy. If Sandy still cannot find sbx, restart Sandy first.'";
+    let script = "winget install -h Docker.sbx\necho ''\nif (Test-Path \"$env:LOCALAPPDATA\\DockerSandboxes\\bin\\sbx.exe\") { echo 'Install finished. You can close this window and return to Sandy.' } else { echo 'Installation failed. Scroll up for details.' }";
     if let Ok(program) = which::which("wt.exe") {
         let mut command = Command::new(program);
         command.args([
@@ -121,7 +123,8 @@ fn open_linux_installer() -> Result<(), String> {
 trap 'rm -f "$tmpfile"' EXIT
 if curl -fsSL https://get.docker.com -o "$tmpfile" && sudo REPO_ONLY=1 sh "$tmpfile" && sudo apt-get install -y docker-sbx; then
   sudo usermod -aG kvm "$(logname 2>/dev/null || id -un)" || echo "warning: could not add user to the kvm group" >&2
-  echo "Install finished."
+  echo
+  echo "Install finished. You can close this window and return to Sandy."
 else
   echo "Installation failed. Scroll up for details."
 fi
