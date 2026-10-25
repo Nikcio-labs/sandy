@@ -89,7 +89,6 @@ export function SandboxList({
               </div>
             </div>
           ))}
-          <p className="help panelnotice">Loading local sandboxes…</p>
         </div>
       )}
       {!loading && visible.length === 0 && (
