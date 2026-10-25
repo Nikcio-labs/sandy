@@ -34,6 +34,10 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             label: Windows
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: Windows (Microsoft Store)
+            store: true
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             label: Linux
@@ -62,17 +66,6 @@ jobs:
           rustup default stable
           rustup target add ${{ matrix.target }}
 
-      - name: Rust cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: rust-${{ matrix.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: |
-            rust-${{ matrix.os }}-${{ matrix.target }}-
-
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
@@ -90,26 +83,15 @@ jobs:
 
       # The updater refuses unsigned bundles, so every release build must run
       # with the signing key; the key has no password.
-      - name: Build Tauri app
+      - name: Build regular installers
+        if: ${{ !matrix.store }}
         run: pnpm tauri build --target ${{ matrix.target }}
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.UPDATER_SIGNING_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.UPDATER_SIGNING_KEY_PASSWORD }}
 
-      # The Store build overwrites the NSIS output, so the regular
-      # installers are moved aside before building the Store variant
-      # (which bundles Webview2, as the Store requires).
-      - name: Stash regular Windows installers
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $bundle = "src-tauri/target/${{ matrix.target }}/release/bundle"
-          New-Item -ItemType Directory -Force -Path bundle-regular | Out-Null
-          Copy-Item "$bundle/msi/*.msi" bundle-regular
-          Copy-Item "$bundle/nsis/*-setup.exe" bundle-regular
-
       - name: Build Microsoft Store installer
-        if: runner.os == 'Windows'
+        if: matrix.store
         run: pnpm tauri build --target ${{ matrix.target }} --config src-tauri/tauri.microsoftstore.conf.json
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.UPDATER_SIGNING_KEY }}
@@ -139,15 +121,18 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $bundle = "src-tauri/target/${{ matrix.target }}/release/bundle"
-          Copy-Item "bundle-regular/msi/*.msi" artifacts
-          Copy-Item "bundle-regular/msi/*.msi.sig" artifacts
-          Copy-Item "bundle-regular/nsis/*-setup.exe" artifacts
-          Copy-Item "bundle-regular/nsis/*-setup.exe.sig" artifacts
-          # Suffix the Store installer so both variants fit on the same
-          # release (the file names would otherwise collide).
-          $store = Get-ChildItem "$bundle/nsis/*-setup.exe" | Select-Object -First 1
-          Copy-Item $store.FullName "artifacts/$($store.BaseName)-microsoft-store$($store.Extension)"
+          if ("${{ matrix.store }}" -eq "true") {
+            # Suffix the Store installer so both variants fit on the same
+            # release (the file names would otherwise collide).
+            $store = Get-ChildItem "src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*-setup.exe" | Select-Object -First 1
+            Copy-Item $store.FullName "artifacts/$($store.BaseName)-microsoft-store$($store.Extension)"
+          } else {
+            $bundle = "src-tauri/target/${{ matrix.target }}/release/bundle"
+            Copy-Item "$bundle/msi/*.msi" artifacts
+            Copy-Item "$bundle/msi/*.msi.sig" artifacts
+            Copy-Item "$bundle/nsis/*-setup.exe" artifacts
+            Copy-Item "$bundle/nsis/*-setup.exe.sig" artifacts
+          }
 
       - name: Generate checksums
         shell: bash
@@ -203,12 +188,21 @@ jobs:
             local dir signature asset
             dir="$(mktemp -d)"
             gh release download "${TAG_NAME}" --pattern "${pattern}.sig" --dir "$dir"
-            signature="$(tr -d '\n' < "$dir"/*.sig)"
-            if [ -z "$signature" ]; then
-              echo "No signature downloaded for ${pattern}" >&2
+            # Resolve the single matching file by name instead of redirecting
+            # through a glob: `"$dir"/*.sig` fails hard on more than one match
+            # and reads nothing on none, and an ambiguous glob here means the
+            # release carries a stale or misnamed signature.
+            mapfile -t matches < <(find "$dir" -name '*.sig')
+            if [ "${#matches[@]}" -ne 1 ]; then
+              echo "Expected exactly one signature for ${pattern}, found ${#matches[@]}" >&2
               exit 1
             fi
-            asset="$(basename "$dir"/*.sig .sig)"
+            asset="$(basename "${matches[0]}" .sig)"
+            signature="$(tr -d '\n' < "${matches[0]}")"
+            if [ -z "$signature" ]; then
+              echo "Empty signature for ${pattern}" >&2
+              exit 1
+            fi
             rm -rf "$dir"
             printf '"%s": { "signature": "%s", "url": "%s/%s" }' "$2" "$signature" "$release_url" "$asset"
           }
