@@ -69,17 +69,6 @@ jobs:
           rustup default stable
           rustup target add ${{ matrix.target }}
 
-      - name: Rust cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: rust-${{ matrix.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: |
-            rust-${{ matrix.os }}-${{ matrix.target }}-
-
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
@@ -94,16 +83,6 @@ jobs:
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
-
-      # The Rust cache can carry bundle outputs from an earlier release built
-      # with the same Cargo.lock (the app version lives in tauri.conf.json, not
-      # Cargo.toml, so the cache key does not change between releases). Left in
-      # place, they get uploaded next to the fresh installers, and the updater
-      # manifest then sees two `.sig` files for one platform glob and aborts.
-      - name: Clear cached bundles
-        if: ${{ !matrix.store }}
-        shell: pwsh
-        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "src-tauri/target/${{ matrix.target }}/release/bundle"
 
       # The updater refuses unsigned bundles, so every release build must run
       # with the signing key; the key has no password.
