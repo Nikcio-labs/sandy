@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
-import { invalidateSetup } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import Providers from "./Providers";
 import Advanced from "./Advanced";
@@ -55,12 +54,6 @@ export default function SettingsPage({
 }: SettingsPageProps) {
   const [pane, setPane] = useState<Pane | null>(null);
 
-  /** A fresh check: the last verdict may predate CLI changes the user made. */
-  const recheckSetup = async () => {
-    await invalidateSetup().catch(() => {});
-    return onCheckSetup();
-  };
-
   return (
     <div className="settingshome">
       {pane === null ? (
@@ -70,7 +63,7 @@ export default function SettingsPage({
             <div className="banner error" role="alert">
               <strong>We couldn’t check your setup.</strong>
               <p>{statusError}</p>
-              <button className="btn small" disabled={busy} onClick={() => void recheckSetup()}>
+              <button className="btn small" disabled={busy} onClick={() => void onCheckSetup()}>
                 Try again
               </button>
             </div>
@@ -79,7 +72,7 @@ export default function SettingsPage({
             <div className="banner error" role="status">
               <strong>Some setup checks are temporarily unavailable.</strong>
               <p>{status.issues.join("\n")}</p>
-              <button className="btn small" disabled={busy} onClick={() => void recheckSetup()}>
+              <button className="btn small" disabled={busy} onClick={() => void onCheckSetup()}>
                 Check again
               </button>
             </div>

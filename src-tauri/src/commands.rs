@@ -44,17 +44,6 @@ async fn check_setup() -> Result<setup::SetupStatus, String> {
     .await
 }
 
-/// Force the next `check_setup` to run for real (a setup action may have
-/// changed the verdict).
-#[tauri::command]
-async fn invalidate_setup() -> Result<(), String> {
-    logged("invalidate_setup", async move {
-        setup::invalidate_check();
-        Ok(())
-    })
-    .await
-}
-
 /// Reveal the main window after first-run setup. Called from the setup
 /// window, which would otherwise leave the app invisible behind its own
 /// close; the splash is closed here too because the setup window may
@@ -105,9 +94,9 @@ async fn open_setup_window(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn install_sbx() -> Result<String, String> {
-    logged("install_sbx", async move {
-        blocking(sbx::ensure_sbx_installed).await
+async fn open_installer_terminal() -> Result<(), String> {
+    logged("open_installer_terminal", async move {
+        blocking(sbx::open_installer_terminal).await
     })
     .await
 }
@@ -416,11 +405,10 @@ async fn clear_debug_log(app: tauri::AppHandle) -> Result<(), String> {
 pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
     Box::new(tauri::generate_handler![
         check_setup,
-        invalidate_setup,
         reveal_main,
         close_splash,
         open_setup_window,
-        install_sbx,
+        open_installer_terminal,
         enable_image_paste,
         setup_ssh,
         login,

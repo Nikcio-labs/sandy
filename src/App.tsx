@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getCurrentWindow, Window } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
-import { Rail, Titlebar } from "./common/components/AppShell";
-import type { View } from "./common/components/AppShell";
+import { Rail, Titlebar } from "./common/components/AppShell";import type { View } from "./common/components/AppShell";
 import BootSplash from "./common/components/BootSplash";
 import { useSetupStatus } from "./common/hooks/useSetupStatus";
 import { UpdateProvider } from "./common/hooks/useUpdateProbe";
-import { invalidateSetup } from "./lib/sandbox";
 import { isSetupComplete } from "./features/setup/setupSteps";
 import SandboxesPage from "./features/dashboard/components/SandboxesPage";
 import TemplatesPage from "./features/templates/components/TemplatesPage";
@@ -35,13 +33,6 @@ export default function App() {
   const setup = useSetupStatus();
   const { status, statusError, loading, busy, setBusy, checkSetup } = setup;
 
-  // A fresh check: the setup window's actions and any user-run CLI commands
-  // can change the verdict while this window was hidden or unfocused.
-  const recheckSetup = useCallback(async () => {
-    await invalidateSetup().catch(() => {});
-    return checkSetup();
-  }, [checkSetup]);
-
   // Route to setup when the first setup check finds incomplete configuration.
   useEffect(() => {
     if (loading) return;
@@ -60,20 +51,13 @@ export default function App() {
   // is the one moment this window's status can be stale (the wizard just
   // changed CLI state), so refresh then instead of polling focus.
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
     const registered = listen(SETUP_DONE_EVENT, () => {
-      void recheckSetup();
+      void checkSetup();
     });
-    registered
-      .then((stop) => {
-        unlisten = stop;
-        return undefined;
-      })
-      .catch(() => {});
     return () => {
-      void registered.then(() => unlisten?.());
+      void registered.then((stop) => stop());
     };
-  }, [recheckSetup]);
+  }, [checkSetup]);
 
   const navigate = (next: View) => {
     setView(next);
@@ -100,7 +84,7 @@ export default function App() {
                 pendingSelection={pendingSelection}
                 onPendingSelectionHandled={() => setPendingSelection(null)}
                 onCreate={() => setCreateDialog({})}
-                onCheckSetup={recheckSetup}
+                onCheckSetup={checkSetup}
                 onCount={setCount}
               />
             )}
@@ -121,7 +105,7 @@ export default function App() {
                 statusError={statusError}
                 busy={busy}
                 active={view === "settings"}
-                onCheckSetup={recheckSetup}
+                onCheckSetup={checkSetup}
               />
             </div>
           </main>

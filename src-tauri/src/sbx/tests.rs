@@ -2,7 +2,7 @@
 use std::path::PathBuf;
 
 use crate::sbx::cli::{SSH_SETUP_COMMAND, first_executable, is_sbx_installed, run_capture};
-use crate::sbx::install::ensure_sbx_installed;
+use crate::sbx::install::open_installer_terminal;
 use crate::sbx::lifecycle::{
     connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
 };
@@ -420,10 +420,8 @@ fn sbx_installed_checks_with_mock() {
     let _guard = env_lock();
     let _mock = MockCli::new();
     assert!(is_sbx_installed());
-    assert_eq!(
-        ensure_sbx_installed(),
-        Ok("sbx is already installed".to_string())
-    );
+    // An installed CLI needs no installer terminal; the command is a no-op.
+    assert_eq!(open_installer_terminal(), Ok(()));
 }
 
 #[test]

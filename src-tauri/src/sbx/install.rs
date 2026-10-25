@@ -1,83 +1,111 @@
 //! Installing the `sbx` CLI per platform (Homebrew, WinGet, apt).
+//!
+//! The install runs in a visible terminal, not captured by Sandy: sudo and
+//! WinGet confirmation prompts need a real console the user can answer, and
+//! the output must stay readable. Sandy only verifies the result afterwards.
 
-#[cfg(target_os = "macos")]
-use std::path::PathBuf;
+#[cfg(target_os = "linux")]
+use std::process::Command;
 
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[cfg(target_os = "windows")]
+use std::process::Command;
+
+#[cfg(target_os = "windows")]
 use super::cli::HideConsole;
-#[cfg(target_os = "macos")]
-use super::cli::first_executable;
+
 use super::cli::is_sbx_installed;
+#[cfg(target_os = "linux")]
+use super::terminal::spawn_terminal;
 
-#[cfg(target_os = "macos")]
-fn homebrew_executable() -> Result<PathBuf, String> {
-    which::which("brew").ok().or_else(|| {
-        first_executable(&["/opt/homebrew/bin/brew".into(), "/usr/local/bin/brew".into()])
-    }).ok_or_else(|| {
-        "Homebrew is required to install sbx on macOS.\nInstall it from https://brew.sh and try again.".to_string()
-    })
-}
-
-/// Install the sbx CLI for the current platform. Returns combined command
-/// output for display in the wizard.
-pub fn ensure_sbx_installed() -> Result<String, String> {
+/// Open a terminal that runs the platform's installer. A terminal that is
+/// already installed needs no install; the wizard skips straight past.
+pub fn open_installer_terminal() -> Result<(), String> {
     if is_sbx_installed() {
-        return Ok("sbx is already installed".to_string());
+        return Ok(());
     }
-    let mut log = String::new();
-
     #[cfg(target_os = "macos")]
     {
-        // Homebrew is the documented install path on macOS.
-        let brew = homebrew_executable()?;
-        let brew = brew.to_str().ok_or("Homebrew path is not valid UTF-8")?;
-        log.push_str(&run_via(brew, &["install", "docker/tap/sbx"])?);
-        if !is_sbx_installed() {
-            return Err(format!(
-                "Installation finished but sbx was not found on PATH.\nOutput:\n{}",
-                log
-            ));
-        }
+        open_macos_installer()
     }
-
     #[cfg(target_os = "windows")]
     {
-        // WinGet installs the per-user MSI and adds its bin directory to the
-        // user PATH — but only for processes started afterwards. Sandy keeps
-        // its current environment, so report success and let the user
-        // restart instead of failing the step.
-        log.push_str(&run_via(
-            "powershell",
-            &["-NoProfile", "-Command", "winget install -h Docker.sbx"],
-        )?);
-        log.push_str("\nRestart Sandy so the updated PATH is picked up.\n");
+        open_windows_installer()
     }
-
     #[cfg(target_os = "linux")]
     {
-        let mut push = |line: &str| log.push_str(line);
-        install_sbx_linux(&mut push)?;
-        if !is_sbx_installed() {
-            return Err(format!(
-                "Installation finished but sbx was not found on PATH.\nRestart Sandy (so the updated PATH is picked up) and try again.\nOutput:\n{}",
-                log
-            ));
-        }
+        open_linux_installer()
     }
-
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     {
-        return Err("This platform is not supported yet.".to_string());
+        Err("This platform is not supported yet.".to_string())
     }
+}
 
-    Ok(log)
+/// macOS: Homebrew is the documented install path. The install command is
+/// one line: AppleScript string literals cannot span lines.
+#[cfg(target_os = "macos")]
+fn open_macos_installer() -> Result<(), String> {
+    use super::terminal::{applescript_quote, shell_quote};
+    let script = "if ! command -v brew >/dev/null 2>&1; then echo \"Homebrew is required to install sbx. Install it from https://brew.sh and try this step again.\"; else brew install docker/tap/sbx && echo \"sbx installed. You can close this window.\" || echo \"Installation failed. You can close this window and try again.\"; fi";
+    let applescript = format!(
+        "tell application \"Terminal\"\nactivate\ndo script {}\nend tell",
+        applescript_quote(&format!("exec {}", shell_quote(script)))
+    );
+    let mut command = Command::new("/usr/bin/osascript");
+    command.args(["-e", &applescript]);
+    // osascript exits after the Apple event; report automation permission
+    // failures synchronously rather than silently swallowing them.
+    let output = command
+        .output()
+        .map_err(|e| format!("could not open Terminal: {e}"))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "could not open Terminal: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ))
+    }
+}
+
+/// Windows: WinGet installs the per-user MSI; the terminal stays open
+/// (`-NoExit`) so confirmation prompts and output remain readable.
+#[cfg(target_os = "windows")]
+fn open_windows_installer() -> Result<(), String> {
+    use std::os::windows::process::CommandExt;
+
+    let script = "winget install -h Docker.sbx; echo ''; echo 'You can close this window and return to Sandy. If Sandy still cannot find sbx, restart Sandy first.'";
+    if let Ok(program) = which::which("wt.exe") {
+        let mut command = Command::new(program);
+        command.args([
+            "new-tab",
+            "--",
+            "powershell",
+            "-NoProfile",
+            "-NoExit",
+            "-Command",
+            script,
+        ]);
+        // `wt.exe` is a console-subsystem launcher stub: without this flag
+        // the release build briefly flashes a console for the stub itself.
+        // The real terminal window is opened by the stub and stays visible.
+        command.hide_console();
+        if spawn_terminal(command).is_ok() {
+            return Ok(());
+        }
+    }
+    let mut command = Command::new("powershell.exe");
+    command
+        .args(["-NoProfile", "-NoExit", "-Command", script])
+        .creation_flags(0x00000010); // CREATE_NEW_CONSOLE
+    spawn_terminal(command)
 }
 
 /// Linux (Ubuntu/Debian): add Docker's apt repository and install the
 /// docker-sbx package, then add the current user to the kvm group for
 /// local sandboxes. Mirrors https://docs.docker.com/ai/sandboxes/install/.
 #[cfg(target_os = "linux")]
-fn install_sbx_linux(log: &mut dyn FnMut(&str)) -> Result<(), String> {
+fn open_linux_installer() -> Result<(), String> {
     if !std::path::Path::new("/usr/bin/apt-get").exists() {
         return Err(
             "Only Ubuntu/Debian systems are supported by the automatic installer.\n\
@@ -89,93 +117,39 @@ fn install_sbx_linux(log: &mut dyn FnMut(&str)) -> Result<(), String> {
     // downloaded to a private (mode 600) file the invoking user owns; a
     // predictable /tmp path would let another local user swap its content.
     // The trap removes it even when the script aborts early.
-    let script = r#"set -e
-tmpfile="$(mktemp)"
+    let script = r#"tmpfile="$(mktemp)" || exit 1
 trap 'rm -f "$tmpfile"' EXIT
-curl -fsSL https://get.docker.com -o "$tmpfile"
-sudo REPO_ONLY=1 sh "$tmpfile"
-sudo apt-get install -y docker-sbx
-sudo usermod -aG kvm "$(logname 2>/dev/null || id -un)" || echo "warning: could not add user to the kvm group" >&2
+if curl -fsSL https://get.docker.com -o "$tmpfile" && sudo REPO_ONLY=1 sh "$tmpfile" && sudo apt-get install -y docker-sbx; then
+  sudo usermod -aG kvm "$(logname 2>/dev/null || id -un)" || echo "warning: could not add user to the kvm group" >&2
+  echo "Install finished."
+else
+  echo "Installation failed. Scroll up for details."
+fi
+echo "Press Enter to close this window."
+read _
 "#;
-    log("Running the Docker install script (may ask for your password)...\n");
-    let status = std::process::Command::new("bash")
-        .arg("-c")
-        .arg(script)
-        .status()
-        .map_err(|e| format!("failed to start installer: {}", e))?;
-    if !status.success() {
-        return Err(format!(
-            "the Linux install script failed (exit {}). If no password prompt appeared, \
-             Sandy may need to be started from a terminal once so sudo can ask for it.",
-            status.code().unwrap_or(-1)
-        ));
+    let mut failures = Vec::new();
+    // Each of these accepts a program and argv, rather than a shell command
+    // string. Avoid terminal flags such as `--command` that concatenate or
+    // reparse arguments.
+    for (terminal, separator) in [
+        ("x-terminal-emulator", "-e"),
+        ("gnome-terminal", "--"),
+        ("konsole", "-e"),
+        ("xfce4-terminal", "-x"),
+        ("xterm", "-e"),
+    ] {
+        if let Ok(program) = which::which(terminal) {
+            let mut command = Command::new(program);
+            command.arg(separator).arg("bash").arg("-c").arg(script);
+            match spawn_terminal(command) {
+                Ok(()) => return Ok(()),
+                Err(e) => failures.push(format!("{terminal}: {e}")),
+            }
+        }
     }
-    log("done\n");
-    Ok(())
-}
-
-/// Run an external program (brew/powershell), capturing the tail of the
-/// output for the wizard log.
-#[cfg(any(target_os = "macos", target_os = "windows"))]
-fn run_via(program: &str, args: &[&str]) -> Result<String, String> {
-    use std::io::Read;
-    use std::process::Stdio;
-
-    // `hide_console` returns `&mut Command` (like std's builder methods), so
-    // the chain must end in an owning call: either `.spawn()` below or a
-    // separate statement on a binding. Assigning the chain directly would
-    // borrow a temporary that dies at the end of the statement (E0716).
-    let mut child = std::process::Command::new(program)
-        .args(args)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .hide_console()
-        .spawn()
-        .map_err(|e| format!("failed to run {}: {}", program, e))?;
-
-    // Pipes were requested above, so these handles are always present.
-    let (Some(mut stdout), Some(mut stderr)) = (child.stdout.take(), child.stderr.take()) else {
-        return Err(format!("{} produced no pipe handles", program));
-    };
-    let mut out = String::new();
-    let t1 = std::thread::spawn(move || {
-        let _ = stdout.read_to_string(&mut out);
-        out
-    });
-    let t2 = std::thread::spawn(move || {
-        let mut s = String::new();
-        let _ = stderr.read_to_string(&mut s);
-        s
-    });
-    let status = child
-        .wait()
-        .map_err(|e| format!("failed to wait for {}: {}", program, e))?;
-    let stdout_text = t1
-        .join()
-        .map_err(|_| "stdout thread panicked".to_string())?;
-    let stderr_text = t2
-        .join()
-        .map_err(|_| "stderr thread panicked".to_string())?;
-    let combined = format!("{}{}", stdout_text, stderr_text);
-    if !status.success() {
-        return Err(format!(
-            "{} failed (exit {}):\n{}",
-            program,
-            status.code().unwrap_or(-1),
-            tail(&combined, 2000)
-        ));
-    }
-    Ok(tail(&combined, 2000))
-}
-
-#[cfg(any(target_os = "macos", target_os = "windows"))]
-fn tail(s: &str, max: usize) -> String {
-    if s.len() <= max {
-        return s.to_string();
-    }
-    let mut start = s.len() - max;
-    while !s.is_char_boundary(start) {
-        start += 1;
-    }
-    format!("…{}", &s[start..])
+    Err(format!(
+        "Could not open a terminal. Install a supported terminal (x-terminal-emulator, GNOME Terminal, Konsole, XFCE Terminal, or xterm).\n{}",
+        failures.join("\n")
+    ))
 }

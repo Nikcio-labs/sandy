@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { emit } from "@tauri-apps/api/event";
 import type { SetupStatus } from "../../lib/sandbox";
-import { checkSetup, closeSplash, invalidateSetup, revealMain } from "../../lib/sandbox";
-import { isSetupComplete } from "../../features/setup/setupSteps";
+import { checkSetup, closeSplash, revealMain } from "../../lib/sandbox";import { isSetupComplete } from "../../features/setup/setupSteps";
 import SetupWizard from "../../features/setup/components/SetupWizard";
 import logo from "../../assets/logo.png";
 import "./SetupWindow.css";
@@ -78,12 +77,9 @@ export default function SetupWindow() {
     const registered = window.onFocusChanged(({ payload: focused }) => {
       if (!focused || document.visibilityState !== "visible") return;
       setHandedOff(false);
-      // Time has passed since the last verdict (first run, or the user ran
-      // setup commands themselves); the cache must not answer.
-      void invalidateSetup()
-        .catch(() => {})
-        .then(() => checkSetup())
-        .then(decide);
+      // Time has passed since the last verdict (the user may have run setup
+      // commands themselves); always re-check on focus.
+      void checkSetup().then(decide);
     });
     registered
       .then((stop) => {

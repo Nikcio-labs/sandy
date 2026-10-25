@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ConnectionInfo, SandboxInfo, SetupStatus } from "../../../lib/sandbox";
-import { connectionInfo, invalidateSetup, setupSsh } from "../../../lib/sandbox";
+import { connectionInfo, setupSsh } from "../../../lib/sandbox";
 import { stateKind } from "../../../common/lib/sandboxState";
 import Icon from "../../../common/components/Icon";
 import { copyText } from "../../../common/lib/clipboard";
@@ -102,12 +102,7 @@ export default function ConnectDialog({
     setBusy(configure ? "setup" : "check");
     setFeedback(null);
     try {
-      if (configure) {
-        await setupSsh();
-        // The SSH action may have changed the verdict; the cached boot-time
-        // status must not answer the follow-up check.
-        await invalidateSetup();
-      }
+      if (configure) await setupSsh();
       const next = await onCheckSetup();
       const ready = next?.ssh_set_up ?? null;
       setSshReady(ready);

@@ -39,6 +39,13 @@
   transition: width 250ms var(--out);
 }
 
+/* Progress label used with a .progress-track bar (update download). */
+.setup-progress-label {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .eyebrow {
   display: block;
   font: 600 10px var(--body);
