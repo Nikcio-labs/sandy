@@ -101,8 +101,53 @@
   .viewtabs .vt:active { transform: scale(0.98); }
   .viewtabs .vtpill { position: absolute; z-index: 1; top: 3px; bottom: 3px; background: #fff; border-radius: 9px; box-shadow: 0 1px 4px rgba(23,30,66,0.1); transition: left 220ms var(--ease-in-out), width 220ms var(--ease-in-out); }
 
+  /* Home action cards */
+  .homeactions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .hact {
+    display: flex; align-items: center; gap: 13px; text-align: left; font: inherit; cursor: pointer;
+    border: 1px solid var(--border); border-radius: var(--radius-card); padding: 15px 16px;
+    background: var(--surface); color: var(--ink); position: relative; min-width: 0;
+    transition: transform 160ms var(--ease-out), border-color var(--dur-fast) ease, box-shadow 160ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .hact:hover { transform: translateY(-2px); border-color: #c9cff0; box-shadow: 0 8px 24px rgba(23, 30, 66, 0.08); }
+  }
+  .hact:active { transform: scale(0.98); }
+  .hact:focus-visible { outline: 2px solid #a49bff; outline-offset: 2px; }
+  .hact .hicon {
+    width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: none;
+  }
+  .hact .hicon svg { width: 20px; height: 20px; }
+  .hact.featured { background: linear-gradient(135deg, #7b6cff, #5b4bf5 65%, #4f3ee8); border-color: transparent; color: #fff; }
+  .hact.featured .hicon { background: rgba(255, 255, 255, 0.16); color: #fff; }
+  .hact.featured .hsub { color: rgba(255, 255, 255, 0.78); }
+  .hact.blue .hicon { background: #e3f0ff; color: #1f6fb8; }
+  .hact.dust .hicon { background: #fdf3e2; color: #c97f1b; }
+  .htitle { white-space: nowrap; }
+  .htxt { display: block; min-width: 0; }
+  .hact .htxt { min-width: 0; flex: 1; }
+  .hact .htitle { font-family: var(--font-display); font-weight: 650; font-size: 14.5px; letter-spacing: -0.2px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hact .hsub { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Narrow columns (demo inspector layout): tiles become vertical launcher
+     cards — icon above a centered title, no subtitle or arrow. */
+  @container (max-width: 620px) {
+    .hact { flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 16px 12px 14px; }
+    .hact .hsub, .hact .harrow { display: none; }
+    .hact .htitle { white-space: normal; overflow: visible; text-overflow: clip; font-size: 13.5px; }
+  }
+  .hact .harrow {
+    margin-left: auto; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    background: #f1f3fa; color: #55679e; transition: transform 160ms var(--ease-out);
+  }
+  .hact .harrow svg { width: 13px; height: 13px; }
+  @media (hover: hover) and (pointer: fine) {
+    .hact:hover .harrow { transform: translateX(2px); }
+    .hact.featured:hover .harrow { background: rgba(255,255,255,0.2); color: #fff; }
+  }
+
   /* Inspector column */
   .withinspector { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 16px; align-items: start; }
+  .withinspector > div:first-child { container-type: inline-size; }
   .inspector {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
     overflow: hidden;
@@ -227,9 +272,10 @@
   .pagehead h1 { font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.4px; margin: 0; }
   .pagehead .sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
 
-  .listcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
+  .listcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); }
   .listhead {
     display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--hairline);
+    border-radius: 15px 15px 0 0;
   }
   .listhead h2 { font-size: 14.5px; font-weight: 650; margin: 0; }
   .listhead .count { color: var(--faint); font-size: 12.5px; }
@@ -247,7 +293,8 @@
     padding: 13px 16px; border-bottom: 1px solid var(--hairline); position: relative;
     transition: background var(--dur-fast) ease, opacity var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out);
   }
-  .row:last-child { border-bottom: 0; }
+  .row:last-child { border-bottom: 0; border-radius: 0 0 15px 15px; }
+  .skeleton:last-child { border-radius: 0 0 15px 15px; }
   .row:hover { background: #f9faff; }
   .row.selected { background: #f6f5ff; box-shadow: inset 3px 0 0 var(--primary); }
   @media (hover: hover) and (pointer: fine) {
@@ -561,9 +608,37 @@
             </div>
 
             <div class="withinspector">
-              <div class="listcard">
-                <div class="listhead" style="display:none"></div>
-                <div class="rows" id="rows"><!-- rows injected --></div>
+              <div>
+                <div class="homeactions" id="homeActions">
+                  <button class="hact featured" id="hactCreate">
+                    <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span>
+                    <span class="htxt">
+                      <span class="htitle">Create sandbox</span>
+                      <span class="hsub">Spin up a fresh environment</span>
+                    </span>
+                    <span class="harrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                  </button>
+                  <button class="hact blue" id="hactTemplate">
+                    <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>
+                    <span class="htxt">
+                      <span class="htitle">From template</span>
+                      <span class="hsub">Launch a saved setup</span>
+                    </span>
+                    <span class="harrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                  </button>
+                  <button class="hact dust" id="hactLearn">
+                    <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.7.3-.9.7-.9 1.7M12 16.5v.5"/></svg></span>
+                    <span class="htxt">
+                      <span class="htitle">Learn more</span>
+                      <span class="hsub">What sandboxes can do</span>
+                    </span>
+                    <span class="harrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                  </button>
+                </div>
+                <div class="listcard">
+                  <div class="listhead" style="display:none"></div>
+                  <div class="rows" id="rows"><!-- rows injected --></div>
+                </div>
               </div>
 
               <aside class="inspector" id="inspector">
@@ -1016,6 +1091,7 @@ command: sh</pre>
       cross(() => {
         h1.textContent = view === "home" ? "Welcome back" : "Your sandboxes";
         document.getElementById("winTitle").textContent = view === "home" ? "Home" : "Sandboxes";
+        document.getElementById("homeActions").style.display = view === "home" ? "" : "none";
         syncSubtitle();
       });
     }));
@@ -1109,6 +1185,14 @@ command: sh</pre>
   }
   document.getElementById("toastOk").addEventListener("click", () => toast("ok", "python-lab started"));
   document.getElementById("toastErr").addEventListener("click", () => toast("err", "Couldn't reach the CLI"));
+
+  /* ---------- Home action cards ---------- */
+  const hactCreate = document.getElementById("hactCreate");
+  if (hactCreate) {
+    hactCreate.addEventListener("click", () => toast("ok", "Opening the create wizard"));
+    document.getElementById("hactTemplate").addEventListener("click", () => toast("ok", "Opening templates"));
+    document.getElementById("hactLearn").addEventListener("click", () => toast("ok", "Opening the guide"));
+  }
 
   /* ---------- Tabs: clip-path color morph ---------- */
   const tabs = document.getElementById("tabs");
