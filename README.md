@@ -39,8 +39,6 @@ pnpm tauri dev    # run in development
 pnpm tauri build  # produce installers
 ```
 
-Packages are pinned exactly and installs reject anything published in the last 24 hours (`pnpm-workspace.yaml`) as supply-chain protection.
-
 ### Windows: `link.exe` errors
 
 If `pnpm tauri dev` on Windows fails with `link: extra operand '…'`, the wrong `link.exe` was found on your PATH — Git Bash ships a Unix `link` tool with the same name as the MSVC linker. Build from a developer shell instead so the MSVC toolchain comes first:
