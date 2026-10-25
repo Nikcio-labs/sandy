@@ -16,7 +16,7 @@ A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with
 
 ## Installing Sandy
 
-Download the installer for your platform from the [releases page](https://github.com/nikcio/sandy/releases):
+Download the installer for your platform from the [releases page](https://github.com/Nikcio-labs/sandy/releases):
 
 | Platform | File |
 | -------- | ---- |
@@ -24,7 +24,7 @@ Download the installer for your platform from the [releases page](https://github
 | Windows | `.msi` or `.exe` |
 | Linux | `.AppImage` or `.deb` |
 
-[Releases page](https://github.com/nikcio/sandy/releases)
+[Releases page](https://github.com/Nikcio-labs/sandy/releases)
 
 ## Building from source
 
