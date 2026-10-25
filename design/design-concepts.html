@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sandy — design iteration concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ============ Concept-page chrome (not part of the app proposal) ============ */
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #eceef6;
+    color: #1c2247;
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .doc { max-width: 1120px; margin: 0 auto; padding: 48px 32px 120px; }
+  .doc > header { margin-bottom: 40px; }
+  .doc h1 {
+    font-family: "Gabarito", system-ui, sans-serif;
+    font-size: 34px; letter-spacing: -0.5px; margin: 0 0 6px;
+  }
+  .doc > header p { margin: 0; color: #5d6b96; max-width: 62ch; }
+  .doc nav { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .doc nav a {
+    text-decoration: none; color: #3c3480; background: #fff;
+    border: 1px solid #dfe3f2; border-radius: 999px; padding: 6px 14px; font-size: 13.5px;
+  }
+  .doc nav a:hover { border-color: #b9b2f2; }
+  .doc section { margin-top: 56px; }
+  .doc h2 {
+    font-family: "Gabarito", system-ui, sans-serif;
+    font-size: 22px; letter-spacing: -0.3px; margin: 0 0 4px;
+  }
+  .doc section > p { color: #5d6b96; margin: 0 0 20px; max-width: 70ch; }
+  .note {
+    font-size: 13px; color: #5d6b96; background: #fff; border: 1px solid #dfe3f2;
+    border-radius: 10px; padding: 10px 14px; margin: 14px 0 0; max-width: 70ch;
+  }
+  .note b { color: #1c2247; }
+
+  /* Framed viewport for in-app surfaces */
+  .frame {
+    background: #fff; border: 1px solid #dfe3f2; border-radius: 16px;
+    overflow: hidden; box-shadow: 0 2px 6px rgba(23, 30, 66, 0.05), 0 20px 48px rgba(23, 30, 66, 0.07);
+  }
+  .frame-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid #eef0f8; background: #fafbfe;
+  }
+  .frame-bar span { font-size: 12.5px; color: #7a87ad; }
+  .replay {
+    font: inherit; font-size: 13px; color: #3c3480; background: #fff;
+    border: 1px solid #d5daf0; border-radius: 8px; padding: 5px 12px; cursor: pointer;
+  }
+  .replay:hover { background: #f2f1ff; }
+  .replay:active { transform: scale(0.97); }
+
+  /* ============ Proposed design tokens ============ */
+  .proposal {
+    --bg: #f7f8fd;
+    --surface: #ffffff;
+    --ink: #141a3d;
+    --muted: #5d6b96;
+    --faint: #8b97b8;
+    --primary: #5b4bf5;
+    --primary-deep: #4536d6;
+    --primary-soft: #efedff;
+    --border: #e3e7f4;
+    --hairline: #eef0f8;
+    --green: #0a8a4a;
+    --green-dot: #2fc274;
+    --green-soft: #e7f8ee;
+    --red: #c73a45;
+    --red-soft: #fdf0f1;
+
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-spring: cubic-bezier(0.34, 1.4, 0.44, 1);
+
+    --dur-fast: 150ms;
+    --dur-ui: 200ms;
+    --dur-view: 280ms;
+
+    --font-display: "Gabarito", -apple-system, "Segoe UI", sans-serif;
+    --radius-card: 16px;
+    --radius-control: 10px;
+  }
+
+  /* ============ Token swatches & type specimen ============ */
+  .tokens { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .swatch {
+    background: #fff; border: 1px solid #dfe3f2; border-radius: 12px; padding: 12px;
+  }
+  .swatch .chip { height: 44px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(23,30,66,0.08); }
+  .swatch .name { font-size: 13px; font-weight: 600; }
+  .swatch .hex { font-size: 12px; color: #7a87ad; }
+  .specimen { background: #fff; border: 1px solid #dfe3f2; border-radius: 12px; padding: 24px; }
+  .specimen .display { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: -0.4px; margin: 0 0 2px; }
+  .specimen .ui { font-size: 14.5px; color: #33406e; margin: 0 0 2px; }
+  .specimen .caption { font-size: 12.5px; color: #8b97b8; }
+  .specimen code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; background: #f4f5fb; border: 1px solid #e8eaf4; padding: 2px 7px; border-radius: 6px; color: #3c3480; }
+  .specimen .role { font-size: 11.5px; text-transform: none; color: #8b97b8; margin: 16px 0 3px; letter-spacing: 0; }
+
+  /* ============ Dashboard concept ============ */
+  .app {
+    display: grid; grid-template-columns: 196px 1fr; min-height: 520px;
+    background: var(--bg); color: var(--ink); font-size: 14px;
+  }
+  .app .rail {
+    border-right: 1px solid var(--hairline); padding: 18px 12px; display: flex; flex-direction: column; gap: 2px;
+  }
+  .app .brand { font-family: var(--font-display); font-weight: 700; font-size: 16.5px; letter-spacing: -0.2px; padding: 4px 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .app .brand i {
+    width: 22px; height: 22px; border-radius: 7px; flex: none;
+    background: linear-gradient(135deg, #7b6cff, var(--primary-deep));
+  }
+  .rail a {
+    display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--muted);
+    padding: 7px 10px; border-radius: 8px; font-weight: 500; font-size: 13.5px;
+  }
+  .rail a svg { width: 16px; height: 16px; }
+  .rail a.active { background: var(--primary-soft); color: var(--primary-deep); }
+  .rail .spacer { flex: 1; }
+
+  .app main { padding: 26px 30px 30px; min-width: 0; }
+  .pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .pagehead h1 { font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.4px; margin: 0; }
+  .pagehead .sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+
+  .listcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
+  .listhead {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--hairline);
+  }
+  .listhead h2 { font-size: 14.5px; font-weight: 650; margin: 0; }
+  .listhead .count { color: var(--faint); font-size: 12.5px; }
+  .search {
+    margin-left: auto; display: flex; align-items: center; gap: 7px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; color: var(--faint); font-size: 13px;
+    background: #fbfcfe;
+  }
+  .search svg { width: 14px; height: 14px; }
+
+  /* Rows */
+  .rows { position: relative; }
+  .row {
+    display: grid; grid-template-columns: 44px 1fr auto auto; align-items: center; gap: 14px;
+    padding: 13px 16px; border-bottom: 1px solid var(--hairline); position: relative;
+    transition: background var(--dur-fast) ease, opacity var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row:hover { background: #f9faff; }
+  @media (hover: hover) and (pointer: fine) {
+    .row .rowmenu { opacity: 0; }
+    .row:hover .rowmenu, .row .rowmenu[data-open="true"] { opacity: 1; }
+  }
+  .row.enter { opacity: 0; transform: translateY(8px); }
+
+  .avatar {
+    width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; color: #4b3fd6;
+  }
+  .avatar svg { width: 20px; height: 20px; }
+  .avatar.p0 { background: linear-gradient(135deg, #ece7ff, #ddd4ff); }
+  .avatar.p1 { background: linear-gradient(135deg, #dff0ff, #c9e4ff); color: #1f6fb8; }
+  .avatar.p2 { background: linear-gradient(135deg, #e2f6ea, #cdeedd); color: #14804a; }
+
+  .rowname { min-width: 0; }
+  .rowname .name { font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: -0.2px; }
+  .rowname .meta { display: flex; align-items: center; gap: 8px; margin-top: 2px; color: var(--muted); font-size: 12.5px; min-width: 0; }
+  .rowname .meta .path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agent-tag {
+    flex: none; font-size: 11px; font-weight: 600; color: #55679e;
+    background: #f1f3fa; border-radius: 999px; padding: 1.5px 8px;
+  }
+
+  /* State pill with breathing dot */
+  .state {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
+    border-radius: 999px; padding: 4px 11px 4px 9px; white-space: nowrap;
+    transition: color var(--dur-ui) ease, background var(--dur-ui) ease, box-shadow var(--dur-ui) ease;
+  }
+  .state .dot { position: relative; width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .state .dot::before, .state .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; }
+  .state.stopped, .state.inactive { background: #f0f2f8; color: #61729f; }
+  .state.stopped .dot, .state.inactive .dot { background: #9aa8c8; }
+  .state.running { background: var(--green-soft); color: var(--green); box-shadow: inset 0 0 0 1px #d2f0de; }
+  .state.running .dot { background: var(--green-dot); }
+  .state.running .dot::after { background: var(--green-dot); animation: breathe 2.4s var(--ease-out) infinite; }
+  @keyframes breathe {
+    0% { transform: scale(1); opacity: 0.7; }
+    70%, 100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  .rowactions { display: flex; align-items: center; gap: 8px; }
+
+  /* Menu (origin-aware popover) */
+  .menuwrap { position: relative; }
+  .rowmenu {
+    width: 32px; height: 32px; border-radius: 8px; border: 0; background: transparent; color: var(--faint);
+    display: grid; place-items: center; cursor: pointer;
+    transition: opacity var(--dur-fast) ease, background var(--dur-fast) ease, transform 120ms var(--ease-out);
+  }
+  .rowmenu:hover { background: #eef0fa; color: var(--ink); }
+  .rowmenu:active { transform: scale(0.94); }
+  .rowmenu svg { width: 16px; height: 16px; }
+  .menu {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 168px;
+    background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 5px;
+    box-shadow: 0 4px 10px rgba(23, 30, 66, 0.06), 0 16px 40px rgba(23, 30, 66, 0.14);
+    transform-origin: top right;
+    transform: scale(0.95); opacity: 0; pointer-events: none;
+    transition: transform 180ms var(--ease-out), opacity 140ms ease-out;
+  }
+  .menu[data-open="true"] { transform: scale(1); opacity: 1; pointer-events: auto; }
+  .menu button {
+    display: flex; align-items: center; gap: 9px; width: 100%; border: 0; background: none;
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--ink);
+    padding: 7px 9px; border-radius: 8px; cursor: pointer; text-align: left;
+  }
+  .menu button:hover { background: #f3f4fb; }
+  .menu button.danger { color: var(--red); }
+  .menu button.danger:hover { background: var(--red-soft); }
+  .menu hr { border: 0; border-top: 1px solid var(--hairline); margin: 4px 6px; }
+  .menu svg { width: 15px; height: 15px; color: var(--faint); }
+  .menu button.danger svg { color: var(--red); }
+
+  /* ============ Buttons ============ */
+  .btn {
+    font: inherit; font-size: 13.5px; font-weight: 600; border-radius: var(--radius-control);
+    min-height: 34px; padding: 6px 14px; cursor: pointer; border: 1px solid transparent;
+    transition: transform 160ms var(--ease-out), background var(--dur-fast) ease, border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+    position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible { outline: 2px solid #a49bff; outline-offset: 2px; }
+  .btn.primary { background: var(--primary); color: #fff; }
+  .btn.primary:hover { background: var(--primary-deep); }
+  .btn.ghost { background: #fff; color: var(--ink); border-color: var(--border); }
+  .btn.ghost:hover { background: #f5f6fd; border-color: #c9cff0; }
+  .btn.small { min-height: 30px; padding: 4px 12px; font-size: 12.5px; }
+
+  /* Success morph with blur crossfade */
+  .btn .swap { display: inline-flex; align-items: center; gap: 7px; transition: filter 200ms ease, opacity 200ms ease, transform 200ms var(--ease-out); }
+  .btn .swap.hidden { position: absolute; inset: 0; justify-content: center; opacity: 0; filter: blur(3px); transform: scale(0.94); }
+  .btn.morphing .swap.visible { opacity: 0; filter: blur(3px); transform: scale(1.04); }
+  .btn .spin {
+    width: 13px; height: 13px; border-radius: 50%; flex: none;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+    animation: rot 0.7s linear infinite;
+  }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  /* ============ Skeleton loading ============ */
+  .skeleton {
+    display: grid; grid-template-columns: 44px 1fr auto auto; gap: 14px; align-items: center;
+    padding: 13px 16px; border-bottom: 1px solid var(--hairline);
+  }
+  .skeleton:last-child { border-bottom: 0; }
+  .bone { border-radius: 7px; background: linear-gradient(100deg, #eef0f7 40%, #f8f9fd 50%, #eef0f7 60%); background-size: 300% 100%; animation: shimmer 1.3s ease infinite; }
+  @keyframes shimmer { to { background-position: -180% 0; } }
+  .skeleton .b-av { width: 44px; height: 44px; border-radius: 13px; }
+  .skeleton .b-line { height: 11px; }
+  .skeleton .b-line.w60 { width: 60%; }
+  .skeleton .b-line.w35 { width: 35%; margin-top: 8px; }
+  .skeleton .b-pill { width: 74px; height: 25px; border-radius: 999px; }
+
+  /* Row flash when state flips to running */
+  .row.flash { animation: flash 900ms var(--ease-out); }
+  @keyframes flash {
+    0% { background: var(--green-soft); }
+    100% { background: transparent; }
+  }
+  .row .state .spin-dark { border-color: #cdd5ea; border-top-color: #7d8cb4; width: 10px; height: 10px; border-width: 2px; }
+
+  /* ============ Motion lab ============ */
+  .lab { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .labcard { background: #fff; border: 1px solid #dfe3f2; border-radius: 14px; padding: 18px; }
+  .labcard h3 { margin: 0 0 2px; font-size: 15px; font-weight: 650; font-family: var(--font-display); letter-spacing: -0.2px; }
+  .labcard > p { margin: 0 0 14px; font-size: 13px; color: #7a87ad; }
+  .labrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 40px; }
+
+  /* Dialog demo */
+  .stage {
+    position: relative; border-radius: 12px; background: var(--bg); border: 1px solid var(--hairline);
+    height: 210px; overflow: hidden; display: grid; place-items: center;
+  }
+  .scrim {
+    position: absolute; inset: 0; background: rgba(20, 26, 61, 0.38); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity var(--dur-view) ease;
+  }
+  .modal {
+    position: relative; z-index: 2; width: min(320px, 84%); background: #fff; border-radius: 16px;
+    padding: 18px; box-shadow: 0 25px 70px rgba(20, 26, 61, 0.28);
+    transform: scale(0.95); opacity: 0; pointer-events: none;
+    transition: transform var(--dur-view) var(--ease-out), opacity var(--dur-view) ease-out;
+  }
+  .stage[data-open="true"] .scrim { opacity: 1; pointer-events: auto; }
+  .stage[data-open="true"] .modal { transform: scale(1); opacity: 1; pointer-events: auto; }
+  .modal h4 { font-family: var(--font-display); margin: 0 0 4px; font-size: 16px; letter-spacing: -0.2px; }
+  .modal p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* Toast demo */
+  .toasts {
+    position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 3;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 550; color: var(--ink);
+    box-shadow: 0 4px 10px rgba(23,30,66,0.06), 0 14px 36px rgba(23,30,66,0.13); width: 250px;
+    transition: transform 320ms var(--ease-spring), opacity 260ms ease;
+  }
+  .toast.err { border-color: #f3d4d8; }
+  .toast .tico { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; flex: none; }
+  .toast.ok .tico { background: var(--green-soft); color: var(--green); }
+  .toast.err .tico { background: var(--red-soft); color: var(--red); }
+  .toast .tico svg { width: 13px; height: 13px; }
+  .toast[data-state="out"] { transform: translateY(12px) scale(0.97); opacity: 0; }
+
+  /* Tabs with clip-path color morph */
+  .tabs { position: relative; display: inline-flex; background: #f0f2f8; border-radius: 10px; padding: 3px; }
+  .tabs .tab { position: relative; z-index: 2; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: #61729f; padding: 6px 14px; cursor: pointer; border-radius: 8px; }
+  .tabs .tab:active { transform: scale(0.97); }
+  .tabs .ghosttrack { position: absolute; inset: 3px; z-index: 1; display: flex; }
+  .tabs .ghosttrack .tab { color: var(--primary-deep); background: #fff; box-shadow: 0 1px 4px rgba(23,30,66,0.1); cursor: default; border-radius: 8px; }
+  .tabs .ghostclip { position: absolute; inset: 0; transition: clip-path var(--dur-ui) var(--ease-in-out); }
+
+  /* Tooltip: first delayed, siblings instant */
+  .tiprow { display: flex; gap: 8px; }
+  .tip { position: relative; }
+  .tip .bubble {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px) scale(0.96);
+    transform-origin: bottom center;
+    background: #1c2247; color: #fff; font-size: 12px; font-weight: 550; white-space: nowrap;
+    padding: 5px 9px; border-radius: 7px; opacity: 0; pointer-events: none;
+    transition: opacity 125ms ease-out, transform 125ms var(--ease-out);
+  }
+  .tip .bubble::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -4px; border: 4px solid transparent; border-top-color: #1c2247; }
+  .tip[data-show="true"] .bubble { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  .tip[data-instant="true"] .bubble { transition-duration: 0ms; }
+  .ibtn {
+    width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: #fff;
+    display: grid; place-items: center; cursor: pointer; color: var(--muted);
+    transition: transform 120ms var(--ease-out), background var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  }
+  .ibtn:hover { background: #f5f6fd; color: var(--ink); }
+  .ibtn:active { transform: scale(0.94); }
+  .ibtn svg { width: 16px; height: 16px; }
+
+  /* Hold to delete */
+  .hold {
+    position: relative; overflow: hidden; border: 1px solid var(--border); background: #fff;
+    color: var(--red); font: inherit; font-size: 13.5px; font-weight: 600;
+    border-radius: var(--radius-control); padding: 8px 16px; cursor: pointer; min-width: 150px;
+    transition: transform 160ms var(--ease-out), color var(--dur-fast) ease;
+  }
+  .hold:active { transform: scale(0.97); }
+  .hold .fill {
+    position: absolute; inset: 0; background: #f6dfe1; z-index: 0;
+    clip-path: inset(0 100% 0 0); transition: clip-path 200ms var(--ease-out);
+  }
+  .hold.holding { transition: transform 160ms var(--ease-out), color 2000ms linear; color: #8f2b33; }
+  .hold.holding .fill { clip-path: inset(0 0 0 0); transition: clip-path 2000ms linear; }
+  .hold span { position: relative; z-index: 1; }
+  .hold.done { border-color: #f3d4d8; background: var(--red-soft); pointer-events: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .state.running .dot::after { animation: none; opacity: 0; }
+    .skeleton .bone { animation: none; }
+    .toast, .modal, .menu, .row, .tabs .ghostclip, .tip .bubble, .hold .fill { transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="doc proposal">
+
+  <header>
+    <h1>Sandy — design iteration</h1>
+    <p>Interactive concepts for the next pass. Everything here is live: replay the loading state, press the buttons, open the menus and dialogs. The proposal keeps Sandy's violet identity and shell layout, and invests in <b>feedback motion</b> — the places where the interface answers what you just did.</p>
+    <nav>
+      <a href="#direction">Direction &amp; tokens</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#motion">Motion lab</a>
+    </nav>
+  </header>
+
+  <!-- ================= DIRECTION ================= -->
+  <section id="direction">
+    <h2>Direction &amp; tokens</h2>
+    <p>One compact token layer replaces the scattered hexes. Violet stays the brand; gradients shrink to a single job (the featured surface). Type gets a personality: <b>Gabarito</b> for display and row names — rounded and warm for a non-technical audience — with the system sans for UI text and mono strictly for commands and YAML.</p>
+
+    <div class="tokens">
+      <div class="swatch"><div class="chip" style="background:#f7f8fd"></div><div class="name">Paper</div><div class="hex">#f7f8fd · app background</div></div>
+      <div class="swatch"><div class="chip" style="background:#141a3d"></div><div class="name">Ink</div><div class="hex">#141a3d · text</div></div>
+      <div class="swatch"><div class="chip" style="background:#5b4bf5"></div><div class="name">Brand</div><div class="hex">#5b4bf5 · primary actions</div></div>
+      <div class="swatch"><div class="chip" style="background:#efedff"></div><div class="name">Brand soft</div><div class="hex">#efedff · selection, nav</div></div>
+      <div class="swatch"><div class="chip" style="background:#2fc274"></div><div class="name">Signal</div><div class="hex">#2fc274 · running state</div></div>
+      <div class="swatch"><div class="chip" style="background:#e3e7f4"></div><div class="name">Hairline</div><div class="hex">#e3e7f4 · borders</div></div>
+    </div>
+
+    <div class="specimen" style="margin-top:16px">
+      <div class="role">Display — Gabarito 700, tight tracking</div>
+      <p class="display">Your sandboxes</p>
+      <div class="role">UI text — system sans</div>
+      <p class="ui">Restarting a sandbox keeps your files in place. Only unsaved work inside running tools is lost.</p>
+      <div class="role">Commands &amp; code — mono, reserved for real code only</div>
+      <p><code>sbx create --template next-kit</code></p>
+      <div class="role">Motion tokens</div>
+      <p class="caption">ease-out <code style="color:#3c3480">cubic-bezier(0.23, 1, 0.32, 1)</code> for entrances · 150ms press · 200ms controls · 280ms views · reduced-motion honored everywhere</p>
+    </div>
+  </section>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section id="dashboard">
+    <h2>Dashboard</h2>
+    <p>The sandbox list is the heart of the app. In this concept: skeleton shimmer while the CLI responds, rows entering with a short stagger, a breathing dot on running sandboxes, and a start action that animates the row's state from stopped to running so the change is unmistakable.</p>
+
+    <div class="frame">
+      <div class="frame-bar">
+        <span>Dashboard · sandbox list</span>
+        <button class="replay" id="replayList">↺ Replay load</button>
+      </div>
+      <div class="app">
+        <aside class="rail">
+          <div class="brand"><i></i>Sandy</div>
+          <a href="#" onclick="return false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+            Home</a>
+          <a href="#" class="active" onclick="return false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg>
+            Sandboxes</a>
+          <a href="#" onclick="return false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+            Templates</a>
+          <a href="#" onclick="return false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4.4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4.4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>
+            Settings</a>
+          <div class="spacer"></div>
+        </aside>
+
+        <main>
+          <div class="pagehead">
+            <div>
+              <h1>Your sandboxes</h1>
+              <div class="sub">2 running · 1 stopped · stored locally on this Mac</div>
+            </div>
+            <button class="btn primary" id="createBtn">
+              <span class="swap visible">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                Create sandbox
+              </span>
+              <span class="swap hidden" data-swap>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+                Created
+              </span>
+            </button>
+          </div>
+
+          <div class="listcard">
+            <div class="listhead">
+              <h2>All sandboxes</h2>
+              <span class="count">3</span>
+              <div class="search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                Search sandboxes…
+              </div>
+            </div>
+            <div class="rows" id="rows"><!-- rows injected --></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <p class="note"><b>Try:</b> press “Replay load” to see skeletons → staggered reveal. Press “Start” on the stopped row to watch the state pill morph (spinner → green, row flashes once). Hover a row to reveal its ⋯ menu, then open it — it scales from its trigger, not from center.</p>
+  </section>
+
+  <!-- ================= MOTION LAB ================= -->
+  <section id="motion">
+    <h2>Motion lab</h2>
+    <p>Isolated interactions, each following the framework: enter with ease-out under 300ms, nothing animates from scale(0), press feedback everywhere, and destructive actions made deliberate.</p>
+
+    <div class="lab">
+
+      <div class="labcard">
+        <h3>Buttons answer</h3>
+        <p>Press scales to 0.97. Confirmation morphs in place with a blur crossfade instead of a jarring label swap.</p>
+        <div class="labrow">
+          <button class="btn primary" id="morphBtn">
+            <span class="swap visible">Launch template</span>
+            <span class="swap hidden" data-swap>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+              Launched
+            </span>
+          </button>
+          <button class="btn ghost">Stop</button>
+          <button class="btn ghost">Restart</button>
+        </div>
+      </div>
+
+      <div class="labcard">
+        <h3>Dialogs arrive, don't pop</h3>
+        <p>Modals stay center-anchored but enter from scale(0.95) with a fading backdrop — never from nothing.</p>
+        <div class="stage" id="stage">
+          <div class="scrim"></div>
+          <div class="modal">
+            <h4>Connect to sandbox</h4>
+            <p>Sandy will open a terminal attached to <b>next-portfolio</b>.</p>
+            <div class="actions">
+              <button class="btn ghost small" id="closeModal">Cancel</button>
+              <button class="btn primary small" id="openModal2">Open terminal</button>
+            </div>
+          </div>
+          <button class="btn primary" id="openModal">Open dialog</button>
+        </div>
+      </div>
+
+      <div class="labcard">
+        <h3>Toasts stack and leave politely</h3>
+        <p>Enter and exit share one direction (bottom), transitions — not keyframes — so rapid-fire actions never restart mid-flight.</p>
+        <div class="stage" id="toastStage">
+          <div class="labrow" style="justify-content:center">
+            <button class="btn primary small" id="toastOk">Sandbox started</button>
+            <button class="btn ghost small" id="toastErr">Sync failed</button>
+          </div>
+          <div class="toasts" id="toasts"></div>
+        </div>
+      </div>
+
+      <div class="labcard">
+        <h3>Tabs morph color as one surface</h3>
+        <p>A clipped duplicate list slides the white pill between tabs — one continuous move instead of three colors racing each other.</p>
+        <div class="tabs" id="tabs">
+          <div class="ghosttrack" id="ghostTrack"><button class="tab">Overview</button><button class="tab">Files</button><button class="tab">Logs</button></div>
+          <button class="tab" data-active>Overview</button>
+          <button class="tab">Files</button>
+          <button class="tab">Logs</button>
+        </div>
+      </div>
+
+      <div class="labcard">
+        <h3>Tooltips warm up, then keep pace</h3>
+        <p>First tooltip waits 500ms to avoid accidents; siblings after it appear instantly — the toolbar feels faster.</p>
+        <div class="tiprow" id="tips">
+          <div class="tip"><button class="ibtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><span class="bubble">Rename</span></div>
+          <div class="tip"><button class="ibtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><span class="bubble">Copy path</span></div>
+          <div class="tip"><button class="ibtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="bubble">Delete</span></div>
+        </div>
+      </div>
+
+      <div class="labcard">
+        <h3>Hold to delete</h3>
+        <p>Deleting a template is deliberate: hold for two seconds while red fills the button. Release early and it snaps back fast — slow where you decide, fast where the system responds.</p>
+        <div class="labrow">
+          <button class="hold" id="holdBtn"><i class="fill"></i><span>Hold to delete</span></button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Dashboard: rows, skeletons, stagger ---------- */
+  const rows = document.getElementById("rows");
+  const DATA = [
+    { name: "next-portfolio", agent: "Claude Code", path: "~/code/portfolio", state: "running", pal: "p0",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg>' },
+    { name: "python-lab", agent: "Codex", path: "~/experiments/ml-notebooks", state: "running", pal: "p1",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' },
+    { name: "docs-writer", agent: "Claude Code", path: "~/writing/handbook", state: "stopped", pal: "p2",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg>' },
+  ];
+  const statePill = (s) => s === "running"
+    ? '<span class="state running"><span class="dot"></span>Running</span>'
+    : '<span class="state stopped"><span class="dot"></span>Stopped</span>';
+
+  function rowHTML(d) {
+    const action = d.state === "running"
+      ? '<button class="btn primary small">Open</button>'
+      : '<button class="btn ghost small" data-start>Start</button>';
+    return (
+      '<div class="avatar ' + d.pal + '">' + d.icon + '</div>' +
+      '<div class="rowname">' +
+        '<div class="name">' + d.name + '</div>' +
+        '<div class="meta"><span class="agent-tag">' + d.agent + '</span><span class="path">' + d.path + '</span></div>' +
+      '</div>' +
+      statePill(d.state) +
+      '<div class="rowactions">' + action +
+        '<div class="menuwrap">' +
+          '<button class="rowmenu" aria-label="Sandbox actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>' +
+          '<div class="menu">' +
+            '<button>Open terminal</button><button>View files</button><button>Restart</button>' +
+            '<hr><button class="danger">Delete sandbox</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>');
+  }
+
+  function skeletonHTML() {
+    return '<div class="skeleton"><div class="bone b-av"></div><div><div class="bone b-line w60"></div><div class="bone b-line w35" style="width:35%"></div></div><div class="bone b-pill"></div><div></div></div>';
+  }
+
+  function renderRows(withStagger) {
+    rows.innerHTML = DATA.map((d, i) => {
+      const enter = withStagger && !reduce && i < 6;
+      return '<div class="row' + (enter ? " enter" : "") + '" data-idx="' + i + '">' + rowHTML(d) + '</div>';
+    }).join("");
+    if (withStagger && !reduce) {
+      rows.querySelectorAll(".row.enter").forEach((el, i) => {
+        setTimeout(() => { el.style.opacity = ""; el.style.transform = ""; el.classList.remove("enter"); }, 40 + i * 60);
+      });
+    }
+  }
+
+  function loadSequence() {
+    rows.innerHTML = skeletonHTML() + skeletonHTML() + skeletonHTML();
+    setTimeout(() => renderRows(true), reduce ? 50 : 900);
+  }
+  document.getElementById("replayList").addEventListener("click", loadSequence);
+  loadSequence();
+
+  /* Start action: spinner in pill, then morph to running + row flash */
+  rows.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-start]");
+    if (!btn) return;
+    const row = btn.closest(".row");
+    const pill = row.querySelector(".state");
+    pill.className = "state stopped";
+    pill.innerHTML = '<span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Starting…';
+    btn.disabled = true; btn.style.opacity = 0.5;
+    setTimeout(() => {
+      pill.className = "state running";
+      pill.innerHTML = '<span class="dot"></span>Running';
+      btn.outerHTML = '<button class="btn primary small">Open</button>';
+      row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+    }, reduce ? 100 : 1100);
+  });
+
+  /* ---------- Origin-aware menus ---------- */
+  let openMenu = null;
+  rows.addEventListener("click", (e) => {
+    const trigger = e.target.closest(".rowmenu");
+    if (trigger) {
+      const menu = trigger.nextElementSibling;
+      const isOpen = menu.dataset.open === "true";
+      if (openMenu && openMenu !== menu) openMenu.dataset.open = "false";
+      menu.dataset.open = String(!isOpen);
+      openMenu = menu;
+      e.stopPropagation();
+    } else if (openMenu && !e.target.closest(".menu")) {
+      openMenu.dataset.open = "false"; openMenu = null;
+    }
+  });
+  document.addEventListener("click", () => { if (openMenu) { openMenu.dataset.open = "false"; openMenu = null; } });
+
+  /* ---------- Blur crossfade button morph ---------- */
+  function wireMorph(btn, revertAfter) {
+    let t;
+    btn.addEventListener("click", () => {
+      clearTimeout(t);
+      const [vis, hid] = btn.querySelectorAll(".swap");
+      btn.classList.add("morphing");
+      vis.classList.remove("visible"); vis.classList.add("hidden");
+      hid.classList.remove("hidden"); hid.classList.add("visible");
+      btn.classList.remove("morphing");
+      t = setTimeout(() => {
+        btn.classList.add("morphing");
+        setTimeout(() => {
+          hid.classList.remove("visible"); hid.classList.add("hidden");
+          vis.classList.remove("hidden"); vis.classList.add("visible");
+          btn.classList.remove("morphing");
+        }, 210);
+      }, revertAfter);
+    });
+  }
+  wireMorph(document.getElementById("createBtn"), 1600);
+  wireMorph(document.getElementById("morphBtn"), 1600);
+
+  /* ---------- Dialog ---------- */
+  const stage = document.getElementById("stage");
+  document.getElementById("openModal").addEventListener("click", () => stage.dataset.open = "true");
+  const closeModal = () => stage.dataset.open = "false";
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  document.getElementById("openModal2").addEventListener("click", closeModal);
+  stage.querySelector(".scrim").addEventListener("click", closeModal);
+
+  /* ---------- Toasts ---------- */
+  const toasts = document.getElementById("toasts");
+  const icons = {
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>',
+    err: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>',
+  };
+  function toast(kind, text) {
+    const el = document.createElement("div");
+    el.className = "toast " + (kind === "ok" ? "ok" : "err");
+    el.innerHTML = '<span class="tico">' + icons[kind] + '</span>' + text;
+    el.style.transform = "translateY(16px) scale(0.97)"; el.style.opacity = "0";
+    toasts.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transform = ""; el.style.opacity = "";
+    }));
+    setTimeout(() => {
+      el.dataset.state = "out";
+      setTimeout(() => el.remove(), 380);
+    }, 2600);
+    el.addEventListener("click", () => { el.dataset.state = "out"; setTimeout(() => el.remove(), 380); });
+  }
+  document.getElementById("toastOk").addEventListener("click", () => toast("ok", "python-lab started"));
+  document.getElementById("toastErr").addEventListener("click", () => toast("err", "Couldn't reach the CLI"));
+
+  /* ---------- Tabs: clip-path color morph ---------- */
+  const tabs = document.getElementById("tabs");
+  const ghost = document.getElementById("ghostTrack");
+  const tabEls = [...tabs.querySelectorAll(":scope > .tab")];
+  let active = 0;
+  function moveGhost() {
+    const t = tabEls[active];
+    ghost.style.clipPath = "inset(0 " + (tabs.offsetWidth - t.offsetLeft - t.offsetWidth) + "px 0 " + t.offsetLeft + "px)";
+  }
+  tabEls.forEach((t, i) => t.addEventListener("click", () => {
+    tabEls[active].removeAttribute("data-active");
+    active = i; tabEls[active].setAttribute("data-active", "");
+    moveGhost();
+  }));
+  addEventListener("resize", moveGhost);
+  requestAnimationFrame(moveGhost);
+
+  /* ---------- Tooltips: delay first, instant siblings ---------- */
+  const tips = [...document.querySelectorAll("#tips .tip")];
+  let lastHide = 0, showTimer = null, shown = null;
+  function hideTip(t) {
+    t.removeAttribute("data-show");
+    lastHide = performance.now();
+    shown = null;
+  }
+  tips.forEach((tip) => {
+    tip.addEventListener("mouseenter", () => {
+      if (shown === tip) return;
+      const instant = performance.now() - lastHide < 800;
+      if (instant) tip.dataset.instant = "true"; else delete tip.dataset.instant;
+      clearTimeout(showTimer);
+      showTimer = setTimeout(() => { tip.dataset.show = "true"; shown = tip; }, instant ? 0 : 500);
+    });
+    tip.addEventListener("mouseleave", () => {
+      clearTimeout(showTimer);
+      if (tip.dataset.show) hideTip(tip);
+    });
+    tip.addEventListener("click", () => { clearTimeout(showTimer); if (tip.dataset.show) hideTip(tip); });
+  });
+
+  /* ---------- Hold to delete ---------- */
+  const hold = document.getElementById("holdBtn");
+  let holdTimer = null;
+  hold.addEventListener("pointerdown", (e) => {
+    if (hold.classList.contains("done")) return;
+    hold.setPointerCapture(e.pointerId);
+    hold.classList.add("holding");
+    holdTimer = setTimeout(() => {
+      hold.classList.remove("holding");
+      hold.classList.add("done");
+      hold.querySelector("span").textContent = "Template deleted";
+      toast("err", "starter-kit deleted");
+    }, 2000);
+  });
+  const release = () => {
+    if (!hold.classList.contains("holding")) return;
+    clearTimeout(holdTimer);
+    hold.classList.remove("holding");
+  };
+  hold.addEventListener("pointerup", release);
+  hold.addEventListener("pointercancel", release);
+})();
+</script>
+</body>
+</html>
