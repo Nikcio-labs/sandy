@@ -41,6 +41,4 @@ jobs:
     with:
       tag: ${{ needs.release-please.outputs.tag_name }}
       sha: ${{ needs.release-please.outputs.sha }}
-    # Repository secrets are not visible to a called workflow unless the
-    # caller forwards them.
     secrets: inherit
