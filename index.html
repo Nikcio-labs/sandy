@@ -7,6 +7,14 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module">
+      // The preview harness (browser + mocked IPC) is opt-in per URL; the
+      // Tauri build never loads it.
+      if (new URLSearchParams(location.search).has("preview")) {
+        import("/src/preview.tsx");
+      } else {
+        import("/src/main.tsx");
+      }
+    </script>
   </body>
 </html>
