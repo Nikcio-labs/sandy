@@ -175,6 +175,7 @@ export default function ConnectDialog({
       >
         <Icon name="close" />
       </button>
+      <div className="connect-body">
       <h2 id="connect-title">Open {sandbox.name}</h2>
       <p id="connect-description">Use your native terminal or connect your editor over SSH.</p>
 
@@ -247,12 +248,6 @@ export default function ConnectDialog({
         onCopy={copy}
       />
 
-      <div className="dialogfoot">
-        <button type="button" className="btn" disabled={!!busy} onClick={close}>
-          Done
-        </button>
-      </div>
-
       <div className="connection-feedback" aria-live="polite" aria-atomic="true">
         {feedback && (
           <p className={feedback.kind} role={feedback.kind === "error" ? "alert" : "status"}>
@@ -260,6 +255,13 @@ export default function ConnectDialog({
             {feedback.text}
           </p>
         )}
+      </div>
+      </div>
+
+      <div className="dialogfoot">
+        <button type="button" className="btn" disabled={!!busy} onClick={close}>
+          Done
+        </button>
       </div>
     </dialog>
   );
