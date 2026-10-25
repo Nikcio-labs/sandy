@@ -2,6 +2,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IconName } from "./Icon";
 import Icon from "./Icon";
 import logo from "../../assets/logo.png";
+import { useAppVersion } from "../hooks/useAppVersion";
+import { useUpdateProbe } from "../hooks/useUpdateProbe";
 import "./AppShell.css";
 
 export type View = "sandboxes" | "templates" | "settings";
@@ -97,6 +99,9 @@ export function Rail({
   count: number | null;
   onNavigate: (view: View) => void;
 }) {
+  const version = useAppVersion();
+  const update = useUpdateProbe();
+
   return (
     <aside className="rail" aria-label="App navigation">
       <nav className="railnav">
@@ -120,11 +125,18 @@ export function Rail({
         })}
       </nav>
       <div className="railfoot">
-        <span>
-          <i />
-          On this computer
-        </span>
-        Local sandboxes only
+        {version && (
+          <span className="railversion">
+            v{version}
+            {update && (
+              <>
+                {" "}
+                <Icon name="update" size={13} className="railupdate" />
+                <span className="sr-only">Update available</span>
+              </>
+            )}
+          </span>
+        )}
       </div>
     </aside>
   );

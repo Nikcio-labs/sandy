@@ -134,11 +134,25 @@ const paths = {
       <path d="m12 12 9 9m-5-5 3-3m-6 0 3-3" />
     </>
   ),
+  update: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 16V8m-3.5 3.5L12 8l3.5 3.5" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;
 
-export default function Icon({ name, size = 22 }: { name: IconName; size?: number }) {
+export default function Icon({
+  name,
+  size = 22,
+  className,
+}: {
+  name: IconName;
+  size?: number;
+  className?: string;
+}) {
   return (
     <svg
       width={size}
@@ -150,7 +164,7 @@ export default function Icon({ name, size = 22 }: { name: IconName; size?: numbe
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="icon"
+      className={className ? `icon ${className}` : "icon"}
     >
       {paths[name]}
     </svg>

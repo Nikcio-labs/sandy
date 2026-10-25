@@ -4,6 +4,7 @@ import { Rail, Titlebar } from "./common/components/AppShell";
 import type { View } from "./common/components/AppShell";
 import BootSplash from "./common/components/BootSplash";
 import { useSetupStatus } from "./common/hooks/useSetupStatus";
+import { UpdateProvider } from "./common/hooks/useUpdateProbe";
 import SandboxesPage from "./features/dashboard/components/SandboxesPage";
 import TemplatesPage from "./features/templates/components/TemplatesPage";
 import CreateDialog from "./features/create/components/CreateDialog";
@@ -72,80 +73,82 @@ export default function App() {
   }
 
   return (
-    <div className="shell">
-      <Titlebar
-        view={
-          createDialog ? (createDialog.templateId ? "edit-template" : "create") : view
-        }
-      />
-      <div className="app">
-        <Rail
-          view={view}
-          busy={busy}
-          checkingSetup={checkingSetup}
-          count={count}
-          onNavigate={navigate}
+    <UpdateProvider>
+      <div className="shell">
+        <Titlebar
+          view={
+            createDialog ? (createDialog.templateId ? "edit-template" : "create") : view
+          }
         />
-        <main className="main" id="main-content">
-          {view === "sandboxes" && (
-            <SandboxesPage
-              status={status}
-              pendingSelection={pendingSelection}
-              onPendingSelectionHandled={() => setPendingSelection(null)}
-              onGoSettings={() => setView("settings")}
-              onCreate={() => setCreateDialog({})}
-              onCheckSetup={checkSetup}
-              onCount={setCount}
-            />
-          )}
-          {view === "templates" && (
-            <TemplatesPage
-              onCreate={() => setCreateDialog({})}
-              onEdit={(templateId) => setCreateDialog({ templateId })}
-              onBusyChange={setBusy}
-              onLaunched={(sandbox) => {
-                setPendingSelection(sandbox);
-                setView("sandboxes");
-              }}
-            />
-          )}
-          <div hidden={view !== "settings"}>
-            <SettingsPage
-              status={status}
-              statusError={statusError}
-              busy={busy}
-              checkingSetup={checkingSetup}
-              setupOpen={setupOpen}
-              setupSession={setupSession}
-              active={view === "settings"}
-              onCheckSetup={checkSetup}
-              onOpenSetup={() => {
-                void openSetup().then((next) => {
-                  if (!next) return;
-                  setSetupSession((value) => value + 1);
-                  setSetupOpen(true);
-                });
-              }}
-              onFinishSetup={finishSetup}
-              onBusyChange={setBusy}
-              onStepDone={onStepDone}
-            />
-          </div>
-        </main>
+        <div className="app">
+          <Rail
+            view={view}
+            busy={busy}
+            checkingSetup={checkingSetup}
+            count={count}
+            onNavigate={navigate}
+          />
+          <main className="main" id="main-content">
+            {view === "sandboxes" && (
+              <SandboxesPage
+                status={status}
+                pendingSelection={pendingSelection}
+                onPendingSelectionHandled={() => setPendingSelection(null)}
+                onGoSettings={() => setView("settings")}
+                onCreate={() => setCreateDialog({})}
+                onCheckSetup={checkSetup}
+                onCount={setCount}
+              />
+            )}
+            {view === "templates" && (
+              <TemplatesPage
+                onCreate={() => setCreateDialog({})}
+                onEdit={(templateId) => setCreateDialog({ templateId })}
+                onBusyChange={setBusy}
+                onLaunched={(sandbox) => {
+                  setPendingSelection(sandbox);
+                  setView("sandboxes");
+                }}
+              />
+            )}
+            <div hidden={view !== "settings"}>
+              <SettingsPage
+                status={status}
+                statusError={statusError}
+                busy={busy}
+                checkingSetup={checkingSetup}
+                setupOpen={setupOpen}
+                setupSession={setupSession}
+                active={view === "settings"}
+                onCheckSetup={checkSetup}
+                onOpenSetup={() => {
+                  void openSetup().then((next) => {
+                    if (!next) return;
+                    setSetupSession((value) => value + 1);
+                    setSetupOpen(true);
+                  });
+                }}
+                onFinishSetup={finishSetup}
+                onBusyChange={setBusy}
+                onStepDone={onStepDone}
+              />
+            </div>
+          </main>
+        </div>
+        {createDialog && (
+          <CreateDialog
+            key={createDialog.templateId ?? "create"}
+            templateId={createDialog.templateId}
+            onBusyChange={setBusy}
+            onClose={() => setCreateDialog(null)}
+            onLaunched={(sandbox) => {
+              setPendingSelection(sandbox);
+              setView("sandboxes");
+              setCreateDialog(null);
+            }}
+          />
+        )}
       </div>
-      {createDialog && (
-        <CreateDialog
-          key={createDialog.templateId ?? "create"}
-          templateId={createDialog.templateId}
-          onBusyChange={setBusy}
-          onClose={() => setCreateDialog(null)}
-          onLaunched={(sandbox) => {
-            setPendingSelection(sandbox);
-            setView("sandboxes");
-            setCreateDialog(null);
-          }}
-        />
-      )}
-    </div>
+    </UpdateProvider>
   );
 }

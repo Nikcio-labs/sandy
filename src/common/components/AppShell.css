@@ -155,19 +155,18 @@
   color: var(--muted);
 }
 
-.railfoot span {
+.railversion {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 2px;
-  color: var(--ink);
+  font-size: 13px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
 }
 
-.railfoot i {
-  width: 6px;
-  height: 6px;
-  background: var(--green);
-  border-radius: 50%;
+.railupdate {
+  color: var(--brand);
+  flex-shrink: 0;
 }
 
 .main {
