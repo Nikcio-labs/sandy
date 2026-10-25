@@ -594,7 +594,7 @@
       </div>
     </div>
 
-    <p class="note"><b>Try:</b> hover the window controls — close tints red, maximize morphs to its restore glyph when clicked. Switch Home/Sandboxes to see the pill slide and the headline change. Select a different row: the inspector swaps with a soft crossfade. Press Start on a stopped row and watch row + inspector + subtitle update together.</p>
+    <p class="note"><b>Try:</b> hover the window controls — close tints red, maximize morphs to its restore glyph when clicked. Switch Home/Sandboxes to see the pill slide and the headline change. Selecting a row swaps the inspector instantly — sandbox switching is high-frequency, so it never animates. Press Start on a stopped row and watch row + inspector + subtitle update together.</p>
   </section>
 
   <!-- ================= STATES ================= -->
@@ -908,25 +908,18 @@ command: sh</pre>
 
   /* ---------- Inspector (app window) ---------- */
   const inspector = document.getElementById("inspector");
-  function syncInspector(d, animate) {
+  function syncInspector(d) {
     if (!inspector) return;
-    const apply = () => {
-      document.getElementById("insAvatar").className = "avatar " + d.pal;
-      document.getElementById("insAvatar").innerHTML = d.icon;
-      document.getElementById("insName").textContent = d.name;
-      document.getElementById("insSub").textContent = "Local sandbox · " + d.agent;
-      document.getElementById("insWs").textContent = d.path;
-      document.getElementById("insAgent").textContent = d.agent;
-      const st = document.getElementById("insState");
-      st.textContent = d.state === "running" ? "Running" : d.state === "pending" ? "Starting…" : "Stopped";
-      st.style.color = d.state === "running" ? "var(--green)" : "var(--muted)";
-      document.getElementById("insPrimary").textContent = d.state === "running" ? "Open" : "Start";
-    };
-    if (animate && !reduce) {
-      inspector.style.transition = "opacity 140ms ease, filter 140ms ease";
-      inspector.style.opacity = "0.4"; inspector.style.filter = "blur(1.5px)";
-      setTimeout(() => { apply(); inspector.style.opacity = ""; inspector.style.filter = ""; }, 140);
-    } else apply();
+    document.getElementById("insAvatar").className = "avatar " + d.pal;
+    document.getElementById("insAvatar").innerHTML = d.icon;
+    document.getElementById("insName").textContent = d.name;
+    document.getElementById("insSub").textContent = "Local sandbox · " + d.agent;
+    document.getElementById("insWs").textContent = d.path;
+    document.getElementById("insAgent").textContent = d.agent;
+    const st = document.getElementById("insState");
+    st.textContent = d.state === "running" ? "Running" : d.state === "pending" ? "Starting…" : "Stopped";
+    st.style.color = d.state === "running" ? "var(--green)" : "var(--muted)";
+    document.getElementById("insPrimary").textContent = d.state === "running" ? "Open" : "Start";
   }
   function syncSubtitle() {
     const sub = document.getElementById("winSub");
@@ -948,7 +941,7 @@ command: sh</pre>
         rows.children[selectedIdx].classList.remove("selected");
         selectedIdx = i; DATA[i].selected = true;
         rowEl.classList.add("selected");
-        syncInspector(DATA[i], true);
+        syncInspector(DATA[i]);
       }
     }
   });
@@ -964,7 +957,7 @@ command: sh</pre>
     pill.innerHTML = '<span class="spin spin-dark" style="border-radius:50%;border-style:solid"></span>Starting…';
     btn.disabled = true; btn.style.opacity = 0.5;
     DATA[i].state = "pending";
-    if (i === selectedIdx) syncInspector(DATA[i], false);
+    if (i === selectedIdx) syncInspector(DATA[i]);
     syncSubtitle();
     setTimeout(() => {
       DATA[i].state = "running";
@@ -974,7 +967,7 @@ command: sh</pre>
       pillNow.innerHTML = '<span class="dot"></span>Running';
       btn.outerHTML = '<button class="btn primary small">Open</button>';
       rowNow.classList.remove("flash"); void rowNow.offsetWidth; rowNow.classList.add("flash");
-      if (i === selectedIdx) syncInspector(DATA[i], false);
+      if (i === selectedIdx) syncInspector(DATA[i]);
       syncSubtitle();
       toast("ok", DATA[i].name + " started");
     }, reduce ? 100 : 1100);
