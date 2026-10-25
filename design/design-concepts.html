@@ -205,6 +205,204 @@
   .tplcard .tplhead { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; align-items: center; }
   .tplcard .tplactions { margin-left: 0; justify-self: end; }
 
+  /* ===== Feature-complete app window additions ===== */
+  .winframe { position: relative; }
+  .listhead .search { min-width: 150px; }
+  .listhead .search input { border: 0; outline: 0; background: none; font: inherit; font-size: 13px; color: var(--ink); width: 110px; }
+  .listhead .search input::placeholder { color: var(--faint); }
+  .listhead .refresh { margin-left: 2px; }
+  .listhead .refresh.spin svg { animation: rot 0.8s linear infinite; }
+  .searchcount { padding: 8px 16px; font-size: 12px; color: var(--faint); border-bottom: 1px solid var(--hairline); }
+  .rowerror { margin: 10px 16px; border: 1px solid #f4cdd5; background: #fff5f6; color: #ad4156; border-radius: 10px; padding: 10px 13px; font-size: 12.5px; display: flex; align-items: center; gap: 10px; }
+  .rowerror b { display: block; font-size: 12.5px; }
+  .rowerror .btn { margin-left: auto; }
+  .setupbanner {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 11px 14px;
+    background: #fdf3e2; border: 1px solid #f3dfba; border-radius: 12px; font-size: 13px; color: #8a5c14;
+  }
+  .setupbanner svg { width: 16px; height: 16px; flex: none; }
+  .setupbanner .btn { margin-left: auto; background: #fff; border-color: #ecd9b4; color: #8a5c14; }
+  .setupbanner .btn:hover { background: #fffaf0; }
+
+  /* Overlay + dialogs inside the app window */
+  .winoverlay {
+    position: absolute; inset: 0; z-index: 60; display: grid; place-items: center;
+    background: rgba(20, 26, 61, 0.38); backdrop-filter: blur(3px); border-radius: 0 0 13px 13px;
+    opacity: 0; pointer-events: none; transition: opacity var(--dur-view) ease;
+  }
+  .winoverlay[data-open="true"] { opacity: 1; pointer-events: auto; }
+  .wdialog {
+    width: min(520px, 88%); max-height: 86%; overflow: auto; background: #fff; border-radius: 16px;
+    padding: 20px 22px; box-shadow: 0 25px 70px rgba(20, 26, 61, 0.28); position: relative;
+    transform: scale(0.95); transition: transform var(--dur-view) var(--ease-out);
+  }
+  .winoverlay[data-open="true"] .wdialog { transform: scale(1); }
+  .wdialog.wide { width: min(620px, 92%); }
+  .wdialog h3 { font-family: var(--font-display); font-size: 17px; font-weight: 650; letter-spacing: -0.2px; margin: 0 0 3px; }
+  .wdialog .dsub { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+  .wdialog .dclose { position: absolute; top: 12px; right: 12px; }
+
+  /* Connection methods */
+  .methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .method {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left;
+    border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fff; cursor: pointer;
+    font: inherit; color: var(--ink); transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, transform 120ms var(--ease-out);
+  }
+  .method:active { transform: scale(0.98); }
+  .method .micon { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: #f1f3fa; color: #55679e; }
+  .method .micon svg { width: 15px; height: 15px; }
+  .method .mname { font-weight: 600; font-size: 13px; }
+  .method .mhint { font-size: 11.5px; color: var(--faint); }
+  .method[aria-pressed="true"] { border-color: #a99bff; background: #f6f4ff; box-shadow: inset 0 0 0 1px #a99bff; }
+  .method[aria-pressed="true"] .micon { background: var(--primary-soft); color: var(--primary-deep); }
+  .sshrow {
+    display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-radius: 11px; margin-bottom: 12px;
+    font-size: 13px; background: var(--green-soft); color: var(--green); border: 1px solid #d2f0de;
+  }
+  .sshrow.warn { background: #fdf3e2; color: #8a5c14; border-color: #f3dfba; }
+  .sshrow svg { width: 15px; height: 15px; flex: none; }
+  .sshrow .btn { margin-left: auto; }
+  .serverdl { display: grid; grid-template-columns: 92px 1fr; row-gap: 8px; column-gap: 12px; align-items: center; font-size: 12.5px; margin-bottom: 16px; }
+  .serverdl dt { color: var(--faint); margin: 0; }
+  .serverdl dd { margin: 0; display: flex; align-items: center; gap: 8px; }
+  .serverdl code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; background: #f4f5fb; padding: 2px 7px; border-radius: 6px; color: #3c3480; }
+  .serverdl .copybtn { grid-column: 3; }
+  .dfoot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+  /* Form fields */
+  .wfield { display: block; margin-bottom: 12px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .wfield input[type="text"] {
+    display: block; width: 100%; margin-top: 5px; font: inherit; font-weight: 400; font-size: 13.5px; color: var(--ink);
+    border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; background: #fff; outline: 0;
+    transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  }
+  .wfield input[type="text"]:focus-visible { border-color: #a49bff; box-shadow: 0 0 0 3px #efedff; }
+  .wfield .frow { display: flex; gap: 8px; margin-top: 5px; }
+  .wfield .frow input { flex: 1; margin-top: 0; }
+  .wcheck { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 14px; cursor: pointer; }
+  .wcheck input { accent-color: var(--primary); width: 15px; height: 15px; }
+  .console {
+    background: #101426; color: #c7d3f2; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px;
+    border-radius: 10px; padding: 12px 14px; margin: 4px 0 14px; min-height: 92px; max-height: 150px; overflow-y: auto;
+  }
+  .console .cline { display: block; }
+  .console .cline.dim { color: #6d7ba3; }
+
+  /* Wizard (create + setup) */
+  .wsteps { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .wstep {
+    display: flex; align-items: center; gap: 7px; border: 0; background: none; font: inherit; font-size: 12.5px;
+    font-weight: 600; color: var(--faint); cursor: pointer; padding: 4px 6px; border-radius: 8px;
+  }
+  .wstep .wnum {
+    width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    background: #eef0f8; color: #61729f; font-size: 11px; transition: background 200ms ease, color 200ms ease, transform 200ms var(--ease-out);
+  }
+  .wstep.current { color: var(--primary-deep); }
+  .wstep.current .wnum { background: var(--primary); color: #fff; transform: scale(1.08); }
+  .wstep.complete { color: var(--green); }
+  .wstep.complete .wnum { background: var(--green-soft); color: var(--green); }
+  .wsep { width: 12px; height: 1.5px; background: var(--border); border-radius: 2px; }
+  .kitgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+  .kit {
+    display: flex; align-items: center; gap: 10px; text-align: left; border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 12px; background: #fff; cursor: pointer; font: inherit; color: var(--ink);
+    transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, transform 120ms var(--ease-out);
+  }
+  .kit:active { transform: scale(0.98); }
+  .kit[aria-pressed="true"] { border-color: #a99bff; background: linear-gradient(120deg, #f7f5ff, #fff); box-shadow: inset 0 0 0 1px #a99bff; }
+  .kit .kav { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .kit .kav svg { width: 16px; height: 16px; }
+  .kit .kname { font-weight: 600; font-size: 13px; }
+  .kit .kdesc { font-size: 11.5px; color: var(--faint); margin-top: 1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+  .chip {
+    border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 6px 13px; font: inherit;
+    font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease, transform 120ms var(--ease-out);
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary-deep); border-color: #c9bfff; }
+  .reviewdl { display: grid; grid-template-columns: 110px 1fr; row-gap: 7px; font-size: 12.5px; margin: 0 0 10px; }
+  .reviewdl dt { color: var(--faint); margin: 0; }
+  .reviewdl dd { margin: 0; font-weight: 550; }
+  .createsuccess { text-align: center; padding: 18px 0 6px; }
+  .createsuccess .okring {
+    width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px;
+    background: var(--green-soft); color: var(--green); animation: pop-in 300ms var(--ease-spring) both;
+  }
+  @keyframes pop-in { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .createsuccess .okring svg { width: 24px; height: 24px; }
+
+  /* Setup wizard (settings) */
+  .ptrack { height: 5px; border-radius: 999px; background: #e9e8f7; overflow: hidden; margin-bottom: 14px; }
+  .pfill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #8b7fff, #5e4bff); transition: width 300ms var(--ease-out); }
+  .stepcard { border: 1px solid var(--hairline); border-radius: 12px; padding: 14px 16px; }
+  .stepcard .shead { display: flex; align-items: center; gap: 11px; margin-bottom: 6px; }
+  .stepcard .sicon { width: 38px; height: 38px; border-radius: 11px; background: var(--primary-soft); color: var(--primary-deep); display: grid; place-items: center; flex: none; }
+  .stepcard .sicon svg { width: 18px; height: 18px; }
+  .stepcard .stitle { font-family: var(--font-display); font-weight: 650; font-size: 14.5px; letter-spacing: -0.2px; }
+  .stepcard .sdesc { font-size: 12.5px; color: var(--muted); margin: 2px 0 10px; }
+  .cmdprev {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: #3c3480; background: #f9faff;
+    border: 1px solid var(--hairline); border-radius: 9px; padding: 9px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .cmdprev .cplabel { margin-left: auto; font-size: 10.5px; color: var(--faint); font-family: inherit; }
+  .stepnote { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 550; margin-top: 10px; }
+  .stepnote.ok { color: var(--green); }
+  .stepnote.fail { color: var(--red); }
+  .stepnote svg { width: 14px; height: 14px; flex: none; }
+
+  /* Updates */
+  .updavail { display: flex; align-items: center; gap: 10px; background: var(--green-soft); border: 1px solid #d2f0de; color: var(--green); border-radius: 10px; padding: 10px 13px; font-size: 12.5px; font-weight: 600; margin-top: 10px; }
+  .updavail .btn { margin-left: auto; }
+  .updprog { margin-top: 10px; }
+
+  /* Providers editor */
+  .provcard { border-top: 1px solid var(--hairline); padding: 12px 16px; display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 12px; align-items: center; }
+  .provcard .pav { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 12px; font-weight: 700; grid-row: span 2; }
+  .provcard input {
+    font: inherit; font-size: 12.5px; border: 1px solid transparent; border-radius: 7px; padding: 4px 8px; margin-left: -8px;
+    background: transparent; color: var(--ink); outline: 0; max-width: 210px;
+    transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease;
+  }
+  .provcard input:hover { background: #f6f7fc; }
+  .provcard input:focus-visible { border-color: #a49bff; background: #fff; box-shadow: 0 0 0 3px #efedff; }
+  .provcard .purl { grid-column: 2; font-size: 11.5px; color: var(--faint); }
+  .provcard .pswitch { grid-column: 3; grid-row: 1 / span 2; }
+
+  /* Diagnostic logs */
+  .logentry { border-top: 1px solid var(--hairline); }
+  .logentry > button {
+    display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; font: inherit;
+    font-size: 12.5px; padding: 10px 16px; cursor: pointer; text-align: left; color: var(--ink);
+  }
+  .logentry > button:hover { background: #f9faff; }
+  .logkind { font-size: 10.5px; font-weight: 700; border-radius: 6px; padding: 2px 7px; flex: none; }
+  .logkind.info { background: #eef0f8; color: #55679e; }
+  .logkind.warn { background: #fdf3e2; color: #8a5c14; }
+  .logkind.error { background: #fdf0f1; color: #c73a45; }
+  .logmsg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logtime { margin-left: auto; color: var(--faint); font-size: 11px; flex: none; }
+  .logdetail { display: none; padding: 0 16px 12px 16px; }
+  .logentry[data-open="true"] .logdetail { display: block; }
+  .logdetail pre { margin: 0; background: #f6f7fc; border-radius: 8px; padding: 9px 11px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; color: #445982; white-space: pre-wrap; }
+  .logfilter { padding: 10px 16px; }
+  .logfilter input {
+    width: 100%; font: inherit; font-size: 12.5px; border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; outline: 0; color: var(--ink);
+  }
+  .logfilter input:focus-visible { border-color: #a49bff; box-shadow: 0 0 0 3px #efedff; }
+
+  /* Template card edit/delete actions */
+  .tplcard .tplactions .ibtn { border-color: var(--border); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .createsuccess .okring { animation: none; }
+    .pfill { transition: none; }
+  }
+
   /* Settings page */
   .setrow { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; }
   .settitle { font-family: var(--font-display); font-weight: 650; font-size: 14.5px; letter-spacing: -0.2px; }
@@ -644,6 +842,11 @@
             <div class="appPage" data-page="sandboxes" data-home="true">
             <div class="withinspector">
               <div>
+                <div class="setupbanner" id="setupBanner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 4v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V7l7-4z"/><path d="M9.5 12l1.8 1.8 3.5-3.6"/></svg>
+                  <span><b>Two setup steps left.</b> SSH access and image pasting are not configured yet.</span>
+                  <button class="btn ghost small" id="setupBannerBtn">Finish setup</button>
+                </div>
                 <div class="homeactions" id="homeActions">
                   <button class="hact featured" id="hactCreate">
                     <span class="hicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span>
@@ -671,8 +874,19 @@
                   </button>
                 </div>
                 <div class="listcard">
-                  <div class="listhead" style="display:none"></div>
+                  <div class="listhead">
+                    <h2>All sandboxes</h2>
+                    <span class="count" id="rowCount">3</span>
+                    <div class="search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                      <input id="sbxSearch" type="text" placeholder="Search sandboxes…" aria-label="Search sandboxes" />
+                    </div>
+                    <button class="ibtn refresh" id="refreshBtn" aria-label="Refresh sandboxes" title="Refresh sandboxes">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+                    </button>
+                  </div>
                   <div class="rows" id="rows"><!-- rows injected --></div>
+                  <p class="searchcount" id="searchCount" hidden></p>
                 </div>
               </div>
 
@@ -715,7 +929,7 @@
                         <div class="tplname">Next.js portfolio</div>
                         <div class="tplmeta"><span class="tplpill dust">Popular</span><span class="tplpill">Node 22</span></div>
                       </div>
-                      <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                      <span class="tplactions"><button class="ibtn" data-tpl-edit aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-tpl-delete aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-tpl-launch>Launch</span></span>
                       <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                     </button>
                     <div class="tplbody"><div><div class="inner">
@@ -735,7 +949,7 @@ mount: ~/code/portfolio</pre>
                         <div class="tplname">Python lab</div>
                         <div class="tplmeta"><span class="tplpill">Python 3.12</span><span class="tplpill">Jupyter</span></div>
                       </div>
-                      <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                      <span class="tplactions"><button class="ibtn" data-tpl-edit aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-tpl-delete aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-tpl-launch>Launch</span></span>
                       <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                     </button>
                     <div class="tplbody"><div><div class="inner">
@@ -754,7 +968,7 @@ command: jupyter lab --no-browser</pre>
                         <div class="tplname">Docs writer</div>
                         <div class="tplmeta"><span class="tplpill">Static</span></div>
                       </div>
-                      <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                      <span class="tplactions"><button class="ibtn" data-tpl-edit aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-tpl-delete aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-tpl-launch>Launch</span></span>
                       <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                     </button>
                     <div class="tplbody"><div><div class="inner">
@@ -772,33 +986,208 @@ command: sh</pre>
               <div class="listcard" style="margin-bottom: 12px;">
                 <div class="setrow">
                   <div>
-                    <div class="settitle">Updates</div>
-                    <div class="setdesc">Sandy checks for updates automatically and installs them in the background.</div>
+                    <div class="settitle">Setup</div>
+                    <div class="setdesc">2 of 4 steps are done. You can use Sandy now and finish the rest whenever.</div>
                   </div>
-                  <button class="switch on" id="updSwitch" role="switch" aria-checked="true" aria-label="Automatic updates"><span class="knob"></span></button>
+                  <button class="btn primary small" id="openSetupBtn">Continue setup</button>
+                </div>
+                <div style="padding: 0 16px 16px;">
+                  <div class="ptrack"><div class="pfill" id="setupFill" style="width: 50%"></div></div>
+                  <div class="wsteps" style="margin-bottom: 0;">
+                    <button class="wstep complete"><span class="wnum">✓</span>Install CLI</button><span class="wsep"></span>
+                    <button class="wstep complete"><span class="wnum">✓</span>Docker account</button><span class="wsep"></span>
+                    <button class="wstep current" id="stepPasting"><span class="wnum">3</span>Image pasting</button><span class="wsep"></span>
+                    <button class="wstep" id="stepSsh"><span class="wnum">4</span>SSH access</button>
+                  </div>
+                </div>
+                <div class="stepcard" style="margin: 0 16px 16px;" id="setupStepCard">
+                  <div class="shead">
+                    <span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 15h4"/></svg></span>
+                    <div>
+                      <div class="stitle">Give your agent the full picture</div>
+                      <div class="sdesc">Let Claude Code paste screenshots and images from your clipboard into the sandbox.</div>
+                    </div>
+                  </div>
+                  <div class="cmdprev">sbx settings set clipboard.imagePaste true<span class="cplabel">runs once</span></div>
+                  <div class="dfoot" style="margin: 0;">
+                    <button class="btn ghost small">Skip for now</button>
+                    <button class="btn primary small" id="runStepBtn">
+                      <span class="swap visible">Run step</span>
+                      <span class="swap hidden" data-swap>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+                        Done
+                      </span>
+                    </button>
+                  </div>
+                  <div class="stepnote ok" id="stepNote" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg><span>Image pasting is on. SSH access is the last step.</span></div>
                 </div>
               </div>
+
+              <div class="listcard" style="margin-bottom: 12px;">
+                <div class="setrow">
+                  <div>
+                    <div class="settitle">Updates</div>
+                    <div class="setdesc">Sandy can check for new versions and update itself in place; you just confirm the restart.</div>
+                  </div>
+                  <span class="tplpill" style="flex:none">Version 0.3.1</span>
+                </div>
+                <div class="updavail" id="updAvail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex:none"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+                  <span><b>Sandy 0.4.0</b> is available.</span>
+                  <button class="btn primary small" id="updBtn">Update now</button>
+                </div>
+                <div class="updprog" id="updProg" hidden style="padding: 0 16px 14px;">
+                  <div class="ptrack" style="margin-bottom: 6px;"><div class="pfill" id="updFill"></div></div>
+                  <span style="font-size:12px;color:var(--muted)">Downloading… restarts when ready.</span>
+                </div>
+              </div>
+
               <div class="listcard" style="margin-bottom: 12px;">
                 <div class="setrow">
                   <div>
                     <div class="settitle">Providers</div>
-                    <div class="setdesc">Agents that Sandy connects to your sandboxes.</div>
+                    <div class="setdesc">Agents that Sandy connects to your sandboxes. Changes save when you leave the page.</div>
                   </div>
                 </div>
-                <div class="provrow"><span class="pdot ok"></span>Claude Code<span class="provstate ok">Connected</span></div>
-                <div class="provrow"><span class="pdot ok"></span>Codex<span class="provstate ok">Connected</span></div>
+                <div class="provcard">
+                  <span class="pav" style="background:#f2ede2; color:#8a5c14">CC</span>
+                  <input value="Claude Code" aria-label="Provider name" />
+                  <span class="purl">github.com/anthropics/claude-code</span>
+                  <button class="switch on pswitch" role="switch" aria-checked="true" aria-label="Enable Claude Code"><span class="knob"></span></button>
+                </div>
+                <div class="provcard">
+                  <span class="pav" style="background:#e3f0ff; color:#1f6fb8">CX</span>
+                  <input value="Codex" aria-label="Provider name" />
+                  <span class="purl">github.com/openai/codex</span>
+                  <button class="switch on pswitch" role="switch" aria-checked="true" aria-label="Enable Codex"><span class="knob"></span></button>
+                </div>
               </div>
+
               <div class="listcard">
-                <div class="setrow">
+                <div class="setrow" style="padding-bottom: 6px;">
                   <div>
-                    <div class="settitle">sbx CLI</div>
-                    <div class="setdesc">Installed at <code>v2.4.1</code>. Logs help diagnose problems with Docker.</div>
+                    <div class="settitle">Advanced</div>
+                    <div class="setdesc">Diagnostic log from Sandy and the sbx CLI.</div>
                   </div>
-                  <button class="btn ghost small" id="logsBtn">Open logs</button>
+                  <button class="btn ghost small" id="logsBtn">Refresh</button>
+                </div>
+                <div class="logfilter"><input type="text" placeholder="Filter log entries…" aria-label="Filter log entries" /></div>
+                <div class="logentry" data-open="false">
+                  <button aria-expanded="false"><span class="logkind info">INFO</span><span class="logmsg">Sandboxes refreshed: 3 found, 2 running</span><span class="logtime">14:02:11</span></button>
+                  <div class="logdetail"><pre>sbx list --json
+→ 3 sandboxes (142 ms)</pre></div>
+                </div>
+                <div class="logentry" data-open="false">
+                  <button aria-expanded="false"><span class="logkind warn">WARN</span><span class="logmsg">Template warnings: 1 file needs attention</span><span class="logtime">14:02:12</span></button>
+                  <div class="logdetail"><pre>python-lab.yml: image tag "python" is ambiguous,
+using "python:3.12" instead.</pre></div>
+                </div>
+                <div class="logentry" data-open="false">
+                  <button aria-expanded="false"><span class="logkind error">ERROR</span><span class="logmsg">docker daemon unreachable (retry 1/3)</span><span class="logtime">13:57:48</span></button>
+                  <div class="logdetail"><pre>Cannot connect to the Docker daemon at
+unix:///var/run/docker.sock. Is the docker daemon running?</pre></div>
+                </div>
+                <div class="logentry" data-open="false">
+                  <button aria-expanded="false"><span class="logkind info">INFO</span><span class="logmsg">Provider Codex saved (repository unchanged)</span><span class="logtime">13:41:02</span></button>
+                  <div class="logdetail"><pre>providers: [{ id: codex, enabled: true }]</pre></div>
                 </div>
               </div>
             </div>
           </main>
+        </div>
+
+        <div class="winoverlay" id="winOverlay" data-open="false">
+          <div class="wdialog wide" id="dlgConnect" hidden>
+            <button class="ibtn dclose" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <h3>Connect to <span id="connName">next-portfolio</span></h3>
+            <p class="dsub">Use your native terminal or connect your editor over SSH.</p>
+            <div class="methods" role="group" aria-label="Connection options">
+              <button class="method" data-method="terminal" aria-pressed="true">
+                <span class="micon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3M13 15h4"/></svg></span>
+                <span class="mname">Terminal</span><span class="mhint">Native terminal</span>
+              </button>
+              <button class="method" data-method="opencode" aria-pressed="false">
+                <span class="micon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+                <span class="mname">OpenCode Desktop</span><span class="mhint">SSH connection guide</span>
+              </button>
+              <button class="method" data-method="vscode" aria-pressed="false">
+                <span class="micon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg></span>
+                <span class="mname">VS Code</span><span class="mhint">Remote – SSH guide</span>
+              </button>
+            </div>
+            <div class="sshrow" id="sshRow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>SSH is set up and ready.</span>
+              <button class="btn ghost small" id="sshCheck">Check again</button>
+            </div>
+            <dl class="serverdl">
+              <dt>Host</dt><dd><code>127.0.0.1</code></dd>
+              <dt>SSH user</dt><dd><code>sandy</code></dd>
+              <dt>Port</dt><dd><code>2222</code></dd>
+              <dt>SSH command</dt>
+              <dd><code id="sshCmd">sbx ssh next-portfolio</code>
+                <button class="ibtn copybtn" id="copyBtn" aria-label="Copy SSH command" title="Copy SSH command" style="width:28px;height:28px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                </button>
+              </dd>
+            </dl>
+            <div class="dfoot">
+              <button class="btn ghost" data-close>Cancel</button>
+              <button class="btn primary" id="openTermBtn">Open terminal</button>
+            </div>
+          </div>
+
+          <div class="wdialog" id="dlgLaunch" hidden>
+            <button class="ibtn dclose" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <h3>Launch <span id="launchName">Next.js portfolio</span></h3>
+            <p class="dsub">A new sandbox is created from this template.</p>
+            <label class="wfield">Sandbox name
+              <input type="text" id="launchSbxName" placeholder="Sandbox name" value="next-portfolio-2" />
+            </label>
+            <label class="wcheck"><input type="checkbox" id="mountless" /> Mountless (no project folder attached)</label>
+            <label class="wfield" id="wsField">Workspace path
+              <span class="frow">
+                <input type="text" id="launchWs" placeholder="Absolute project path" value="~/code/portfolio-2" />
+                <button class="btn ghost small" id="browseBtn">Browse…</button>
+              </span>
+            </label>
+            <div class="console" id="launchConsole" hidden>
+              <span class="cline dim">sbx: pulling node:22 … done</span>
+              <span class="cline">sbx: creating sandbox next-portfolio-2</span>
+              <span class="cline dim">waiting for container to become ready…</span>
+              <span class="cline">sbx: sandbox is ready ✓</span>
+            </div>
+            <div class="dfoot">
+              <button class="btn ghost" data-close>Cancel</button>
+              <button class="btn primary" id="launchGoBtn">
+                <span class="swap visible">Launch sandbox</span>
+                <span class="swap hidden" data-swap>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+                  Launched
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="wdialog" id="dlgDelete" hidden>
+            <button class="ibtn dclose" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <h3>Delete “<span id="delName">Docs writer</span>”?</h3>
+            <p class="dsub">The template file stays on disk; it is only removed from Sandy's catalog.</p>
+            <div class="dfoot">
+              <button class="btn ghost" data-close>Keep it</button>
+              <button class="btn danger" id="delGoBtn">
+                <span class="swap visible">Delete template</span>
+                <span class="swap hidden" data-swap>Deleted</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="wdialog" id="dlgSoon" hidden>
+            <button class="ibtn dclose" data-close aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <h3>Learn more is on its way</h3>
+            <p class="dsub">A built-in guide to sandboxes is coming. Meanwhile, the docs cover everything the app can do.</p>
+            <div class="dfoot"><button class="btn primary" data-close>Got it</button></div>
+          </div>
         </div>
       </div>
     </div>
@@ -882,7 +1271,7 @@ command: sh</pre>
               <h1>Templates</h1>
               <div class="sub">Reusable environments, ready to launch.</div>
             </div>
-            <button class="btn primary" id="newTplBtn">
+            <button class="btn primary" data-newtpl-static>
               <span class="swap visible">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
                 New template
@@ -896,7 +1285,7 @@ command: sh</pre>
               <h2>Saved templates</h2>
               <span class="count">3</span>
             </div>
-            <div id="tplList">
+            <div data-tpllist-static>
               <div class="tplcard" data-open="false">
                 <button class="tplhead" aria-expanded="false">
                   <div class="tplavatar pa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg></div>
@@ -904,7 +1293,7 @@ command: sh</pre>
                     <div class="tplname">Next.js portfolio</div>
                     <div class="tplmeta"><span class="tplpill dust">Popular</span><span class="tplpill">Node 22</span></div>
                   </div>
-                  <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                  <span class="tplactions"><button class="ibtn" data-static aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-static aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-static>Launch</span></span>
                   <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                 </button>
                 <div class="tplbody"><div><div class="inner">
@@ -924,7 +1313,7 @@ mount: ~/code/portfolio</pre>
                     <div class="tplname">Python lab</div>
                     <div class="tplmeta"><span class="tplpill">Python 3.12</span><span class="tplpill">Jupyter</span></div>
                   </div>
-                  <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                  <span class="tplactions"><button class="ibtn" data-static aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-static aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-static>Launch</span></span>
                   <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                 </button>
                 <div class="tplbody"><div><div class="inner">
@@ -943,7 +1332,7 @@ command: jupyter lab --no-browser</pre>
                     <div class="tplname">Docs writer</div>
                     <div class="tplmeta"><span class="tplpill">Static</span></div>
                   </div>
-                  <span class="tplactions"><span class="btn primary small" role="button">Launch</span></span>
+                  <span class="tplactions"><button class="ibtn" data-static aria-label="Edit template" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ibtn" data-static aria-label="Delete template" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button><span class="btn primary small" role="button" data-static>Launch</span></span>
                   <span class="tplchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
                 </button>
                 <div class="tplbody"><div><div class="inner">
@@ -1252,6 +1641,148 @@ command: sh</pre>
     }, 700);
   });
 
+  /* ---------- App-window dialogs ---------- */
+  const overlay = document.getElementById("winOverlay");
+  const dialogs = ["dlgConnect", "dlgLaunch", "dlgDelete", "dlgSoon"];
+  function openDialog(id) {
+    dialogs.forEach(d => document.getElementById(d).hidden = d !== id);
+    overlay.dataset.open = "true";
+  }
+  function closeDialogs() { overlay.dataset.open = "false"; }
+  if (overlay) {
+    overlay.addEventListener("click", (e) => { if (e.target === overlay || e.target.closest("[data-close]")) closeDialogs(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay.dataset.open === "true") closeDialogs(); });
+  }
+
+  /* Row Open button + menu -> connect dialog */
+  rows.addEventListener("click", (e) => {
+    const openBtn = e.target.closest(".rowactions .btn.primary");
+    if (!openBtn || openBtn.closest(".menu")) return;
+    const row = openBtn.closest(".row");
+    const d = DATA[+row.dataset.idx];
+    if (d.state !== "running") return;
+    document.getElementById("connName").textContent = d.name;
+    document.getElementById("sshCmd").textContent = "sbx ssh " + d.name;
+    openDialog("dlgConnect");
+  });
+  rows.addEventListener("click", (e) => {
+    if (!e.target.closest(".menu button")) return;
+    closeDialogs();
+    const label = e.target.textContent.trim();
+    if (label === "Open terminal") openDialog("dlgConnect");
+    else if (label === "Delete sandbox") toast("err", "Sandbox deletion is not wired in this concept");
+    else toast("ok", label + " — not wired in this concept");
+  });
+
+  const sshRow = document.getElementById("sshRow");
+  if (sshRow) document.getElementById("sshCheck").addEventListener("click", () => {
+    sshRow.classList.add("warn");
+    sshRow.querySelector("span").textContent = "Checking SSH setup…";
+    setTimeout(() => {
+      sshRow.classList.remove("warn");
+      sshRow.querySelector("span").textContent = "SSH is set up and ready.";
+    }, 1200);
+  });
+  const copyBtn = document.getElementById("copyBtn");
+  if (copyBtn) copyBtn.addEventListener("click", () => toast("ok", "SSH command copied"));
+  const openTermBtn = document.getElementById("openTermBtn");
+  if (openTermBtn) openTermBtn.addEventListener("click", () => { closeDialogs(); toast("ok", "Opening your terminal…"); });
+
+  /* Launch dialog */
+  const mountless = document.getElementById("mountless");
+  const wsField = document.getElementById("wsField");
+  if (mountless) mountless.addEventListener("change", () => {
+    wsField.style.opacity = mountless.checked ? "0.45" : "";
+    document.getElementById("launchWs").disabled = mountless.checked;
+    document.getElementById("browseBtn").disabled = mountless.checked;
+  });
+  const launchGo = document.getElementById("launchGoBtn");
+  if (launchGo) launchGo.addEventListener("click", () => {
+    document.getElementById("launchConsole").hidden = false;
+    const [vis, hid] = launchGo.querySelectorAll(".swap");
+    vis.classList.remove("visible"); vis.classList.add("hidden");
+    hid.classList.remove("hidden"); hid.classList.add("visible");
+    setTimeout(() => { closeDialogs(); toast("ok", "Sandbox created from template"); }, 1400);
+  });
+  const browseBtn = document.getElementById("browseBtn");
+  if (browseBtn) browseBtn.addEventListener("click", () => toast("ok", "Folder picker opens here"));
+
+  /* Delete + coming soon dialogs */
+  const delGo = document.getElementById("delGoBtn");
+  if (delGo) delGo.addEventListener("click", () => {
+    const [vis, hid] = delGo.querySelectorAll(".swap");
+    vis.classList.remove("visible"); vis.classList.add("hidden");
+    hid.classList.remove("hidden"); hid.classList.add("visible");
+    setTimeout(() => { closeDialogs(); toast("err", "Template removed from the catalog"); }, 900);
+    setTimeout(() => { hid.classList.remove("visible"); hid.classList.add("hidden"); vis.classList.remove("hidden"); vis.classList.add("visible"); }, 2400);
+  });
+  document.querySelectorAll("[data-tpl-delete]").forEach(b => b.addEventListener("click", () => openDialog("dlgDelete")));
+  document.querySelectorAll("[data-tpl-launch]").forEach(b => b.addEventListener("click", () => openDialog("dlgLaunch")));
+  document.querySelectorAll("[data-tpl-edit]").forEach(b => b.addEventListener("click", () => toast("ok", "Template editor opens here")));
+
+  /* Search + refresh */
+  const searchInput = document.getElementById("sbxSearch");
+  if (searchInput) searchInput.addEventListener("input", () => {
+    const q = searchInput.value.trim().toLowerCase();
+    const matches = q ? DATA.filter(d => (d.name + " " + d.agent + " " + d.path).toLowerCase().includes(q)) : DATA;
+    rows.querySelectorAll(".row").forEach(r => {
+      r.style.display = matches.some(m => m === DATA[+r.dataset.idx]) ? "" : "none";
+    });
+    const sc = document.getElementById("searchCount");
+    if (q) { sc.hidden = false; sc.textContent = "Showing " + matches.length + " of " + DATA.length + " sandboxes"; }
+    else sc.hidden = true;
+  });
+  const refreshBtn = document.getElementById("refreshBtn");
+  if (refreshBtn) refreshBtn.addEventListener("click", () => {
+    refreshBtn.classList.add("spin");
+    refreshBtn.disabled = true;
+    loadSequence();
+    setTimeout(() => { refreshBtn.classList.remove("spin"); refreshBtn.disabled = false; }, reduce ? 100 : 1200);
+  });
+
+  /* Setup banner + wizard wiring */
+  const setupBanner = document.getElementById("setupBanner");
+  if (setupBanner) document.getElementById("setupBannerBtn").addEventListener("click", () => {
+    showPage("settings");
+    toast("ok", "Continuing setup in Settings");
+  });
+  const runStep = document.getElementById("runStepBtn");
+  if (runStep) runStep.addEventListener("click", () => {
+    document.getElementById("stepNote").hidden = false;
+  });
+  const updBtn = document.getElementById("updBtn");
+  if (updBtn) updBtn.addEventListener("click", () => {
+    document.getElementById("updAvail").hidden = true;
+    const prog = document.getElementById("updProg");
+    const fill = document.getElementById("updFill");
+    prog.hidden = false;
+    let p = 0;
+    const iv = setInterval(() => {
+      p += 12 + Math.random() * 10;
+      fill.style.width = Math.min(p, 100) + "%";
+      if (p >= 100) { clearInterval(iv); toast("ok", "Update installed — restart to apply"); }
+    }, 260);
+  });
+  document.querySelectorAll(".pswitch").forEach(sw => sw.addEventListener("click", () => {
+    const on = sw.getAttribute("aria-checked") === "true";
+    sw.setAttribute("aria-checked", String(!on));
+    sw.classList.toggle("on", !on);
+  }));
+  document.querySelectorAll(".logentry > button").forEach(b => b.addEventListener("click", () => {
+    const entry = b.closest(".logentry");
+    const open = entry.dataset.open === "true";
+    entry.dataset.open = String(!open);
+    b.setAttribute("aria-expanded", String(!open));
+  }));
+
+  /* Home action cards: Learn more -> coming soon, From template -> templates page */
+  const hactCreate = document.getElementById("hactCreate");
+  if (hactCreate) {
+    hactCreate.addEventListener("click", () => showPage("sandboxes"));
+    document.getElementById("hactTemplate").addEventListener("click", () => showPage("templates"));
+    document.getElementById("hactLearn").addEventListener("click", () => openDialog("dlgSoon"));
+  }
+
   /* ---------- Templates: expand/collapse ---------- */
   const tplList = document.getElementById("tplList");
   if (tplList) {
@@ -1264,7 +1795,7 @@ command: sh</pre>
       card.dataset.open = String(!open);
       head.setAttribute("aria-expanded", String(!open));
     });
-    wireMorph(document.getElementById("newTplBtn"), 1600);
+    wireMorph(document.getElementById("pageAction"), 1600);
   }
 
   /* ---------- Blur crossfade button morph ---------- */
@@ -1320,14 +1851,6 @@ command: sh</pre>
   }
   document.getElementById("toastOk").addEventListener("click", () => toast("ok", "python-lab started"));
   document.getElementById("toastErr").addEventListener("click", () => toast("err", "Couldn't reach the CLI"));
-
-  /* ---------- Home action cards ---------- */
-  const hactCreate = document.getElementById("hactCreate");
-  if (hactCreate) {
-    hactCreate.addEventListener("click", () => toast("ok", "Opening the create wizard"));
-    document.getElementById("hactTemplate").addEventListener("click", () => toast("ok", "Opening templates"));
-    document.getElementById("hactLearn").addEventListener("click", () => toast("ok", "Opening the guide"));
-  }
 
   /* ---------- Tabs: clip-path color morph ---------- */
   const tabs = document.getElementById("tabs");
