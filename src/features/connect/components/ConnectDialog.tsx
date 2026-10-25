@@ -175,7 +175,6 @@ export default function ConnectDialog({
       >
         <Icon name="close" />
       </button>
-      <span className="eyebrow">CONNECT TO SANDBOX</span>
       <h2 id="connect-title">Open {sandbox.name}</h2>
       <p id="connect-description">Use your native terminal or connect your editor over SSH.</p>
 

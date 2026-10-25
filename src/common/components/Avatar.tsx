@@ -1,8 +1,10 @@
 import Icon from "./Icon";
 
 const palettes = ["", "blue", "sand", "green"] as const;
+const glyphs = ["code", "terminal", "folder", "box"] as const;
 
-/** A stable per-name tint: the palette rotates with the name's characters. */
+/** A stable per-name tint and glyph: both rotate with the name's characters,
+ *  so one sandbox keeps its tile everywhere it appears (list, inspector). */
 export function Avatar({ name }: { name: string }) {
   let hash = 0;
   for (const character of name) {
@@ -11,7 +13,7 @@ export function Avatar({ name }: { name: string }) {
   const palette = palettes[hash % palettes.length];
   return (
     <span className={`avatar ${palette}`.trimEnd()}>
-      <Icon name={hash % 2 === 0 ? "code" : "box"} size={18} />
+      <Icon name={glyphs[hash % glyphs.length]} size={18} />
     </span>
   );
 }

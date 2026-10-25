@@ -85,7 +85,7 @@
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  transition: transform 150ms var(--out);
+  transition: transform 120ms var(--out);
 }
 
 .switch[aria-checked="true"] {

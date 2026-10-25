@@ -15,6 +15,12 @@
   margin-bottom: 14px;
 }
 
+/* A helper paragraph that leads a field label needs its own clearance; the
+   label's small margin alone reads as a collision. */
+.help + .field {
+  margin-top: 14px;
+}
+
 .field input,
 .field select,
 .field textarea,

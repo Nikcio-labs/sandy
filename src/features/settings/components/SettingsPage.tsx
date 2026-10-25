@@ -155,11 +155,9 @@ export default function SettingsPage({
             </section>
           )}
           {active && (
-            <>
-              <div className="panel settings-stack">
-                <Updates />
-              </div>
-              <div className="panel settingslinks">
+            <div className="panel settings-stack">
+              <Updates />
+              <div className="settingslinks" role="group" aria-label="Settings sections">
                 {PANES.map((item) => (
                   <button
                     key={item.id}
@@ -176,7 +174,7 @@ export default function SettingsPage({
                   </button>
                 ))}
               </div>
-            </>
+            </div>
           )}
         </>
       ) : (

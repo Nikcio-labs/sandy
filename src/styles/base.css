@@ -152,11 +152,32 @@ select {
   height: 35px;
   padding: 0 8px;
   max-width: 180px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--field-border);
   border-radius: 7px;
   background: var(--surface);
   color: var(--ink);
   font-size: 14px;
+}
+
+/* Replace the native select arrow and number spinners with the app's own
+   affordances; the OS chrome reads as unstyled next to the custom inputs. */
+select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23596382" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 10 5 5 5-5"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 28px;
+}
+
+input[type="number"] {
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
 }
 
 svg {

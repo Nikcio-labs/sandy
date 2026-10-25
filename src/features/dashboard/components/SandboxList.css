@@ -160,6 +160,15 @@
   .rowaction {
     padding: 5px 8px;
     min-width: 45px;
+    margin-left: auto;
+  }
+
+  .row .state {
+    flex-shrink: 0;
+  }
+
+  .rowaction .btn {
+    margin-left: 8px;
   }
 }
 

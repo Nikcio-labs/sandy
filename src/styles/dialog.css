@@ -47,6 +47,31 @@
   }
 }
 
+/* The study's 180ms dialog entrance: scale/translate/fade from the
+   starting style, with allow-discrete keeping the element visible while
+   the transition plays on open and close. The backdrop fades with it. */
+.appdialog[open] {
+  transition:
+    opacity 180ms var(--out),
+    transform 180ms var(--out),
+    overlay 180ms allow-discrete,
+    display 180ms allow-discrete;
+}
+
+.appdialog[open]::backdrop {
+  transition:
+    background-color 180ms ease,
+    overlay 180ms allow-discrete,
+    display 180ms allow-discrete;
+}
+
+@starting-style {
+  .appdialog[open]::backdrop {
+    background: transparent;
+    backdrop-filter: blur(0);
+  }
+}
+
 .dialogclose {
   position: absolute;
   top: 14px;

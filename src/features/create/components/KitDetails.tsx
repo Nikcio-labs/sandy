@@ -5,7 +5,7 @@ export function KitDetails({ kit }: { kit: KitOption }) {
     <span className="option-body">
       <span className="option-title">
         <strong>{kit.name}</strong>
-        <span className="badge pill">
+        <span className="badge violet">
           Kit v{kit.schema_version} ·{" "}
           {kit.kind === "workload" ? "Workload" : kit.kind === "agent" ? "Agent" : "Mixin"}
         </span>

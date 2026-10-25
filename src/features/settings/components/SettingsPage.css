@@ -41,13 +41,10 @@
   max-height: 200px;
 }
 
-/* Home → pane navigation. */
-.settings-stack {
-  margin-top: 17px;
-}
-
+/* Home → pane navigation. One card holds Updates and the link rows,
+   separated by the card's own hairlines as in the study. */
 .settingslinks {
-  margin-top: 17px;
+  border-top: 1px solid var(--line);
 }
 
 .setlink {

@@ -32,7 +32,7 @@ export function ServerInfo({
             disabled={busy}
             onClick={() => onCopy(serverInfo, "Server information")}
           >
-            <Icon name="clipboard" size={16} /> Copy server info
+            Copy server info
           </button>
         )}
       </div>
