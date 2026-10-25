@@ -104,9 +104,11 @@ jobs:
         shell: pwsh
         run: |
           $bundle = "src-tauri/target/${{ matrix.target }}/release/bundle"
-          New-Item -ItemType Directory -Force -Path bundle-regular | Out-Null
-          Copy-Item "$bundle/msi/*.msi" bundle-regular
-          Copy-Item "$bundle/nsis/*-setup.exe" bundle-regular
+          # Keep the bundle's msi/nsis layout so the artifact step can copy
+          # from the same paths after the Store build overwrites the bundle.
+          New-Item -ItemType Directory -Force -Path bundle-regular/msi, bundle-regular/nsis | Out-Null
+          Copy-Item "$bundle/msi/*.msi*" bundle-regular/msi
+          Copy-Item "$bundle/nsis/*-setup.exe*" bundle-regular/nsis
 
       - name: Build Microsoft Store installer
         if: runner.os == 'Windows'
