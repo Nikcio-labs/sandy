@@ -92,7 +92,7 @@
 .debug-log-time {
   flex: none;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 

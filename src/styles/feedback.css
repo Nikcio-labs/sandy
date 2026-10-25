@@ -45,7 +45,7 @@
   background: #202640;
   color: #e8ecff;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -63,7 +63,7 @@
 }
 
 .command code {
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
   flex: 1;
   min-width: 0;
@@ -82,7 +82,7 @@
   border: 1px dashed #d9e1f4;
   border-radius: 10px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.75;
 }
 
@@ -101,7 +101,7 @@
   border-radius: 10px;
   background: var(--sand-soft);
   color: var(--sand);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.75;
   overflow-wrap: anywhere;
 }
@@ -126,7 +126,7 @@
   border-radius: 8px;
   color: var(--red);
   background: var(--red-soft);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.75;
   overflow-wrap: anywhere;
 }

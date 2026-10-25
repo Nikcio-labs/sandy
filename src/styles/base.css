@@ -15,7 +15,7 @@ body {
   min-height: 100%;
   background: var(--paper);
   color: var(--ink);
-  font: 14px/1.5 var(--body);
+  font: 15px/1.5 var(--body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -65,7 +65,7 @@ a {
 code,
 pre {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 code {
@@ -156,7 +156,7 @@ select {
   border-radius: 7px;
   background: var(--surface);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 svg {

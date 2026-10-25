@@ -63,7 +63,7 @@
 .recipe {
   border-left: 1px solid var(--line);
   padding-left: 20px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .recipe h3 {
@@ -73,7 +73,7 @@
 
 .recipe p {
   margin-bottom: 9px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 
@@ -134,7 +134,7 @@
 
 .catalog-selected ol {
   padding-left: 24px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .catalog-selected li {
@@ -154,7 +154,7 @@
 
 .catalog-required {
   color: var(--red);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -163,7 +163,7 @@
   grid-template-columns: 110px minmax(0, 1fr);
   gap: 12px 18px;
   margin: 18px 0 23px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
 }
 
@@ -189,7 +189,7 @@
   background: var(--surface-soft);
   border: 1px solid #e6eafa;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 
@@ -202,7 +202,7 @@
 pre.catalog-yaml {
   max-height: 430px;
   padding: 18px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -210,7 +210,7 @@ pre.catalog-yaml {
 }
 
 .catalog-output {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   margin: 15px 0;
 }

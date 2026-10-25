@@ -8,7 +8,7 @@
   background: var(--sand-soft);
   border: 1px solid #edd9b5;
   border-radius: 9px;
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 15px;
 }
 
@@ -25,5 +25,5 @@
 
 .banner p {
   margin: 4px 0 8px;
-  font-size: 12px;
+  font-size: 13px;
 }

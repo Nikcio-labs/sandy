@@ -35,7 +35,7 @@
 
 .wintitle {
   margin-left: 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   border-left: 1px solid var(--line);
   padding-left: 18px;
@@ -115,7 +115,7 @@
   padding: 10px 12px;
   text-align: left;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
 }
 
@@ -145,7 +145,7 @@
 .rail .railfoot {
   border-top: 1px solid var(--line);
   padding: 12px 10px 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 

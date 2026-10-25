@@ -50,7 +50,7 @@
   width: 140px;
   min-width: 0;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
   outline-offset: 6px;
 }
 
@@ -71,7 +71,7 @@
 .resultcount {
   padding: 9px 15px;
   border-top: 1px solid var(--line);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin: 0;
 }
@@ -125,6 +125,6 @@
 .empty p {
   max-width: 39ch;
   margin: 0 auto 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
