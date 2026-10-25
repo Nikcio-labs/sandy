@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Nikcio-labs/sandy/compare/v0.2.2...v0.3.0) (2026-10-25)
+
+
+### Features
+
+* add Microsoft Store distribution setup ([#8](https://github.com/Nikcio-labs/sandy/issues/8)) ([91b297d](https://github.com/Nikcio-labs/sandy/commit/91b297da818a1ff2c7590057b7cbd73e93fbcafa))
+
 ## [0.2.2](https://github.com/Nikcio-labs/sandy/compare/v0.2.1...v0.2.2) (2026-10-25)
 
 
