@@ -24,23 +24,26 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* No top padding: the sticky close button pins to the content box, so its
+     10px offset comes from its own margin instead (sticky offsets ignore
+     scroll-container padding). */
   overflow-y: auto;
-  padding: var(--dialog-pad-block, 24px) 26px;
+  padding: 0 26px 24px;
 }
 
 /* The close button matches the inspector's .insclose (plain iconbtn, 10px
    offsets) and floats over the wizard's heading row. It sticks inside the
    scroll body instead of the dialog frame, so its right edge sits at the
    content edge — clear of the body's scrollbar at any scrollbar width. The
-   negative margins lift it into the body padding without pushing the
-   wizard content down. */
+   negative bottom margin lets the wizard's heading keep its normal position
+   under the button's 32px box. */
 .appdialog-wide .dialogclose {
   position: sticky;
   top: 10px;
   z-index: 5;
   align-self: flex-end;
-  margin: calc(10px - var(--dialog-pad-block, 24px)) 0
-    calc(var(--dialog-pad-block, 24px) - 42px);
+  flex-shrink: 0;
+  margin: 10px 0 -18px;
 }
 
 @media (max-width: 900px) {
@@ -50,7 +53,6 @@
   }
 
   .appdialog-wide-body {
-    --dialog-pad-block: 18px;
-    padding: 18px 14px;
+    padding: 0 14px 18px;
   }
 }
