@@ -10,7 +10,6 @@ import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
 import { openSetupWindow } from "../../../lib/sandbox";
 import ConnectDialog from "../../connect/components/ConnectDialog";
 import { SecretsDialog } from "./SecretsDialog";
-import { ComingSoonDialog } from "../../../common/components/ComingSoonDialog";
 import { PageHead } from "../../../common/components/PageHead";
 
 export interface SandboxesPageProps {
@@ -171,24 +170,12 @@ export default function SandboxesPage({
             installed={installed}
             onAction={(action) => void runAction(detail.name, action).catch(() => {})}
             onOpen={() => runPrimaryAction(detail)}
+            onSecrets={() => setSecretsOpen(true)}
             onClose={() => selectSandbox(null)}
             actionLabels={actionLabels}
           />
         )}
       </div>
-      {inspectorOpen && (
-        <SandboxInspector
-          detail={detail}
-          pending={detailPending}
-          running={detailRunning}
-          installed={installed}
-          onAction={(action) => detail && void runAction(detail.name, action).catch(() => {})}
-          onOpen={() => detail && runPrimaryAction(detail)}
-          onSecrets={() => setSecretsOpen(true)}
-          onClose={() => setInspectorOpen(false)}
-          actionLabels={actionLabels}
-        />
-      )}
       <div className="toasts" aria-live="polite" aria-atomic="true">
         {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       </div>
@@ -208,9 +195,6 @@ export default function SandboxesPage({
           sandbox={detail}
           onClose={() => setSecretsOpen(false)}
         />
-      )}
-      {comingSoonOpen && (
-        <ComingSoonDialog feature="Learn more" onClose={() => setComingSoonOpen(false)} />
       )}
     </div>
   );

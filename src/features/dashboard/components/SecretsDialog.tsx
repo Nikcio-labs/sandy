@@ -5,6 +5,7 @@ import type { SecretEntry } from "../../../lib/secrets";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
+import "./SecretsDialog.css";
 
 /**
  * Manage the secrets stored on this computer: every scope plus the named
@@ -130,7 +131,7 @@ export function SecretsDialog({
   return (
     <dialog
       ref={dialog}
-      className="catalog-launch-dialog"
+      className="appdialog"
       aria-labelledby={`${id}-secrets-title`}
       onCancel={(event) => {
         if (actionLock.current) event.preventDefault();
@@ -138,11 +139,11 @@ export function SecretsDialog({
       onClose={onClose}
     >
       <form onSubmit={save} aria-busy={busy !== null}>
-        <div className="catalog-section-heading">
+        <div className="sectionhead">
           <h2 id={`${id}-secrets-title`}>Secrets</h2>
           <button
             type="button"
-            className="icon-button"
+            className="iconbtn"
             aria-label="Close secrets dialog"
             disabled={busy !== null}
             onClick={close}
@@ -150,7 +151,7 @@ export function SecretsDialog({
             <Icon name="close" size={20} />
           </button>
         </div>
-        <p className="catalog-muted">
+        <p className="help intro">
           Stored with the sbx CLI and used by the sandbox proxy to authenticate your agents.
           Values never enter the sandbox. Global secrets cover every sandbox; this sandbox’s own
           take precedence.
@@ -161,14 +162,14 @@ export function SecretsDialog({
           </ErrorBanner>
         )}
         {notice && (
-          <p className="catalog-status" role="status">
+          <p className="statusline" role="status">
             {notice}
           </p>
         )}
         {entries !== null && (
           <div className="secret-list">
             {entries.length === 0 ? (
-              <p className="catalog-empty-note">No secrets stored yet.</p>
+              <p className="help">No secrets stored yet.</p>
             ) : (
               <table className="secret-table">
                 <thead>
@@ -177,7 +178,7 @@ export function SecretsDialog({
                     <th scope="col">Service</th>
                     <th scope="col">Value</th>
                     <th scope="col">
-                      <span className="catalog-sr-only">Actions</span>
+                      <span className="sr-only">Actions</span>
                     </th>
                   </tr>
                 </thead>
@@ -192,7 +193,7 @@ export function SecretsDialog({
                       <td>
                         <button
                           type="button"
-                          className="ghost"
+                          className="btn"
                           disabled={busy !== null}
                           aria-label={`Remove ${entry.name} for ${entry.scope}`}
                           onClick={() => void remove(entry)}
@@ -208,13 +209,13 @@ export function SecretsDialog({
           </div>
         )}
         {entries === null && !loadError && (
-          <p className="catalog-status" role="status">
+          <p className="statusline" role="status">
             <span className="spinner" /> Loading stored secrets…
           </p>
         )}
         <fieldset className="catalog-unframed" disabled={busy !== null}>
-          <legend className="catalog-sr-only">Store a new secret</legend>
-          <label className="catalog-field" htmlFor={`${id}-service`}>
+          <legend className="sr-only">Store a new secret</legend>
+          <label className="field" htmlFor={`${id}-service`}>
             Service name
             <input
               id={`${id}-service`}
@@ -224,11 +225,11 @@ export function SecretsDialog({
               pattern="[a-zA-Z0-9][a-zA-Z0-9_\-]*"
               onChange={(event) => setService(event.target.value)}
             />
-            <span className="catalog-help">
+            <span className="help">
               The service the kits declare, such as github or a custom kit’s service name.
             </span>
           </label>
-          <label className="catalog-field" htmlFor={`${id}-value`}>
+          <label className="field" htmlFor={`${id}-value`}>
             Secret value
             <input
               id={`${id}-value`}
@@ -240,7 +241,7 @@ export function SecretsDialog({
               onChange={(event) => setValue(event.target.value)}
             />
           </label>
-          <label className="catalog-check" htmlFor={`${id}-scope`}>
+          <label className="check" htmlFor={`${id}-scope`}>
             <input
               id={`${id}-scope`}
               type="checkbox"
@@ -249,11 +250,11 @@ export function SecretsDialog({
             />
             Only let {sandbox.name} use it
           </label>
-          <div className="catalog-actions">
-            <button type="button" className="ghost" disabled={busy !== null} onClick={close}>
+          <div className="actionbar end">
+            <button type="button" className="btn" disabled={busy !== null} onClick={close}>
               Done
             </button>
-            <button type="submit" className="primary" disabled={!service.trim() || !value}>
+            <button type="submit" className="btn primary" disabled={!service.trim() || !value}>
               {busy === "save" ? (
                 <>
                   <span className="spinner" /> Saving…

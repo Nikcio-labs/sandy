@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import type { KitCredential } from "../../lib/catalog";
 import type { LaunchSecret } from "../../lib/templates";
 import Icon from "./Icon";
+import "./SecretFields.css";
 
 /**
  * Optional secret inputs for the credential services a template's kits
@@ -33,7 +34,7 @@ export function SecretFields({
 
   return (
     <div className="secret-fields">
-      <p className="catalog-help">
+      <p className="help">
         These kits authenticate through the sandbox proxy. Store a secret now, or leave
         everything blank to use what’s already saved on this computer.
       </p>
@@ -42,11 +43,11 @@ export function SecretFields({
         const shown = revealed.includes(credential.service);
         return (
           <div className="secret-field" key={credential.service}>
-            <label className="catalog-field" htmlFor={`${id}-secret-${credential.service}`}>
+            <label className="field" htmlFor={`${id}-secret-${credential.service}`}>
               {credential.service} secret
-              {credential.required && <span className="catalog-badge">required by kit</span>}
+              {credential.required && <span className="badge">required by kit</span>}
             </label>
-            <div className="catalog-path-row secret-input">
+            <div className="path-row secret-input">
               <input
                 id={`${id}-secret-${credential.service}`}
                 type={shown ? "text" : "password"}
@@ -70,7 +71,7 @@ export function SecretFields({
               />
               <button
                 type="button"
-                className="ghost"
+                className="btn"
                 disabled={disabled}
                 aria-label={shown ? "Hide secret value" : "Show secret value"}
                 onClick={() => reveal(credential.service)}
@@ -79,7 +80,7 @@ export function SecretFields({
               </button>
             </div>
             {secret && (
-              <label className="catalog-check" htmlFor={`${id}-scope-${credential.service}`}>
+              <label className="check" htmlFor={`${id}-scope-${credential.service}`}>
                 <input
                   id={`${id}-scope-${credential.service}`}
                   type="checkbox"
