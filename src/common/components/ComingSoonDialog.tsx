@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import Icon from "./Icon";
+import "./ComingSoonDialog.css";
 
 export function ComingSoonDialog({
   feature,
@@ -28,7 +29,7 @@ export function ComingSoonDialog({
     >
       <button
         type="button"
-        className="icon-button dialog-close"
+        className="iconbtn dialogclose"
         aria-label="Close dialog"
         onClick={() => dialog.current?.close()}
       >
@@ -39,7 +40,7 @@ export function ComingSoonDialog({
       <p id={`${id}-description`}>
         This part of Sandy is still being built. Check back in a future update.
       </p>
-      <button type="button" className="primary" onClick={() => dialog.current?.close()}>
+      <button type="button" className="btn primary" onClick={() => dialog.current?.close()}>
         Got it
       </button>
     </dialog>

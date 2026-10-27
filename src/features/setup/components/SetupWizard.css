@@ -1,0 +1,155 @@
+/*
+ * The setup wizard flow: title, number-only step dots, and the current
+ * step's card. Compact enough that the whole flow fits the setup window
+ * without scrolling. The step dots reuse the shared .steps sizing, so the
+ * create flow keeps its labeled variant there.
+ */
+
+.setup-flow h2 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin: 0 0 18px;
+}
+
+/* Number-only dots on one line, left-aligned; the current step's label
+   lives in the card below, so the dots carry only the check state. */
+.setup-flow .steps {
+  grid-template-columns: repeat(4, 44px);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.setup-flow .steps button {
+  justify-content: center;
+  padding: 6px 0;
+  border-bottom-width: 2px;
+}
+
+/* Sized by the number, not stretched: keeps the dots equal and compact. */
+.setup-flow .step-number {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+
+/* Short what-to-do lines for steps that run outside Sandy. */
+.step-guide {
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.step-guide li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.step-guide li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+  flex-shrink: 0;
+  translate: 0 -2px;
+}
+
+.step-card {
+  padding: 25px;
+}
+
+.step-card h3 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin-bottom: 13px;
+}
+
+.step-description {
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 480px;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.step-feedback {
+  margin: 14px 0 4px;
+  min-height: 24px;
+}
+
+.step-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Collapsed error details; open by default when a step fails. */
+.step-output {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.step-output summary {
+  cursor: pointer;
+}
+
+.step-output pre {
+  max-height: 120px;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.success {
+  color: var(--green);
+}
+
+.failure {
+  color: var(--red);
+}
+
+/* The setup wizard centers its actions in the finish state. */
+.setup-finish .actionbar {
+  justify-content: center;
+}
+
+.setup-finish {
+  text-align: center;
+  padding: 40px 26px;
+}
+
+.setup-finish h3 {
+  font-size: 25px;
+  margin: 4px 0 12px;
+  letter-spacing: -0.5px;
+}
+
+.setup-finish p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.setup-footer {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .step-card {
+    padding: 20px 16px;
+  }
+
+  .setup-flow h2,
+  .step-card h3 {
+    font-size: 22px;
+  }
+}

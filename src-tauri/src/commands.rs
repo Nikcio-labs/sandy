@@ -44,10 +44,71 @@ async fn check_setup() -> Result<setup::SetupStatus, String> {
     .await
 }
 
+/// Reveal the main window after first-run setup. Called from the setup
+/// window, which would otherwise leave the app invisible behind its own
+/// close; the splash is closed here too because the setup window may
+/// finish without ever having shown itself (setup already complete).
 #[tauri::command]
-async fn install_sbx() -> Result<String, String> {
-    logged("install_sbx", async move {
-        blocking(sbx::ensure_sbx_installed).await
+async fn reveal_main(app: tauri::AppHandle) -> Result<(), String> {
+    logged("reveal_main", async move {
+        let main = app
+            .get_webview_window("main")
+            .ok_or_else(|| "main window is missing".to_string())?;
+        main.show().map_err(|error| error.to_string())?;
+        main.set_focus().map_err(|error| error.to_string())?;
+        if let Some(splash) = app.get_webview_window("splash") {
+            let _ = splash.close();
+        }
+        Ok(())
+    })
+    .await
+}
+
+/// Close the boot splash. The setup window calls this before showing the
+/// wizard: the splash is always-on-top and would cover it, and the setup
+/// window's capability does not grant closing other windows.
+#[tauri::command]
+async fn close_splash(app: tauri::AppHandle) -> Result<(), String> {
+    logged("close_splash", async move {
+        if let Some(splash) = app.get_webview_window("splash") {
+            let _ = splash.close();
+        }
+        Ok(())
+    })
+    .await
+}
+
+/// Reopen the setup window from the main window (e.g. the sandboxes page's
+/// setup banner after the user skipped first-run setup). The setup window
+/// re-runs its check when focused.
+#[tauri::command]
+async fn open_setup_window(app: tauri::AppHandle) -> Result<(), String> {
+    logged("open_setup_window", async move {
+        let setup = app
+            .get_webview_window("setup")
+            .ok_or_else(|| "setup window is missing".to_string())?;
+        setup.show().map_err(|error| error.to_string())?;
+        setup.set_focus().map_err(|error| error.to_string())
+    })
+    .await
+}
+
+/// Quit the app from the setup window's close button. Closing the window
+/// alone would reveal the main window (the destroyed-window fallback), so
+/// quitting must exit the whole process.
+#[tauri::command]
+async fn quit_app(app: tauri::AppHandle) -> Result<(), String> {
+    logged("quit_app", async move {
+        app.exit(0);
+        Ok(())
+    })
+    .await
+}
+
+#[tauri::command]
+async fn open_installer_terminal() -> Result<(), String> {
+    logged("open_installer_terminal", async move {
+        blocking(sbx::open_installer_terminal).await
     })
     .await
 }
@@ -115,6 +176,30 @@ async fn remove_sandbox(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn list_settings() -> Result<Vec<sbx::SettingRecord>, String> {
+    logged("list_settings", async move {
+        blocking(sbx::list_settings).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn set_setting(key: String, value_json: String) -> Result<String, String> {
+    logged("set_setting", async move {
+        blocking(move || sbx::set_setting(&key, &value_json)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn unset_setting(key: String) -> Result<String, String> {
+    logged("unset_setting", async move {
+        blocking(move || sbx::unset_setting(&key)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn open_terminal(name: String) -> Result<(), String> {
     logged("open_terminal", async move {
         blocking(move || sbx::open_terminal(&name)).await
@@ -152,20 +237,29 @@ async fn save_providers(
 }
 
 #[tauri::command]
-async fn provider_versions(provider: catalog::Provider) -> Result<Vec<String>, String> {
+async fn provider_versions(
+    app: tauri::AppHandle,
+    provider: catalog::Provider,
+    refresh: Option<bool>,
+) -> Result<Vec<String>, String> {
     logged("provider_versions", async move {
-        blocking(move || catalog::provider_versions(provider)).await
+        let root = data_dir(&app)?;
+        blocking(move || catalog::provider_versions(&root, provider, refresh.unwrap_or(false)))
+            .await
     })
     .await
 }
 
 #[tauri::command]
 async fn discover_kits(
+    app: tauri::AppHandle,
     providers: Vec<catalog::Provider>,
-    query: Option<String>,
+    refresh: Option<bool>,
 ) -> Result<catalog::Catalog, String> {
     logged("discover_kits", async move {
-        blocking(move || catalog::discover_kits(providers, query)).await
+        let root = data_dir(&app)?;
+        let refresh = refresh.unwrap_or(false);
+        blocking(move || catalog::discover_kits(&root, providers, refresh)).await
     })
     .await
 }
@@ -343,7 +437,11 @@ async fn clear_debug_log(app: tauri::AppHandle) -> Result<(), String> {
 pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
     Box::new(tauri::generate_handler![
         check_setup,
-        install_sbx,
+        reveal_main,
+        close_splash,
+        open_setup_window,
+        open_installer_terminal,
+        quit_app,
         enable_image_paste,
         setup_ssh,
         login,
@@ -352,6 +450,9 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         stop_sandbox,
         restart_sandbox,
         remove_sandbox,
+        list_settings,
+        set_setting,
+        unset_setting,
         open_terminal,
         connection_info,
         get_providers,

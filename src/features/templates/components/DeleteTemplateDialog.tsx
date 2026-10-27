@@ -5,7 +5,8 @@ import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 
-/** Asks for confirmation, then deletes the saved template file and record. */
+/** Asks for confirmation, then deletes the saved template file and record.
+ * Registered local files are only unlinked; the file on disk is kept. */
 export function DeleteTemplateDialog({
   template,
   onDeleted,
@@ -56,7 +57,7 @@ export function DeleteTemplateDialog({
   return (
     <dialog
       ref={dialog}
-      className="catalog-launch-dialog"
+      className="appdialog"
       aria-labelledby={`${id}-delete-title`}
       aria-describedby={`${id}-delete-description`}
       onCancel={(event) => {
@@ -68,13 +69,13 @@ export function DeleteTemplateDialog({
       }}
     >
       <div aria-busy={busy}>
-        <div className="catalog-section-heading">
+        <div className="sectionhead">
           <h2 id={`${id}-delete-title`}>
             {template.registered ? `Remove ${template.name} from Sandy?` : `Delete ${template.name}?`}
           </h2>
           <button
             type="button"
-            className="icon-button"
+            className="iconbtn"
             aria-label="Close delete dialog"
             disabled={busy}
             onClick={close}
@@ -82,7 +83,7 @@ export function DeleteTemplateDialog({
             <Icon name="close" size={20} />
           </button>
         </div>
-        <p className="catalog-muted" id={`${id}-delete-description`}>
+        <p className="help intro" id={`${id}-delete-description`}>
           {template.registered ? (
             <>
               Sandy stops listing this template, and the file{" "}
@@ -102,11 +103,11 @@ export function DeleteTemplateDialog({
             <span>Try deleting it again.</span>
           </ErrorBanner>
         )}
-        <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={close} disabled={busy}>
+        <div className="actionbar end">
+          <button type="button" className="btn" onClick={close} disabled={busy}>
             Cancel
           </button>
-          <button type="button" className="danger" onClick={remove} disabled={busy}>
+          <button type="button" className="btn danger" onClick={remove} disabled={busy}>
             {busy ? (
               <>
                 <span className="spinner" /> {template.registered ? "Removing…" : "Deleting…"}
@@ -126,7 +127,7 @@ export function DeleteTemplateDialog({
           </button>
         </div>
         {busy && (
-          <p className="catalog-status" role="status">
+          <p className="statusline" role="status">
             {template.registered
               ? "Removing the template from Sandy…"
               : "Removing the saved template file…"}

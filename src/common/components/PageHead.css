@@ -1,0 +1,51 @@
+/*
+ * Page head and context line: the per-page title block with its optional
+ * action button, and the quiet icon + caption line under page content.
+ * Rendered by the PageHead and ContextLine components.
+ */
+
+.pagehead {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.pagehead h1 {
+  font-size: 29px;
+  letter-spacing: -0.8px;
+  margin-bottom: 6px;
+}
+
+.pagehead p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .pagehead {
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .pagehead h1 {
+    font-size: 25px;
+  }
+}
+
+.contextline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 17px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.contextline svg {
+  width: 15px;
+  height: 15px;
+}

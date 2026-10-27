@@ -32,13 +32,15 @@ export interface CreateFlowOptions {
   onBusyChange?: (busy: boolean) => void;
   /** Present when the wizard edits an existing template instead of creating one. */
   templateId?: string;
+  /** Called with the sandbox name after a successful launch from the wizard. */
+  onLaunched?: (sandbox: string) => void;
 }
 
 /**
  * The create-wizard state machine: kit discovery, agent/mixin selection,
  * template saving, and launching. The page component only renders steps.
  */
-export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
+export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFlowOptions) {
   const mounted = useMountedRef();
   const [step, setStep] = useState(0);
   const [providers, setProviders] = useState<Provider[] | null>(null);
@@ -254,7 +256,7 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     });
   };
 
-  const discover = async () => {
+  const discover = async (refresh = false) => {
     // Provider edits are persisted by saveProviders below, so unsaved changes
     // do not need to block discovery.
     if (lock.current || !providers) return;
@@ -264,7 +266,7 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     try {
       // Defaults from get_providers may not have a file yet. Persist before discovery.
       const persistedProviders = await saveProviders(providers);
-      const result = await discoverKits(persistedProviders);
+      const result = await discoverKits(persistedProviders, refresh);
       if (!mounted.current) return;
       const { kits, warnings } = verifiedFrom(result);
       setCatalog({ kits, warnings });
@@ -311,6 +313,7 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     if (!mounted.current) return;
     setLaunchOutput(output);
     setLaunched(true);
+    onLaunched?.(template.name);
   };
 
   const submit = async (shouldLaunch: boolean) => {

@@ -1,0 +1,41 @@
+/*
+ * State pills: the CLI state signal rendered by the StatePill component.
+ */
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #606984;
+  background: #eff1f7;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.state.running {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.state.inactive {
+  color: var(--sand);
+  background: var(--sand-soft);
+}
+
+.state.pending {
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+}
+
+.state .dot,
+.dot {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

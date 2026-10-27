@@ -46,7 +46,7 @@ export function ReviewStep({
   const id = useId();
   return (
     <form
-      className="card catalog-panel"
+      className="panel catalog-panel"
       onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const submitter = (event.nativeEvent as SubmitEvent).submitter;
@@ -54,16 +54,16 @@ export function ReviewStep({
       }}
     >
       <h2>Bring your project</h2>
-      <p className="catalog-muted">
+      <p className="help intro">
         Choose the project folder to mount, then review the exact kit references.{" "}
         {editing
           ? "Saving updates this template where it is saved today."
           : "Your configuration is saved as a reusable template."}
       </p>
       <fieldset className="catalog-unframed" disabled={busy}>
-        <legend className="catalog-sr-only">Project details</legend>
-        <label className="catalog-field" htmlFor={`${id}-name`}>
-          Sandbox & template name <span className="catalog-sr-only">(required)</span>
+        <legend className="sr-only">Project details</legend>
+        <label className="field" htmlFor={`${id}-name`}>
+          Sandbox & template name <span className="sr-only">(required)</span>
           <input
             id={`${id}-name`}
             value={name}
@@ -73,12 +73,12 @@ export function ReviewStep({
             placeholder="Project name"
             onChange={(event) => onName(event.target.value)}
           />
-          <span className="catalog-help">
+          <span className="help">
             Start with a letter or number; use letters, numbers, dots, underscores, or hyphens. This
             is the default launch name.
           </span>
         </label>
-        <label className="catalog-check" htmlFor={`${id}-mountless`}>
+        <label className="check" htmlFor={`${id}-mountless`}>
           <input
             id={`${id}-mountless`}
             type="checkbox"
@@ -87,16 +87,16 @@ export function ReviewStep({
           />
           Run without a workspace (mountless)
         </label>
-        <p className="catalog-help" id={`${id}-mountless-help`}>
+        <p className="help" id={`${id}-mountless-help`}>
           The sandbox gets no folder from this computer, isolating it from the host file system.
           Files stay inside the sandbox and are removed with it.
         </p>
         {!mountless && (
           <>
-            <label className="catalog-field" htmlFor={`${id}-workspace`}>
-              Workspace folder <span className="catalog-sr-only">(required)</span>
+            <label className="field" htmlFor={`${id}-workspace`}>
+              Workspace folder <span className="sr-only">(required)</span>
             </label>
-            <div className="catalog-path-row">
+            <div className="path-row">
               <input
                 id={`${id}-workspace`}
                 value={workspace}
@@ -105,11 +105,11 @@ export function ReviewStep({
                 aria-describedby={`${id}-workspace-help`}
                 onChange={(event) => onWorkspace(event.target.value)}
               />
-              <button type="button" className="ghost" onClick={() => onBrowse("workspace")}>
+              <button type="button" className="btn" onClick={() => onBrowse("workspace")}>
                 Browse…
               </button>
             </div>
-            <p className="catalog-help" id={`${id}-workspace-help`}>
+            <p className="help" id={`${id}-workspace-help`}>
               Choose an existing folder on this computer. The template stores this workspace for
               reuse.
             </p>
@@ -117,10 +117,10 @@ export function ReviewStep({
         )}
         {!editing && (
           <>
-            <label className="catalog-field" htmlFor={`${id}-path`}>
+            <label className="field" htmlFor={`${id}-path`}>
               Save file location (optional)
             </label>
-            <div className="catalog-path-row">
+            <div className="path-row">
               <input
                 id={`${id}-path`}
                 value={savePath}
@@ -128,15 +128,15 @@ export function ReviewStep({
                 aria-describedby={`${id}-path-help`}
                 onChange={(event) => onSavePath(event.target.value)}
               />
-              <button type="button" className="ghost" onClick={() => onBrowse("path")}>
+              <button type="button" className="btn" onClick={() => onBrowse("path")}>
                 Choose file…
               </button>
             </div>
-            <p className="catalog-help" id={`${id}-path-help`}>
+            <p className="help" id={`${id}-path-help`}>
               Leave blank to use Sandy’s managed templates outside your workspace.
             </p>
             {savePath && (
-              <button type="button" className="text-button" onClick={() => onSavePath("")}>
+              <button type="button" className="textbtn" onClick={() => onSavePath("")}>
                 Use managed storage
               </button>
             )}
@@ -174,19 +174,19 @@ export function ReviewStep({
           <pre className="catalog-yaml" aria-label="Environment YAML preview">
             <code>{previewTemplate(request)}</code>
           </pre>
-          <p className="catalog-help">
+          <p className="help">
             The saved file’s actual YAML and final path will appear after saving.
           </p>
         </div>
-        <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={onBack}>
+        <div className="actionbar">
+          <button type="button" className="btn" onClick={onBack}>
             Back
           </button>
           <button
             type="submit"
             name="action"
             value="save"
-            className="ghost"
+            className="btn"
             disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
             {editing ? "Update template" : "Save template"}
@@ -195,7 +195,7 @@ export function ReviewStep({
             type="submit"
             name="action"
             value="launch"
-            className="primary"
+            className="btn primary"
             disabled={!name.trim() || (!mountless && !workspace.trim())}
           >
             {busy

@@ -45,6 +45,12 @@ struct LogRecord<'a> {
 /// crate is already in the dependency tree via Tauri, but its formatting
 /// features are not enabled, so the timestamp is composed from the epoch
 /// duration directly (no timezone math beyond the UTC offset of zero).
+/// The current time as RFC 3339 UTC, shared with caches that stamp when a
+/// payload was fetched.
+pub(crate) fn now_rfc3339() -> String {
+    rfc3339_now()
+}
+
 fn rfc3339_now() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

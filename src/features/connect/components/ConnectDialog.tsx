@@ -10,6 +10,7 @@ import { EditorSteps } from "./EditorSteps";
 import { ServerInfo } from "./ServerInfo";
 import type { Method } from "./ConnectionMethods";
 import type { Feedback } from "./ServerInfo";
+import "./ConnectDialog.css";
 
 export interface ConnectDialogProps {
   sandbox: SandboxInfo;
@@ -167,14 +168,14 @@ export default function ConnectDialog({
       }}
     >
       <button
-        className="icon-button dialog-close"
+        className="iconbtn dialogclose"
         aria-label="Close connection dialog"
         disabled={!!busy}
         onClick={close}
       >
         <Icon name="close" />
       </button>
-      <span className="eyebrow">CONNECT TO SANDBOX</span>
+      <div className="connect-body">
       <h2 id="connect-title">Open {sandbox.name}</h2>
       <p id="connect-description">Use your native terminal or connect your editor over SSH.</p>
 
@@ -200,7 +201,7 @@ export default function ConnectDialog({
         aria-labelledby="connection-method-title"
       >
         {method === "terminal" ? (
-          <>
+          <div className="connectguide">
             <h3 id="connection-method-title">Your sandbox, in a terminal</h3>
             <p>
               Open a Bash session in your computer’s terminal. This uses the sandbox CLI and does
@@ -208,7 +209,7 @@ export default function ConnectDialog({
             </p>
             <button
               ref={terminalButton}
-              className="primary"
+              className="btn primary"
               disabled={!!busy || !running}
               onClick={() => void launchTerminal()}
             >
@@ -219,7 +220,7 @@ export default function ConnectDialog({
               )}
               {busy === "terminal" ? "Opening terminal…" : "Open Terminal"}
             </button>
-          </>
+          </div>
         ) : (
           <>
             <h3 id="connection-method-title">
@@ -254,6 +255,13 @@ export default function ConnectDialog({
             {feedback.text}
           </p>
         )}
+      </div>
+      </div>
+
+      <div className="dialogfoot">
+        <button type="button" className="btn" disabled={!!busy} onClick={close}>
+          Done
+        </button>
       </div>
     </dialog>
   );

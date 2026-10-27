@@ -3,6 +3,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 import { useUpdater } from "../../../common/hooks/useUpdater";
+import "./Updates.css";
 
 // Settings mounts and unmounts this card on every navigation; the automatic
 // check runs once per app session, like the startup setup check.
@@ -49,19 +50,19 @@ export default function Updates() {
 
   return (
     <section
-      className="catalog-providers"
+      className="group group-body"
       aria-labelledby={`${id}-title`}
       aria-busy={state.step === "checking"}
     >
-      <div className="catalog-section-heading">
+      <div className="sectionhead">
         <div>
           <h2 id={`${id}-title`}>Updates</h2>
-          <p className="catalog-muted">
+          <p className="help intro">
             Sandy can check for new versions and update itself in place; you just confirm the
             restart.
           </p>
         </div>
-        {version && <span className="catalog-badge">Version {version}</span>}
+        {version && <span className="badge pill">Version {version}</span>}
       </div>
 
       {error && (
@@ -76,8 +77,8 @@ export default function Updates() {
       )}
 
       {state.step === "idle" && !error && (
-        <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={check} disabled={busy}>
+        <div className="actionbar">
+          <button type="button" className="btn" onClick={check} disabled={busy}>
             <Icon name="refresh" size={16} />
             Check for updates
           </button>
@@ -85,7 +86,7 @@ export default function Updates() {
       )}
 
       {state.step === "checking" && (
-        <p className="catalog-status" role="status">
+        <p className="statusline" role="status">
           <span className="spinner" /> Checking for updates…
         </p>
       )}
@@ -94,13 +95,13 @@ export default function Updates() {
         <div className="update-offer">
           <p>
             <strong>Sandy {state.version}</strong> is available.
-            {state.notes && <span className="catalog-help"> {state.notes}</span>}
+            {state.notes && <span className="help"> {state.notes}</span>}
           </p>
-          <div className="catalog-actions">
-            <button type="button" className="primary" onClick={() => void state.download()}>
+          <div className="actionbar">
+            <button type="button" className="btn primary" onClick={() => void state.download()}>
               Download update
             </button>
-            <button type="button" className="ghost" onClick={dismiss}>
+            <button type="button" className="btn" onClick={dismiss}>
               Not now
             </button>
           </div>
@@ -125,7 +126,7 @@ export default function Updates() {
       )}
 
       {state.step === "installing" && (
-        <p className="catalog-status" role="status">
+        <p className="statusline" role="status">
           <span className="spinner" /> Installing update…
         </p>
       )}
@@ -135,8 +136,8 @@ export default function Updates() {
           <p>
             <strong>Sandy {state.version}</strong> is installed. Restart to start using it.
           </p>
-          <div className="catalog-actions">
-            <button type="button" className="primary" onClick={() => void state.restart()}>
+          <div className="actionbar">
+            <button type="button" className="btn primary" onClick={() => void state.restart()}>
               Restart now
             </button>
           </div>

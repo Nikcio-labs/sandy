@@ -3,7 +3,7 @@ use std::net::TcpListener;
 
 use super::descriptor::option_from_descriptor;
 use super::http::Api;
-use super::types::Provider;
+use super::types::{Catalog, Provider};
 use super::{
     BUILTIN_AGENTS, discover_with, encoded_path, get_providers, save_providers, unique_id,
 };
@@ -221,4 +221,85 @@ fn builtin_agents_match_the_documented_list() {
             "shell",
         ]
     );
+}
+
+#[test]
+fn discovery_cache_serves_same_configuration_and_misses_on_change() {
+    let root = std::env::temp_dir().join(format!("sandy-cache-{}", unique_id()));
+    let providers = [Provider {
+        id: "p".into(),
+        label: "P".into(),
+        kind: "github".into(),
+        repository: "nikcio/docker-sandboxing".into(),
+        reference: String::new(),
+        enabled: true,
+    }];
+    assert!(super::cache::read_catalog(&root, &providers).is_none());
+    super::cache::write_catalog(
+        &root,
+        &providers,
+        &Catalog {
+            kits: Vec::new(),
+            warnings: vec!["from-cache".into()],
+        },
+    );
+    let cached = super::cache::read_catalog(&root, &providers).expect("cached catalog");
+    assert_eq!(cached.warnings, ["from-cache"]);
+
+    // A changed configuration must not be served the old result.
+    let mut changed = providers[0].clone();
+    changed.reference = "v9.9.9".into();
+    assert!(super::cache::read_catalog(&root, std::slice::from_ref(&changed)).is_none());
+
+    // Corrupt cache content is a miss, not an error.
+    std::fs::write(root.join("cache").join("catalog.json"), "not json").unwrap();
+    assert!(super::cache::read_catalog(&root, &providers).is_none());
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn version_cache_keeps_entries_per_provider_and_misses_on_change() {
+    let root = std::env::temp_dir().join(format!("sandy-cache-{}", unique_id()));
+    let provider = Provider {
+        id: "p".into(),
+        label: "P".into(),
+        kind: "github".into(),
+        repository: "team/kits".into(),
+        reference: String::new(),
+        enabled: true,
+    };
+    assert!(super::cache::read_versions(&root, &provider).is_none());
+    super::cache::write_versions(&root, &provider, &["v1".into(), "v0".into()]);
+    assert_eq!(
+        super::cache::read_versions(&root, &provider).expect("cached versions"),
+        ["v1", "v0"]
+    );
+
+    // A second provider's entry coexists with the first.
+    let mut other = provider.clone();
+    other.id = "q".into();
+    other.repository = "other/kits".into();
+    super::cache::write_versions(&root, &other, &["x".into()]);
+    assert_eq!(
+        super::cache::read_versions(&root, &provider).unwrap(),
+        ["v1", "v0"]
+    );
+    assert_eq!(super::cache::read_versions(&root, &other).unwrap(), ["x"]);
+
+    // A changed reference invalidates the entry: the fingerprint is
+    // deliberately per-configuration, so a stale list can never mask a
+    // reference switch.
+    let mut changed = provider.clone();
+    changed.reference = "v1.0".into();
+    assert!(super::cache::read_versions(&root, &changed).is_none());
+
+    // Re-writing replaces instead of appending duplicates.
+    super::cache::write_versions(&root, &provider, &["v2".into()]);
+    assert_eq!(
+        super::cache::read_versions(&root, &provider).unwrap(),
+        ["v2"]
+    );
+    let bytes = std::fs::read_to_string(root.join("cache").join("versions.json")).unwrap();
+    assert_eq!(bytes.matches("\"key\"").count(), 2, "{bytes}");
+    std::fs::remove_dir_all(root).unwrap();
 }

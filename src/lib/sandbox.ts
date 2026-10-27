@@ -41,7 +41,16 @@ export interface ConnectionInfo {
 // invoke: StrictMode double effects and overlapping callers must not each
 // spawn the same CLI work.
 export const checkSetup = shareInFlight(() => invoke<SetupStatus>("check_setup"));
-export const installSbx = () => invoke<string>("install_sbx");
+/** Reveal the main window (and close the splash) from the setup window. */
+export const revealMain = () => invoke<void>("reveal_main");
+/** Close the boot splash from the setup window before the wizard shows. */
+export const closeSplash = () => invoke<void>("close_splash");
+/** Quit the whole app from the setup window's close button. */
+export const quitApp = () => invoke<void>("quit_app");
+/** Reopen the setup window after the user skipped first-run setup. */
+export const openSetupWindow = () => invoke<void>("open_setup_window");
+/** Open the sbx installer in a visible terminal (sudo/winget prompts). */
+export const openInstallerTerminal = () => invoke<void>("open_installer_terminal");
 export const enableImagePaste = () => invoke<void>("enable_image_paste");
 export const setupSsh = () => invoke<string>("setup_ssh");
 export const login = () => invoke<string>("login");
