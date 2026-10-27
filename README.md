@@ -4,7 +4,9 @@
   <img src="src-tauri/icons/icon.png" alt="Sandy icon" width="120">
 </p>
 
-A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with guided setup, reusable environment templates, and local sandbox management, powered by the `sbx` CLI.
+A desktop app for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) with guided setup, reusable environment templates, and local sandbox management.
+
+Docker Sandboxes are disposable development environments that AI coding agents work inside. Sandy drives Docker's `sbx` command-line tool, which manages those sandboxes on your computer — you never need to learn the CLI; Sandy installs it and runs its commands for you.
 
 ## What it does
 
