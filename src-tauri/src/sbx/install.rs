@@ -14,7 +14,7 @@ use std::process::Command;
 use super::cli::HideConsole;
 
 use super::cli::is_sbx_installed;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 use super::terminal::spawn_terminal;
 
 /// Open a terminal that runs the platform's installer. An already installed
