@@ -40,11 +40,11 @@ export function SshStatus({
         )}
         {sshReady !== true && (
           <div className="connection-setup-actions">
-            <button className="primary" disabled={!!busy || !sbxInstalled} onClick={onSetup}>
+            <button className="btn primary" disabled={!!busy || !sbxInstalled} onClick={onSetup}>
               {busy === "setup" && <span className="spinner" aria-hidden="true" />}
               {busy === "setup" ? "Setting up SSH…" : "Set up SSH"}
             </button>
-            <button className="ghost" disabled={!!busy} onClick={onCheck}>
+            <button className="btn" disabled={!!busy} onClick={onCheck}>
               {busy === "check" ? "Checking…" : "Check SSH setup"}
             </button>
           </div>

@@ -1,0 +1,22 @@
+/*
+ * The update offer and download progress states inside the Updates card.
+ */
+
+.update-offer p {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 14px 0 4px;
+}
+
+.update-progress {
+  margin: 14px 0 4px;
+}
+
+.update-progress .setup-progress-label {
+  margin: 0 0 8px;
+}
+
+.update-progress .progress-track {
+  margin: 0;
+}

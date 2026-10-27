@@ -1,0 +1,156 @@
+/*
+ * Settings → Sandbox settings: the CLI-true settings editor. Rows follow
+ * the concept's two-column setting grid: description and metadata badges
+ * on the left, typed control and apply/reset actions on the right.
+ */
+
+.pane-section {
+  min-width: 0;
+}
+
+.pane-toolbar {
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.pane-search {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+}
+
+.settinglist {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 260px);
+  gap: 18px;
+  align-items: start;
+}
+
+.setting:last-child {
+  border-bottom: 0;
+}
+
+.settinginfo strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.1px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.settinginfo p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 5px 0;
+}
+
+.settingbadges .badge {
+  font-size: 9px;
+}
+
+.settingbadges {
+  margin-top: 7px;
+}
+
+/* Source and restart markers stay neutral; violet is reserved for
+   interactive accents. */
+.settingbadges .badge.violet {
+  background: var(--surface-sunken);
+  color: var(--muted);
+}
+
+/* The bool control: a real switch with a traveling knob and a violet on
+   state, as in the concept. */
+.switch {
+  padding: 3px;
+  border: 0;
+  width: 38px;
+  height: 22px;
+  border-radius: 12px;
+  background: #c8cee0;
+  flex-shrink: 0;
+}
+
+.switch span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 120ms var(--out);
+}
+
+.switch[aria-checked="true"] {
+  background: var(--brand);
+}
+
+.switch[aria-checked="true"] span {
+  transform: translateX(16px);
+}
+
+.settingcontrols {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Keep the control and its actions on one tidy baseline like the concept's
+   two-column grid; the actions never wrap under the input. */
+.settingapply {
+  flex-shrink: 0;
+}
+
+.settingbool {
+  justify-content: flex-end;
+}
+
+.settingvalue {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--field-border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  padding: 8px 10px;
+  font-weight: 400;
+}
+
+textarea.settingvalue {
+  min-height: 76px;
+  font-family: var(--mono);
+  font-size: 14px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.7;
+}
+
+.setting-error {
+  margin: 0;
+  color: var(--red);
+}
+
+@media (max-width: 720px) {
+  .setting {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .settingcontrols {
+    justify-content: flex-start;
+  }
+
+  .settingapply {
+    justify-content: flex-start;
+  }
+}

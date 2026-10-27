@@ -1,0 +1,109 @@
+/*
+ * The Sandy diagnostic log view inside the Advanced card: toolbar, filter,
+ * entry list, and older-entries affordance.
+ */
+
+.debug-log-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 14px 0 10px;
+  flex-wrap: wrap;
+}
+
+.debug-log-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.debug-log-filter select {
+  padding: 6px 10px;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: inherit;
+  font-size: 14px;
+  max-width: none;
+}
+
+.debug-log-view {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  padding: 6px 0;
+}
+
+.debug-log-entry summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  list-style: none;
+}
+
+.debug-log-entry summary::-webkit-details-marker {
+  display: none;
+}
+
+.debug-log-entry summary:hover {
+  background: var(--surface-sunken);
+}
+
+.debug-log-kind {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.debug-log-kind-http {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.debug-log-kind-command {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.debug-log-entry > span,
+.debug-log-entry summary > span:nth-child(2) {
+  flex: 1;
+}
+
+.debug-log-failed {
+  color: var(--red);
+}
+
+.debug-log-time {
+  flex: none;
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.debug-log-entry pre {
+  margin: 0 14px 10px 52px;
+  max-height: 260px;
+  background: #f1f3fa;
+}
+
+.debug-log-older {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}

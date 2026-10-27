@@ -1,7 +1,7 @@
 //! Opening a native interactive terminal attached to a sandbox.
 
 use std::process::Command;
-#[cfg(target_os = "linux")]
+#[cfg(any(test, target_os = "linux"))]
 use std::process::Stdio;
 
 #[cfg(target_os = "windows")]
@@ -27,8 +27,8 @@ pub(crate) fn powershell_quote(value: &str) -> String {
 /// Wait briefly for launch failures, then transfer ownership to a waiter.
 /// Terminal sessions may last hours; dropping Child without waiting leaks
 /// zombies on Unix. No pipes are held open by the long-lived terminal.
-#[cfg(any(target_os = "linux", target_os = "windows"))]
-fn spawn_terminal(mut command: Command) -> Result<(), String> {
+#[cfg(any(test, target_os = "linux", target_os = "windows"))]
+pub(crate) fn spawn_terminal(mut command: Command) -> Result<(), String> {
     // A Windows CREATE_NEW_CONSOLE must get real console handles, rather
     // than explicitly redirecting its interactive PowerShell to NUL.
     #[cfg(not(windows))]

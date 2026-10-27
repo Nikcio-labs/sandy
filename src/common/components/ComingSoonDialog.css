@@ -1,0 +1,32 @@
+/*
+ * The "coming soon" feature dialog. Co-located with ComingSoonDialog, which
+ * is currently unreferenced pending a product decision on its removal.
+ */
+
+.feature-dialog {
+  position: relative;
+  width: min(430px, calc(100vw - 40px));
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 26px;
+  color: var(--ink);
+  box-shadow: 0 22px 65px #141a3d38;
+}
+
+.feature-dialog::backdrop {
+  background: #141a3d50;
+  backdrop-filter: blur(3px);
+}
+
+.feature-dialog h2 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin-bottom: 12px;
+}
+
+.feature-dialog p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 25px;
+}

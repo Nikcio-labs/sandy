@@ -5,13 +5,11 @@ use serde::Serialize;
 
 use crate::sbx::{self, CheckExplanation};
 
-/// Run the full setup check: whether the `sbx` CLI is installed, and how far
-/// the local configuration (authentication, clipboard setting, SSH) has come.
 /// Every call spawns CLI processes (daemon probe, `sbx diagnose`, a settings
 /// read), so call it only where the answer can change: once at startup, after
 /// a setup action (wizard step, login, SSH setup), or on an explicit user
 /// request ("check again"). Never poll it — sandbox data comes from `sbx ls`.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct SetupStatus {
     pub sbx_installed: bool,
     // Unavailable checks are not evidence that the user signed out or disabled setup.
@@ -29,7 +27,16 @@ pub struct SetupStatus {
     pub issues: Vec<String>,
 }
 
+/// Run the full setup check: whether the `sbx` CLI is installed, and how far
+/// the local configuration (authentication, clipboard setting, SSH) has come.
+/// The main window and the setup window run in one process but not one React
+/// tree, so each runs its own check; callers keep the total low by checking
+/// once at boot and then only where the answer can change.
 pub(crate) fn check_setup() -> Result<SetupStatus, String> {
+    run_check()
+}
+
+fn run_check() -> Result<SetupStatus, String> {
     let sbx_installed = sbx::is_sbx_installed();
     if !sbx_installed {
         return Ok(SetupStatus {
