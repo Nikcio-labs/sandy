@@ -13,7 +13,7 @@
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
-  animation: spin 650ms linear infinite;
+  animation: spin 500ms linear infinite;
 }
 
 @keyframes spin {
@@ -36,7 +36,8 @@
   height: 100%;
   border-radius: inherit;
   background: var(--brand);
-  transition: width 250ms var(--out);
+  transform-origin: left;
+  transition: transform 250ms var(--out);
 }
 
 /* Progress label used with a .progress-track bar (update download). */

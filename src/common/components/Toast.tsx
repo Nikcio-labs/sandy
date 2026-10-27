@@ -12,7 +12,7 @@ export function Toast({ notice, onDismiss }: { notice: ToastNotice; onDismiss: (
 
   useEffect(() => {
     if (!leaving) return;
-    const timer = setTimeout(onDismiss, 180);
+    const timer = setTimeout(onDismiss, 120);
     return () => clearTimeout(timer);
   }, [leaving, onDismiss]);
 

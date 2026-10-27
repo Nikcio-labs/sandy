@@ -43,9 +43,13 @@
   color: var(--red);
 }
 
+/* Exit is faster than entry (asymmetric timing): dismissal is the system
+   responding, so it should not linger. The unmount timeout in Toast.tsx
+   matches the exit duration. */
 .toast.leaving {
   opacity: 0;
   transform: translateY(7px);
+  transition-duration: 120ms;
 }
 
 @starting-style {

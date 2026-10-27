@@ -54,8 +54,20 @@
   color: var(--brand-dark);
 }
 
+/* Pane entrance via transition + starting style (not keyframes): a quick
+   back-navigation retargets the running transition instead of restarting
+   it from zero. The base stylesheet's reduced-motion rule strips this. */
 .settingspane {
-  animation: pane-in 220ms var(--out);
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 180ms var(--out),
+    transform 180ms var(--out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(10px);
+  }
 }
 
 .panehead {
@@ -82,24 +94,6 @@
   font-size: 14px;
   color: var(--muted);
   margin-bottom: 18px;
-}
-
-@keyframes pane-in {
-  from {
-    opacity: 0.4;
-    transform: translateX(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .settingspane {
-    animation: none;
-  }
 }
 
 @media (max-width: 720px) {
