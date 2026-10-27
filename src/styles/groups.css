@@ -1,0 +1,15 @@
+/*
+ * Grouped panel sections: a section inside a panel card. .group-body adds
+ * the card padding when the section is the card's content, .group spaces
+ * stacked sections. Used by the Settings cards (Updates, Kit providers,
+ * Advanced).
+ */
+
+.group {
+  margin: 25px 0 0;
+}
+
+.group-body {
+  padding: 26px;
+  margin-top: 0;
+}

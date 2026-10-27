@@ -1,0 +1,53 @@
+/*
+ * The first-run setup window: a frameless window with its own draggable
+ * brand bar and the setup wizard filling the body. Its look borrows the
+ * splash card: the app paper background fills the frame edge-to-edge.
+ */
+
+.setupwindow {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: var(--paper);
+  user-select: none;
+}
+
+.setupwindow-bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 49px;
+  padding-left: 15px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  font: 600 18px var(--display);
+}
+
+.setupwindow-bar img {
+  width: 28px;
+  height: 28px;
+}
+
+.setupwindow-close {
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.setupwindow-body {
+  flex: 1;
+  overflow: auto;
+  padding: 25px 28px;
+  user-select: text;
+}
+
+.setupwindow-body .setup-flow {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  .setupwindow-body {
+    padding: 20px 16px;
+  }
+}

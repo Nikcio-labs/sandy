@@ -1,0 +1,130 @@
+/*
+ * Panel surfaces and the scaffolding around lists: .panel (rounded card),
+ * .listhead (panel header with title, count, search, and actions),
+ * .search (bordered search input pill), and .resultcount (list footer).
+ * Empty states share the list scaffolding vocabulary.
+ */
+
+.panel {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.listhead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.listhead h2 {
+  font-size: 15px;
+  letter-spacing: -0.2px;
+}
+
+.search {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-left: auto;
+  color: var(--muted);
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 7px;
+}
+
+.search svg {
+  width: 14px;
+  height: 14px;
+}
+
+.search input {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 140px;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 14px;
+  outline-offset: 6px;
+}
+
+/* Full-width standalone search above a list or grid of choices. */
+.search.wide {
+  margin: 0 0 16px;
+}
+
+.search.wide input {
+  width: 100%;
+}
+
+.search:focus-within {
+  outline: 2px solid var(--brand-soft);
+  outline-offset: 2px;
+}
+
+.resultcount {
+  padding: 9px 15px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Banners floated inside a panel need the list padding without touching
+   the shared banner component's own box styles. */
+.panelnotice {
+  padding: 14px 15px 0;
+}
+
+@media (max-width: 720px) {
+  .listhead {
+    padding: 10px;
+  }
+
+  .listhead h2 {
+    font-size: 14px;
+  }
+
+  .search {
+    order: 3;
+    width: 100%;
+  }
+
+  .search input {
+    width: 100%;
+  }
+
+  .listhead > .iconbtn {
+    margin-left: auto;
+  }
+}
+
+/* Empty panel content: centered icon, heading, and guidance. */
+.empty {
+  padding: 40px 22px;
+  text-align: center;
+}
+
+.empty .avatar {
+  margin: 0 auto 17px;
+  width: 46px;
+  height: 46px;
+}
+
+.empty h3 {
+  margin-bottom: 9px;
+  font-size: 21px;
+}
+
+.empty p {
+  max-width: 39ch;
+  margin: 0 auto 18px;
+  font-size: 14px;
+  color: var(--muted);
+}

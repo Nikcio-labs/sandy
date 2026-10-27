@@ -1,0 +1,85 @@
+/*
+ * Step tabs: the numbered horizontal step navigation shared by the setup
+ * wizard and the create flow, with current/complete states.
+ */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+  margin: 0 0 24px;
+}
+
+.steps li {
+  display: flex;
+  min-width: 0;
+}
+
+.steps button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 5px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  border-radius: 0;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.steps button:hover:not(:disabled),
+.steps button.current {
+  background: transparent;
+  color: var(--brand-dark);
+  border-color: var(--brand);
+}
+
+.steps button.complete:not(.current) {
+  color: var(--green);
+}
+
+.steps button:disabled {
+  opacity: 1;
+}
+
+.step-number {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef0f8;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+/* "Optional" tag next to non-blocking setup step labels. */
+.step-optional {
+  display: block;
+  font-style: normal;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--faint);
+}
+
+.steps button.current .step-number {
+  color: #fff;
+  background: var(--brand);
+}
+
+.steps button.complete .step-number {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+@media (max-width: 720px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

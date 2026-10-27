@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import logo from "../../assets/logo.png";
+import "./BootSplash.css";
 
 /**
  * Boot screen: the logo, a spinner, and a label.
