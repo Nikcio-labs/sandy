@@ -1,22 +1,18 @@
 /*
  * The connect dialog and its parts: method option cards, SSH status, editor
  * steps, and SSH server information. Dialog chrome comes from the shared
- * appdialog vocabulary (.dialogclose); this file owns the connect-specific
- * layout and detail panels.
+ * .appdialog; this file owns the connect-specific layout (pinned footer
+ * over a scrolling body) and detail panels.
  */
 
-.connect-dialog {
-  position: relative;
+/* Two classes to out-rank the shared .appdialog chrome: bundling can emit
+   that rule after this file regardless of import order. */
+.appdialog.connect-dialog {
   width: min(620px, calc(100vw - 40px));
   height: min(680px, calc(100dvh - 60px));
   display: flex;
   flex-direction: column;
   padding: 0;
-  color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: 0 22px 65px #141a3d38;
   overflow: hidden;
 }
 
@@ -28,47 +24,9 @@
   padding: 26px;
 }
 
-.connect-dialog::backdrop {
-  background: #141a3d50;
-  backdrop-filter: blur(3px);
-}
-
-/* Entrance matches the shared .appdialog vocabulary so every modal in the
-   app plays the same motion. */
-.connect-dialog[open] {
-  transition:
-    opacity 180ms var(--out),
-    transform 180ms var(--out),
-    overlay 180ms allow-discrete,
-    display 180ms allow-discrete;
-}
-
-@starting-style {
-  .connect-dialog[open] {
-    opacity: 0;
-    transform: scale(0.97) translateY(5px);
-  }
-}
-
-.connect-dialog[open]::backdrop {
-  transition:
-    background-color 180ms ease,
-    overlay 180ms allow-discrete,
-    display 180ms allow-discrete;
-}
-
-@starting-style {
-  .connect-dialog[open]::backdrop {
-    background: transparent;
-    backdrop-filter: blur(0);
-  }
-}
-
+/* No dialog padding: the heading reserves its own close-button clearance. */
 .connect-dialog h2 {
-  font-size: 25px;
-  letter-spacing: -0.6px;
   margin: 0 30px 8px 0;
-  overflow-wrap: anywhere;
 }
 
 .connect-dialog h3 {
@@ -89,15 +47,15 @@
 }
 
 @media (max-width: 720px) {
-  .connect-dialog {
+  .appdialog.connect-dialog {
     padding: 21px 17px;
   }
 }
 
 /* ---- Method options ---- */
 
-/* Segmented method track, as in the concept: one gray rail, the active
-   segment lifts to a white tab with violet text. */
+/* Segmented method track: one gray rail, the active segment lifts to a
+   white tab with violet text. */
 .segmented {
   display: flex;
   gap: 4px;
@@ -131,7 +89,7 @@
   margin-bottom: 22px;
 }
 
-/* The terminal hand-off guide sits on the concept's tinted panel. */
+/* The terminal hand-off guide sits on a tinted panel. */
 .connection-method .connectguide {
   padding: 15px;
   background: var(--surface-soft);
@@ -141,14 +99,6 @@
 
 .connection-method .connectguide h3 {
   margin-bottom: 8px;
-}
-
-.connection-note {
-  padding: 13px 14px;
-  border: 1px solid #edd9b5;
-  border-radius: 9px;
-  background: var(--sand-soft);
-  font-size: 14px;
 }
 
 /* ---- SSH status ---- */
@@ -251,22 +201,16 @@
   font-size: 16px;
 }
 
+/* The server information is the shared .details dl with its own columns;
+   dd text stays selectable for pasting into an SSH client. */
 .connection-info {
-  display: grid;
   grid-template-columns: 70px minmax(0, 1fr);
   gap: 9px 14px;
-  font-size: 14px;
   line-height: 1.5;
   margin: 0 0 14px;
 }
 
-.connection-info dt {
-  color: var(--muted);
-}
-
 .connection-info dd {
-  margin: 0;
-  overflow-wrap: anywhere;
   user-select: text;
 }
 

@@ -26,3 +26,12 @@ export function Toast({ notice, onDismiss }: { notice: ToastNotice; onDismiss: (
     </div>
   );
 }
+
+/** The fixed bottom-right region every page renders its notice into. */
+export function ToastHost({ notice, onDismiss }: { notice: ToastNotice | null; onDismiss: () => void }) {
+  return (
+    <div className="toasts" aria-live="polite" aria-atomic="true">
+      {notice && <Toast notice={notice} onDismiss={onDismiss} />}
+    </div>
+  );
+}

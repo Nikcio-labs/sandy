@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { SandboxInfo, SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
-import { Toast } from "../../../common/components/Toast";
+import { ToastHost } from "../../../common/components/Toast";
 import { SandboxList } from "./SandboxList";
 import { SandboxInspector } from "./SandboxInspector";
 import type { SandboxAction } from "../sandboxActions";
@@ -173,9 +173,7 @@ export default function SandboxesPage({
           />
         )}
       </div>
-      <div className="toasts" aria-live="polite" aria-atomic="true">
-        {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
-      </div>
+      <ToastHost notice={notice} onDismiss={dismissNotice} />
       {connecting && (
         <ConnectDialog
           key={connecting.name}

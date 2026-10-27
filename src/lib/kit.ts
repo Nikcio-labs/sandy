@@ -13,6 +13,8 @@ export const BUILTIN_AGENTS: KitOption[] = [
   "copilot",
   "cursor",
   "devin",
+  "docker-agent",
+  "droid",
   "gemini",
   "kiro",
   "opencode",

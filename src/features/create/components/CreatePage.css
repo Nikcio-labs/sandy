@@ -1,8 +1,8 @@
 /*
  * The create wizard page: in-place page layout, step navigation, discovery
  * warnings, and the wizard grid with the environment summary rail. Owned by
- * CreatePage and RecipeAside; the shared components.css vocabulary covers
- * panels, fields, option cards, and action bars.
+ * CreatePage and RecipeAside; the shared stylesheets cover panels, fields,
+ * option cards, and action bars.
  */
 
 /* The create wizard replaces the page content in-place under the shared
@@ -164,22 +164,16 @@
   font-weight: 500;
 }
 
+/* The review grid is the shared .details dl with wider columns; dd text is
+   selectable so the composed environment can be copied. */
 .catalog-review-grid {
-  display: grid;
   grid-template-columns: 110px minmax(0, 1fr);
   gap: 12px 18px;
   margin: 18px 0 23px;
-  font-size: 14px;
   line-height: 1.7;
 }
 
-.catalog-review-grid dt {
-  color: var(--muted);
-}
-
 .catalog-review-grid dd {
-  margin: 0;
-  overflow-wrap: anywhere;
   user-select: text;
 }
 

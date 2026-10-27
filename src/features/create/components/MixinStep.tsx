@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { KitArguments, KitOption } from "../../../lib/kit";
 import Icon from "../../../common/components/Icon";
+import { SearchField } from "../../../common/components/SearchField";
 import { KitDetails } from "./KitDetails";
 import { KitInputs } from "./KitInputs";
 
@@ -59,17 +60,14 @@ export function MixinStep({
         </div>
         <span className="badge pill">{mixins.length} selected</span>
       </div>
-      <label className="search wide" htmlFor={`${id}-mixin-search`}>
-        <Icon name="search" size={14} />
-        <input
-          id={`${id}-mixin-search`}
-          type="search"
-          placeholder="Search compatible mixins…"
-          aria-label="Search mixins"
-          value={search}
-          onChange={(event) => onSearch(event.target.value)}
-        />
-      </label>
+      <SearchField
+        id={`${id}-mixin-search`}
+        value={search}
+        onChange={onSearch}
+        placeholder="Search compatible mixins…"
+        label="Search mixins"
+        wide
+      />
       <label className="field" htmlFor={`${id}-provider-filter`}>
         Group by provider
         <select

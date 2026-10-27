@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { KitOption } from "../../../lib/catalog";
 import Icon from "../../../common/components/Icon";
+import { SearchField } from "../../../common/components/SearchField";
 import { KitDetails } from "./KitDetails";
 
 export function AgentStep({
@@ -30,17 +31,14 @@ export function AgentStep({
         Built-in agent shortcuts use kit v2. A v3 workload starts a v3-only environment. Remote kit
         sources below come from discovered descriptors.
       </p>
-      <label className="search wide" htmlFor={`${id}-agent-search`}>
-        <Icon name="search" size={14} />
-        <input
-          id={`${id}-agent-search`}
-          type="search"
-          placeholder="Search agents and workloads…"
-          aria-label="Search agents and workloads"
-          value={search}
-          onChange={(event) => onSearch(event.target.value)}
-        />
-      </label>
+      <SearchField
+        id={`${id}-agent-search`}
+        value={search}
+        onChange={onSearch}
+        placeholder="Search agents and workloads…"
+        label="Search agents and workloads"
+        wide
+      />
       {([2, 3] as const).map((version) => {
         const items = agents.filter((kit) => kit.schema_version === version);
         return (

@@ -1,57 +1,14 @@
 /*
- * The "coming soon" feature dialog. Co-located with ComingSoonDialog, which
- * is currently unreferenced pending a product decision on its removal.
+ * The "coming soon" feature dialog: shared .appdialog chrome with a
+ * narrower panel and the eyebrow + description copy layout.
  */
 
-.feature-dialog {
-  position: relative;
+.appdialog.feature-dialog {
   width: min(430px, calc(100vw - 40px));
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
   padding: 26px;
-  color: var(--ink);
-  box-shadow: 0 22px 65px #141a3d38;
 }
 
-.feature-dialog::backdrop {
-  background: #141a3d50;
-  backdrop-filter: blur(3px);
-}
-
-/* Entrance matches the shared .appdialog vocabulary so every modal in the
-   app plays the same motion. */
-.feature-dialog[open] {
-  transition:
-    opacity 180ms var(--out),
-    transform 180ms var(--out),
-    overlay 180ms allow-discrete,
-    display 180ms allow-discrete;
-}
-
-@starting-style {
-  .feature-dialog[open] {
-    opacity: 0;
-    transform: scale(0.97) translateY(5px);
-  }
-}
-
-.feature-dialog[open]::backdrop {
-  transition:
-    background-color 180ms ease,
-    overlay 180ms allow-discrete,
-    display 180ms allow-discrete;
-}
-
-@starting-style {
-  .feature-dialog[open]::backdrop {
-    background: transparent;
-    backdrop-filter: blur(0);
-  }
-}
-
-.feature-dialog h2 {
-  font-size: 25px;
-  letter-spacing: -0.6px;
+.appdialog.feature-dialog h2 {
   margin-bottom: 12px;
 }
 

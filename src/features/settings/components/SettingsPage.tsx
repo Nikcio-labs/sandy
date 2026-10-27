@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
+import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Providers from "./Providers";
 import Advanced from "./Advanced";
 import Updates from "./Updates";
@@ -42,8 +43,8 @@ const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; d
 
 /**
  * The Settings area: updates and nested panes (home list → back-navigated
- * pane) matching the design study. First-run setup lives in its own window;
- * state orchestration stays in `App`.
+ * pane). First-run setup lives in its own window; state orchestration
+ * stays in `App`.
  */
 export default function SettingsPage({
   status,
@@ -60,22 +61,25 @@ export default function SettingsPage({
         <>
           <PageHead title="Settings" />
           {statusError && (
-            <div className="banner error" role="alert">
-              <strong>We couldn’t check your setup.</strong>
+            <ErrorBanner
+              title="We couldn’t check your setup."
+              actionLabel="Try again"
+              disabled={busy}
+              onAction={() => void onCheckSetup()}
+            >
               <p>{statusError}</p>
-              <button className="btn small" disabled={busy} onClick={() => void onCheckSetup()}>
-                Try again
-              </button>
-            </div>
+            </ErrorBanner>
           )}
           {!!status?.issues?.length && (
-            <div className="banner error" role="status">
-              <strong>Some setup checks are temporarily unavailable.</strong>
+            <ErrorBanner
+              role="status"
+              title="Some setup checks are temporarily unavailable."
+              actionLabel="Check again"
+              disabled={busy}
+              onAction={() => void onCheckSetup()}
+            >
               <p>{status.issues.join("\n")}</p>
-              <button className="btn small" disabled={busy} onClick={() => void onCheckSetup()}>
-                Check again
-              </button>
-            </div>
+            </ErrorBanner>
           )}
           {active && (
             <div className="panel settings-stack">

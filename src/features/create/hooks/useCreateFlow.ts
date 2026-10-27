@@ -440,7 +440,6 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
   return {
     /** True when the wizard edits an existing template instead of creating one. */
     editing,
-    // Wizard position and shared feedback state.
     step,
     moveTo,
     busy,
@@ -448,18 +447,15 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     /** All selected kits (agent first); drives argument validity and the review. */
     selectedKits,
     values,
-    // Step 0: providers and discovery.
     providers,
     catalog,
     onProvidersChange,
     discover,
-    // Step 1: agent selection.
     agents,
     agent,
     agentSearch,
     setAgentSearch,
     selectAgent,
-    // Step 2: mixin selection and kit inputs.
     compatible,
     matchingMixins,
     mixinGroups,
@@ -472,7 +468,6 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     toggleMixin,
     removeMixin,
     changeArgument,
-    // Step 3: project details and review.
     inputValid,
     request,
     updateRequest,
@@ -486,7 +481,6 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     setSavePath,
     submit,
     browse,
-    // Finished panel.
     saved,
     launched,
     launchOutput,

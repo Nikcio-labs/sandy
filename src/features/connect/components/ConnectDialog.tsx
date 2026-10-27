@@ -144,7 +144,7 @@ export default function ConnectDialog({
   return (
     <dialog
       ref={dialog}
-      className="connect-dialog"
+      className="appdialog connect-dialog"
       aria-labelledby="connect-title"
       aria-describedby="connect-description"
       onClose={(event) => {
@@ -189,7 +189,7 @@ export default function ConnectDialog({
       />
 
       {!running && (
-        <p className="connection-note">
+        <p className="banner">
           This sandbox is not running. Close this dialog and use <strong>Start</strong> in its
           details before connecting.
         </p>

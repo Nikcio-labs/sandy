@@ -1,7 +1,7 @@
 /*
- * Settings → Sandbox settings: the CLI-true settings editor. Rows follow
- * the concept's two-column setting grid: description and metadata badges
- * on the left, typed control and apply/reset actions on the right.
+ * Settings → Sandbox settings: the CLI-true settings editor. Rows use a
+ * two-column setting grid: description and metadata badges on the left,
+ * typed control and apply/reset actions on the right.
  */
 
 .pane-section {
@@ -68,7 +68,7 @@
 }
 
 /* The bool control: a real switch with a traveling knob and a violet on
-   state, as in the concept. */
+   state. */
 .switch {
   padding: 3px;
   border: 0;
@@ -104,8 +104,8 @@
   flex-wrap: wrap;
 }
 
-/* Keep the control and its actions on one tidy baseline like the concept's
-   two-column grid; the actions never wrap under the input. */
+/* Keep the control and its actions on one tidy baseline; the actions
+   never wrap under the input. */
 .settingapply {
   flex-shrink: 0;
 }
@@ -115,15 +115,8 @@
 }
 
 .settingvalue {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--field-border);
-  border-radius: 7px;
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 14px;
+  /* The 2px-tighter vertical padding fits the denser settings row. */
   padding: 8px 10px;
-  font-weight: 400;
 }
 
 textarea.settingvalue {

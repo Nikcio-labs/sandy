@@ -3,6 +3,7 @@ import type { SettingRecord } from "../../../lib/settings";
 import { listSettings, setSetting, unsetSetting } from "../../../lib/settings";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
+import { SearchField } from "../../../common/components/SearchField";
 import "./SandboxSettings.css";
 
 /**
@@ -95,16 +96,14 @@ export default function SandboxSettings() {
         default. Environment variables take precedence over user overrides.
       </p>
       <div className="split pane-toolbar">
-        <label className="search wide pane-search">
-          <Icon name="search" size={14} />
-          <input
-            aria-label="Filter settings"
-            placeholder="Filter settings…"
-            type="search"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          />
-        </label>
+        <SearchField
+          value={filter}
+          onChange={setFilter}
+          placeholder="Filter settings…"
+          label="Filter settings"
+          wide
+          className="pane-search"
+        />
         <button type="button" className="btn small" onClick={() => void refresh()} disabled={loading}>
           <Icon name="refresh" size={14} /> Refresh
         </button>
@@ -189,7 +188,7 @@ function SettingRow({
         <div className="actions settingbadges">
           <span className="badge">{setting.type}</span>
           <span className="badge violet">{setting.source}</span>
-          {setting.requires_restart && <span className="badge sand">daemon restart</span>}
+          {setting.requires_restart && <span className="badge">daemon restart</span>}
           {setting.env_var && <span className="badge">{setting.env_var}</span>}
         </div>
       </div>
@@ -233,7 +232,7 @@ function SettingRow({
           </select>
         ) : setting.type === "json" ? (
           <textarea
-            className="settingvalue"
+            className="fieldcontrol settingvalue"
             aria-label={setting.key}
             rows={3}
             disabled={busy}
@@ -242,7 +241,7 @@ function SettingRow({
           />
         ) : (
           <input
-            className="settingvalue"
+            className="fieldcontrol settingvalue"
             aria-label={setting.key}
             type={setting.type === "int" || setting.type === "float" ? "number" : "text"}
             step={setting.type === "int" ? 1 : "any"}
