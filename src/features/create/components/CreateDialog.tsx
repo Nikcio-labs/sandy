@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import CreatePage from "./CreatePage";
+import Icon from "../../../common/components/Icon";
 import "./CreateDialog.css";
 
 export interface CreateDialogProps {
@@ -52,20 +53,19 @@ export default function CreateDialog({ onClose, onBusyChange, onLaunched, templa
         if (event.target === dialog.current) close();
       }}
     >
-      <button
-        type="button"
-        className="iconbtn dialogclose"
-        aria-label="Close create dialog"
-        onClick={close}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="m6 6 12 12M6 18 18 6" />
-        </svg>
-      </button>
       <span id={`${id}-create-title`} className="sr-only">
         {templateId ? "Edit template" : "Create a sandbox"}
       </span>
       <div className="appdialog-wide-body">
+        <button
+          type="button"
+          className="iconbtn dialogclose"
+          aria-label="Close create dialog"
+          title="Close create dialog"
+          onClick={close}
+        >
+          <Icon name="close" size={16} />
+        </button>
         <CreatePage
           templateId={templateId}
           onClose={close}

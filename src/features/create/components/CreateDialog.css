@@ -22,16 +22,25 @@
 .appdialog-wide-body {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
-  padding: 24px 26px;
+  padding: var(--dialog-pad-block, 24px) 26px;
 }
 
-/* The floating close button overlaps the wizard's heading row. */
+/* The close button matches the inspector's .insclose (plain iconbtn, 10px
+   offsets) and floats over the wizard's heading row. It sticks inside the
+   scroll body instead of the dialog frame, so its right edge sits at the
+   content edge — clear of the body's scrollbar at any scrollbar width. The
+   negative margins lift it into the body padding without pushing the
+   wizard content down. */
 .appdialog-wide .dialogclose {
+  position: sticky;
+  top: 10px;
   z-index: 5;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  align-self: flex-end;
+  margin: calc(10px - var(--dialog-pad-block, 24px)) 0
+    calc(var(--dialog-pad-block, 24px) - 42px);
 }
 
 @media (max-width: 900px) {
@@ -41,13 +50,7 @@
   }
 
   .appdialog-wide-body {
+    --dialog-pad-block: 18px;
     padding: 18px 14px;
   }
-}
-
-/* The close button must land where a pointer expects it on touch-like
-   targets; keep its glyph optically centered in the 32px button. */
-.appdialog-wide .dialogclose svg {
-  display: block;
-  margin: 0 auto;
 }
