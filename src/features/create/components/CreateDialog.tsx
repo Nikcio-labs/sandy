@@ -65,13 +65,15 @@ export default function CreateDialog({ onClose, onBusyChange, onLaunched, templa
       <span id={`${id}-create-title`} className="sr-only">
         {templateId ? "Edit template" : "Create a sandbox"}
       </span>
-      <CreatePage
-        templateId={templateId}
-        onClose={close}
-        onLaunched={onLaunched}
-        onBusyChange={onBusyChange}
-        inDialog
-      />
+      <div className="appdialog-wide-body">
+        <CreatePage
+          templateId={templateId}
+          onClose={close}
+          onLaunched={onLaunched}
+          onBusyChange={onBusyChange}
+          inDialog
+        />
+      </div>
     </dialog>
   );
 }

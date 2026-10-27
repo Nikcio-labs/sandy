@@ -6,11 +6,22 @@
 .appdialog-wide {
   /* Sized relative to the app window (the dialog's containing viewport),
      matching the study's dialog footprint, not the full browser window. */
-  width: min(980px, calc(100vw - 120px));
+  width: min(1400px, calc(100vw - 80px));
   height: calc(100dvh - 90px);
   max-height: none;
-  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  /* The frame stays fixed and fully rounded; the wizard scrolls in the body
+     below, keeping the scrollbar inside the rounded corners. */
+  overflow: hidden;
+  padding: 0;
+}
+
+.appdialog-wide-body {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  padding: 24px 26px;
 }
 
 /* The floating close button overlaps the wizard's heading row. */
@@ -25,6 +36,9 @@
   .appdialog-wide {
     width: calc(100vw - 32px);
     height: calc(100dvh - 40px);
+  }
+
+  .appdialog-wide-body {
     padding: 18px 14px;
   }
 }
