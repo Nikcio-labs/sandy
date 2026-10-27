@@ -9,8 +9,12 @@
   /* Sized relative to the app window (the dialog's containing viewport),
      matching the study's dialog footprint, not the full browser window. */
   width: min(1400px, calc(100vw - 80px));
-  height: calc(100dvh - 90px);
-  max-height: none;
+  /* Content-sized up to the viewport: short steps (e.g. right after picking
+     an agent) must not leave a tall dead zone below the wizard. fit-content
+     matters because a modal dialog's UA box is inset-pinned (top:0;bottom:0),
+     where height:auto would stretch to the viewport instead of the content. */
+  height: fit-content;
+  max-height: calc(100dvh - 90px);
   display: flex;
   flex-direction: column;
   /* The frame stays fixed and fully rounded; the wizard scrolls in the body
@@ -49,7 +53,7 @@
 @media (max-width: 900px) {
   .appdialog.appdialog-wide {
     width: calc(100vw - 32px);
-    height: calc(100dvh - 40px);
+    max-height: calc(100dvh - 40px);
   }
 
   .appdialog-wide-body {
