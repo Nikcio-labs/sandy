@@ -1,7 +1,7 @@
 //! Opening a native interactive terminal attached to a sandbox.
 
 use std::process::Command;
-#[cfg(target_os = "linux")]
+#[cfg(any(test, target_os = "linux"))]
 use std::process::Stdio;
 
 #[cfg(target_os = "windows")]

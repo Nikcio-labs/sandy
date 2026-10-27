@@ -4,10 +4,6 @@
 //! WinGet confirmation prompts need a real console the user can answer, and
 //! the output must stay readable. Sandy only verifies the result afterwards.
 
-#[cfg(target_os = "linux")]
-use std::process::Command;
-
-#[cfg(target_os = "windows")]
 use std::process::Command;
 
 #[cfg(target_os = "windows")]
