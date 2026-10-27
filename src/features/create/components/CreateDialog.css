@@ -3,7 +3,9 @@
  * The wizard body keeps its own page styles; only the host frame lives here.
  */
 
-.appdialog-wide {
+/* Two classes to out-rank the shared .appdialog chrome: bundling can
+   emit that rule after this file regardless of import order. */
+.appdialog.appdialog-wide {
   /* Sized relative to the app window (the dialog's containing viewport),
      matching the study's dialog footprint, not the full browser window. */
   width: min(1400px, calc(100vw - 80px));
@@ -33,7 +35,7 @@
 }
 
 @media (max-width: 900px) {
-  .appdialog-wide {
+  .appdialog.appdialog-wide {
     width: calc(100vw - 32px);
     height: calc(100dvh - 40px);
   }
