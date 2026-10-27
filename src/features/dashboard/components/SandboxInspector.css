@@ -1,0 +1,82 @@
+/*
+ * The sandbox inspector: the detail panel beside the list, owned by
+ * SandboxInspector.
+ */
+
+.inspector {
+  position: relative;
+}
+
+.inshead {
+  padding: 19px 17px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inshead .avatar {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+}
+
+.inshead h2 {
+  font-size: 20px;
+  letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
+  padding-right: 6px;
+  margin-bottom: 7px;
+}
+
+.insclose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.insbody {
+  padding: 16px 17px;
+}
+
+.insbody .btn.primary {
+  width: 100%;
+  margin-bottom: 9px;
+}
+
+.insbody .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.inspector-details {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.inspector-details dd {
+  margin-bottom: 7px;
+}
+
+@media (max-width: 1049px) {
+  .inshead .avatar {
+    display: none;
+  }
+
+  .inspector-details {
+    margin-bottom: 0;
+  }
+}
+
+/* The boundary note closes the inspector: what is shared with the host. */
+.boundary-note {
+  padding: 13px 17px;
+  background: var(--surface-soft);
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.boundary-note strong {
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 3px;
+}

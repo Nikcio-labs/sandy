@@ -116,10 +116,10 @@ export function ProviderEditor({
   const hasCurrentReference = versions.values.includes(provider.reference);
 
   return (
-    <fieldset className="catalog-provider" disabled={disabled}>
-      <legend>{provider.label || provider.repository || "Provider"}</legend>
-      <div className="catalog-provider-heading">
-        <label className="catalog-check">
+    <fieldset className="fieldset" disabled={disabled}>
+      <legend className="legend">{provider.label || provider.repository || "Provider"}</legend>
+      <div className="sectionhead">
+        <label className="check">
           <input
             type="checkbox"
             checked={provider.enabled}
@@ -127,18 +127,18 @@ export function ProviderEditor({
           />
           Enabled for discovery
         </label>
-        <span className="catalog-badge">GitHub</span>
+        <span className="badge pill">GitHub</span>
         <button
           type="button"
-          className="text-button"
+          className="textbtn"
           onClick={onRemove}
           aria-label={`Remove ${provider.label || provider.repository}`}
         >
           Remove
         </button>
       </div>
-      <div className="catalog-fields">
-        <label className="catalog-field" htmlFor={`${id}-label`}>
+      <div className="fields">
+        <label className="field" htmlFor={`${id}-label`}>
           Display name
           <input
             id={`${id}-label`}
@@ -148,7 +148,7 @@ export function ProviderEditor({
             onChange={(event) => onUpdate({ ...provider, label: event.target.value })}
           />
         </label>
-        <label className="catalog-field" htmlFor={`${id}-repository`}>
+        <label className="field" htmlFor={`${id}-repository`}>
           GitHub URL or owner/repository
           <input
             id={`${id}-repository`}
@@ -158,13 +158,13 @@ export function ProviderEditor({
             aria-describedby={`${id}-repository-help`}
             onChange={(event) => onUpdate({ ...provider, repository: event.target.value })}
           />
-          <span className="catalog-help" id={`${id}-repository-help`}>
+          <span className="help" id={`${id}-repository-help`}>
             Use the repository root; choose its revision below.
           </span>
         </label>
       </div>
-      <div className="catalog-fields catalog-version-fields">
-        <label className="catalog-field" htmlFor={`${id}-version`}>
+      <div className="fields">
+        <label className="field" htmlFor={`${id}-version`}>
           Version / reference
           <select
             id={`${id}-version`}
@@ -186,10 +186,10 @@ export function ProviderEditor({
             ))}
           </select>
         </label>
-        <div className="catalog-version-actions">
+        <div className="actionbar">
           <button
             type="button"
-            className="ghost"
+            className="btn"
             disabled={versions.loading || !repositoryIsValid(provider.repository)}
             onClick={() => void loadVersions(true)}
           >
@@ -204,14 +204,14 @@ export function ProviderEditor({
                 ? "Refresh versions"
                 : "Fetch versions"}
           </button>
-          <label className="catalog-check">
+          <label className="check">
             <input type="checkbox" checked={manual} onChange={(event) => setManual(event.target.checked)} />
             Enter reference manually
           </label>
         </div>
       </div>
       {(manual || (!versions.values.length && !versions.loading)) && (
-        <label className="catalog-field catalog-reference" htmlFor={`${id}-reference`}>
+        <label className="field" htmlFor={`${id}-reference`}>
           Tag, branch, or commit
           <input
             id={`${id}-reference`}
@@ -222,7 +222,7 @@ export function ProviderEditor({
           />
         </label>
       )}
-      <p className="catalog-help">
+      <p className="help">
         Selected reference:{" "}
         <code>
           {provider.reference || (versions.loading ? "Fetching latest…" : "Latest release")}
@@ -234,7 +234,7 @@ export function ProviderEditor({
             : " · Remote versions have not been loaded for this repository."}
       </p>
       {versions.error && (
-        <div className="catalog-inline-error" role="alert">
+        <div className="inline-error" role="alert">
           <strong>Couldn’t load remote versions.</strong> {versions.error}
           <span>
             {" "}

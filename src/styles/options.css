@@ -1,0 +1,106 @@
+/*
+ * The option-card pattern: a selectable card (radio or checkbox semantics
+ * via a hidden input) shown as a quiet bordered tile with a fading check
+ * mark instead of a visible form control. Used for kit choices and
+ * connection methods.
+ */
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 9px;
+  padding: 13px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.option:hover {
+  border-color: var(--brand-border);
+}
+
+.option.selected,
+.option:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-faint);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+.option:focus-within {
+  outline: 2px solid var(--brand-soft);
+  outline-offset: 3px;
+}
+
+.option > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Selection is a fading check mark, not a visible form control; the hidden
+   input keeps native keyboard and form semantics. */
+.option::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  align-self: flex-end;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  background: currentColor;
+  color: var(--brand-dark);
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>') center / contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>') center / contain no-repeat;
+  transition: opacity 120ms ease;
+}
+
+.option.selected::after,
+.option:has(input:checked)::after {
+  opacity: 1;
+}
+
+.option-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.option-title strong {
+  font: 600 16px var(--display);
+}
+
+.option-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.option-source {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  user-select: text;
+}

@@ -3,23 +3,21 @@ import type { SandboxInfo, SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { Toast } from "../../../common/components/Toast";
 import { SandboxList } from "./SandboxList";
-import { HomeActions } from "./HomeActions";
 import { SandboxInspector } from "./SandboxInspector";
 import type { SandboxAction } from "../sandboxActions";
 import { stateKind } from "../../../common/lib/sandboxState";
-import { summarize, useSandboxDashboard } from "../hooks/useSandboxDashboard";
+import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
+import { openSetupWindow } from "../../../lib/sandbox";
 import ConnectDialog from "../../connect/components/ConnectDialog";
 import { SecretsDialog } from "./SecretsDialog";
 import { ComingSoonDialog } from "../../../common/components/ComingSoonDialog";
+import { PageHead } from "../../../common/components/PageHead";
 
-export interface DashboardPageProps {
-  home: boolean;
+export interface SandboxesPageProps {
   status: SetupStatus | null;
   /** A sandbox to select and inspect once the list reports it (launch handoff). */
   pendingSelection?: string | null;
   onPendingSelectionHandled?: () => void;
-  onGoSettings: () => void;
-  onGoTemplates: () => void;
   onCreate: () => void;
   onCheckSetup: () => Promise<SetupStatus | null>;
   onCount: (count: number) => void;
@@ -32,23 +30,18 @@ const actionLabels: Record<SandboxAction, string> = {
   terminal: "Opening terminal…",
 };
 
-export default function DashboardPage({
-  home,
+export default function SandboxesPage({
   status,
   pendingSelection,
   onPendingSelectionHandled,
-  onGoSettings,
-  onGoTemplates,
   onCreate,
   onCheckSetup,
   onCount,
-}: DashboardPageProps) {
+}: SandboxesPageProps) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [connecting, setConnecting] = useState<SandboxInfo | null>(null);
   const [secretsOpen, setSecretsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const installed = !!status?.sbx_installed;
   const {
     sandboxes,
@@ -63,13 +56,15 @@ export default function DashboardPage({
   } = useSandboxDashboard({ installed, onCount });
 
   useEffect(() => {
-    // Keep the selection on a sandbox that still exists after a refresh.
+    // Keep the selection on a sandbox that still exists after a refresh, but
+    // only while no explicit user choice (or a deliberate deselect) is in
+    // force; polling must not reopen the inspector after "Close".
     setSelected((current) =>
       (sandboxes ?? []).some((item) => item.name === current)
         ? current
         : (sandboxes?.[0]?.name ?? null),
     );
-  }, [sandboxes]);
+  }, [sandboxes !== null]);
 
   // A launch handed off from another page selects the new sandbox as soon as
   // the list confirms it exists — never assume state the CLI has not reported.
@@ -77,14 +72,12 @@ export default function DashboardPage({
     if (!pendingSelection) return;
     if ((sandboxes ?? []).some((item) => item.name === pendingSelection)) {
       setSelected(pendingSelection);
-      setInspectorOpen(true);
       onPendingSelectionHandled?.();
     }
   }, [pendingSelection, sandboxes, onPendingSelectionHandled]);
 
-  const selectSandbox = (name: string) => {
+  const selectSandbox = (name: string | null) => {
     setSelected(name);
-    setInspectorOpen(true);
   };
 
   const openConnection = (sandbox: SandboxInfo) => {
@@ -107,61 +100,81 @@ export default function DashboardPage({
       .toLowerCase()
       .includes(search.trim().toLowerCase()),
   );
-  const { summary } = summarize(all);
   const detail = all.find((sandbox) => sandbox.name === selected) ?? null;
   const detailPending = detail ? pending.get(detail.name) : undefined;
   const detailRunning = detail !== null && stateKind(detail.state) === "running";
   const needsSetup =
     status !== null &&
-    [status.sbx_installed, status.signed_in, status.image_paste_on, status.ssh_set_up].some(
-      (value) => value === false,
-    );
+    [status.sbx_installed, status.signed_in].some((value) => value === false);
+
+  const running = all.filter((sandbox) => stateKind(sandbox.state) === "running").length;
+  const stopped = all.filter((sandbox) => stateKind(sandbox.state) === "stopped").length;
+  const inactive = all.length - running - stopped;
+  const subtitle = !installed
+    ? "Install the CLI to see your sandboxes"
+    : error && sandboxes === null
+      ? "Unable to load sandboxes"
+      : sandboxes === null
+        ? "Reading local sandboxes…"
+        : `${running} running · ${stopped} stopped${inactive ? ` · ${inactive} inactive` : ""} · on this computer`;
 
   return (
-    <div className={`dashboard ${inspectorOpen ? "" : "inspector-closed"}`}>
-      <div className="dashboard-main">
-        <div className="page-head dashboard-page-head">
-          <div>
-            <h1>{home ? "Welcome to Sandy" : "Your Sandboxes"}</h1>
-          </div>
-          {!home && (
-            <button className="primary" onClick={onCreate}>
-              <Icon name="create" size={19} /> Create sandbox
-            </button>
-          )}
+    <div>
+      <PageHead
+        title="Your sandboxes"
+        subtitle={subtitle}
+        action={
+          <button className="btn primary" onClick={onCreate}>
+            <Icon name="create" size={16} />
+            <span>Create sandbox</span>
+          </button>
+        }
+      />
+      {needsSetup && (
+        <div className="banner">
+          <strong>Finish setting up Sandy to create sandboxes.</strong>
+          <p>Your existing sandboxes are still listed below.</p>
+          <button
+            className="btn small"
+            onClick={() => {
+              void openSetupWindow().catch(() => {});
+            }}
+          >
+            Finish setup
+          </button>
         </div>
-        {home && (
-          <HomeActions
+      )}
+      <div className={`board ${detail ? "" : "no-detail"}`}>
+        <div>
+          <SandboxList
+            sandboxes={sandboxes}
+            visible={visible}
+            error={error}
+            refreshing={refreshing}
+            installed={installed}
+            selected={selected}
+            pending={pending}
+            actionLabels={actionLabels}
+            search={search}
+            onSearch={setSearch}
+            onRefresh={() => void refresh()}
+            onSelect={selectSandbox}
+            onOpen={runPrimaryAction}
             onCreate={onCreate}
-            onGoTemplates={onGoTemplates}
-            onLearnMore={() => setComingSoonOpen(true)}
+          />
+        </div>
+        {detail && (
+          <SandboxInspector
+            detail={detail}
+            pending={detailPending}
+            running={detailRunning}
+            installed={installed}
+            onAction={(action) => void runAction(detail.name, action).catch(() => {})}
+            onOpen={() => runPrimaryAction(detail)}
+            onClose={() => selectSandbox(null)}
+            actionLabels={actionLabels}
           />
         )}
-        {needsSetup && (
-          <div className="setup-banner">
-            <Icon name="shield" size={20} />
-            <span>A few setup steps still need your attention.</span>
-            <button className="text-button" onClick={onGoSettings}>
-              Open Settings <Icon name="arrow" size={16} />
-            </button>
-          </div>
-        )}
-        <SandboxList
-          sandboxes={sandboxes}
-          visible={visible}
-          error={error}
-          refreshing={refreshing}
-          installed={installed}
-          selected={selected}
-          pending={pending}
-          search={search}
-          onSearch={setSearch}
-          onRefresh={() => void refresh()}
-          onSelect={selectSandbox}
-          onOpen={runPrimaryAction}
-          onCreate={onCreate}
-          summary={summary}
-        />
       </div>
       {inspectorOpen && (
         <SandboxInspector
@@ -176,7 +189,7 @@ export default function DashboardPage({
           actionLabels={actionLabels}
         />
       )}
-      <div className="dashboard-notifications" aria-live="polite" aria-atomic="true">
+      <div className="toasts" aria-live="polite" aria-atomic="true">
         {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       </div>
       {connecting && (

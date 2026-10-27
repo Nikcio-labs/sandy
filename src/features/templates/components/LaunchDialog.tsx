@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
 import { launchTemplate } from "../../../lib/templates";
-import { launchPhaseLabel } from "../../../lib/sandbox";
+import { launchPhaseLabel, listSandboxes } from "../../../lib/sandbox";
 import type { LaunchProgress } from "../../../lib/sandbox";
 import { pickWorkspace } from "../../../lib/catalog";
 import type { LaunchSecret } from "../../../lib/templates";
@@ -10,6 +10,7 @@ import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { SecretFields } from "../../../common/components/SecretFields";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
+import "./LaunchDialog.css";
 
 export function LaunchDialog({
   template,
@@ -34,6 +35,9 @@ export function LaunchDialog({
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [phase, setPhase] = useState<LaunchProgress | null>(null);
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
+  // A sandbox with this name already exists: launching resumes it instead of
+  // applying the template, so the workspace choices are locked.
+  const [existing, setExisting] = useState(false);
 
   useEffect(() => {
     if (!dialog.current?.open) {
@@ -45,6 +49,27 @@ export function LaunchDialog({
   useEffect(() => {
     consoleEnd.current?.scrollIntoView({ block: "end" });
   }, [consoleLines]);
+
+  useEffect(() => {
+    const candidate = name.trim();
+    if (!candidate) {
+      setExisting(false);
+      return;
+    }
+    let active = true;
+    listSandboxes()
+      .then((sandboxes) => {
+        if (active) setExisting(sandboxes.some((sandbox) => sandbox.name === candidate));
+      })
+      .catch(() => {
+        // Without the list the resume state is unknown; launch reports it.
+      });
+    return () => {
+      active = false;
+    };
+  }, [name]);
+
+  const resume = existing;
 
   const close = () => {
     if (actionLock.current) return;
@@ -99,7 +124,8 @@ export function LaunchDialog({
         },
       );
       if (!mounted.current) return;
-      onLaunched(`${name.trim()} launched from ${template.name}.`, name.trim());      // The sandbox exists: the dialog's job is done and the dashboard takes
+      onLaunched(`${name.trim()} launched from ${template.name}.`, name.trim());
+      // The sandbox exists: the dialog's job is done and the dashboard takes
       // over. Close without waiting for the user to dismiss it.
       dialog.current?.close();
     } catch (failure) {
@@ -116,7 +142,7 @@ export function LaunchDialog({
   return (
     <dialog
       ref={dialog}
-      className="catalog-launch-dialog"
+      className="appdialog"
       aria-labelledby={`${id}-launch-title`}
       aria-describedby={`${id}-launch-description`}
       onCancel={(event) => {
@@ -129,11 +155,11 @@ export function LaunchDialog({
       }}
     >
       <form onSubmit={launch} aria-busy={busy !== null}>
-        <div className="catalog-section-heading">
+        <div className="sectionhead">
           <h2 id={`${id}-launch-title`}>Launch {template.name}</h2>
           <button
             type="button"
-            className="icon-button"
+            className="iconbtn"
             aria-label="Close launch dialog"
             disabled={busy !== null}
             onClick={close}
@@ -141,18 +167,28 @@ export function LaunchDialog({
             <Icon name="close" size={20} />
           </button>
         </div>
-        <p className="catalog-muted" id={`${id}-launch-description`}>
+        <p className="help intro" id={`${id}-launch-description`}>
           Choose a new name or workspace to reuse this environment. These choices apply to this
           launch.
-        </p>        {launchError && (
+        </p>
+        {launchError && (
           <ErrorBanner title="Couldn’t launch this sandbox.">
             <p>{launchError}</p>
             <span>Edit the details or try launching again.</span>
           </ErrorBanner>
         )}
+        {resume && (
+          <div className="banner" role="status">
+            <strong>Resume {name.trim()}</strong>
+            <p>
+              This name already exists. Its agent, kits, and workspace are kept; the template is
+              not applied again.
+            </p>
+          </div>
+        )}
         <fieldset className="catalog-unframed" disabled={busy !== null}>
-          <legend className="catalog-sr-only">Sandbox launch details</legend>
-          <label className="catalog-field" htmlFor={`${id}-launch-name`}>
+          <legend className="sr-only">Sandbox launch details</legend>
+          <label className="field" htmlFor={`${id}-launch-name`}>
             Sandbox name
             <input
               id={`${id}-launch-name`}
@@ -164,37 +200,39 @@ export function LaunchDialog({
               placeholder="Sandbox name"
               onChange={(event) => setName(event.target.value)}
             />
-            <span className="catalog-help">
+            <span className="help">
               Use a new name to create a separate sandbox. Start with a letter or number; use
               letters, numbers, dots, underscores, or hyphens.
             </span>
           </label>
-          <label className="catalog-check" htmlFor={`${id}-launch-mountless`}>
+          <label className="check" htmlFor={`${id}-launch-mountless`}>
             <input
               id={`${id}-launch-mountless`}
               type="checkbox"
               checked={mountless}
+              disabled={resume}
               onChange={(event) => setMountless(event.target.checked)}
             />
             Run without a workspace (mountless)
           </label>
-          <p className="catalog-help" id={`${id}-launch-mountless-help`}>
+          <p className="help" id={`${id}-launch-mountless-help`}>
             The sandbox gets no folder from this computer, isolating it from the host file system.
           </p>
           {!mountless && (
             <>
-              <label className="catalog-field" htmlFor={`${id}-launch-workspace`}>
+              <label className="field" htmlFor={`${id}-launch-workspace`}>
                 Workspace folder
               </label>
-              <div className="catalog-path-row">
+              <div className="path-row">
                 <input
                   id={`${id}-launch-workspace`}
                   required
                   value={workspace}
+                  disabled={resume}
                   placeholder="Absolute project path"
                   onChange={(event) => setWorkspace(event.target.value)}
                 />
-                <button type="button" className="ghost" onClick={browse}>
+                <button type="button" className="btn" onClick={browse} disabled={resume}>
                   Browse…
                 </button>
               </div>
@@ -208,13 +246,13 @@ export function LaunchDialog({
             }
             disabled={busy !== null}
           />
-          <div className="catalog-actions">
-            <button type="button" className="ghost" onClick={close}>
+          <div className="actionbar end">
+            <button type="button" className="btn" onClick={close}>
               Cancel
             </button>
             <button
               type="submit"
-              className="primary"
+              className="btn primary"
               disabled={!name.trim() || (!mountless && !workspace.trim())}
             >
               {busy === "launch" ? (
@@ -230,17 +268,17 @@ export function LaunchDialog({
           </div>
         </fieldset>
         {busy === "workspace" && (
-          <p className="catalog-status" role="status">
+          <p className="statusline" role="status">
             Choose a workspace in the folder picker…
           </p>
         )}
         {busy === "launch" && phase && (
           <div className="catalog-launch-progress">
-            <p className="catalog-status" role="status">
+            <p className="statusline" role="status">
               <span className="spinner" /> {launchPhaseLabel(phase)}
             </p>
             {consoleLines.length > 0 && (
-              <pre className="catalog-console" role="log" aria-label="Sandbox creation console output">
+              <pre className="console" role="log" aria-label="Sandbox creation console output">
                 {consoleLines.join("\n")}
                 <span ref={consoleEnd} />
               </pre>

@@ -56,7 +56,7 @@ export function DeleteTemplateDialog({
   return (
     <dialog
       ref={dialog}
-      className="catalog-launch-dialog"
+      className="appdialog"
       aria-labelledby={`${id}-delete-title`}
       aria-describedby={`${id}-delete-description`}
       onCancel={(event) => {
@@ -68,11 +68,11 @@ export function DeleteTemplateDialog({
       }}
     >
       <div aria-busy={busy}>
-        <div className="catalog-section-heading">
+        <div className="sectionhead">
           <h2 id={`${id}-delete-title`}>Delete {template.name}?</h2>
           <button
             type="button"
-            className="icon-button"
+            className="iconbtn"
             aria-label="Close delete dialog"
             disabled={busy}
             onClick={close}
@@ -80,7 +80,7 @@ export function DeleteTemplateDialog({
             <Icon name="close" size={20} />
           </button>
         </div>
-        <p className="catalog-muted" id={`${id}-delete-description`}>
+        <p className="help intro" id={`${id}-delete-description`}>
           This permanently removes the saved template file{" "}
           <code>{template.path}</code>. Sandboxes already created from it keep working.
         </p>
@@ -90,11 +90,11 @@ export function DeleteTemplateDialog({
             <span>Try deleting it again.</span>
           </ErrorBanner>
         )}
-        <div className="catalog-actions">
-          <button type="button" className="ghost" onClick={close} disabled={busy}>
+        <div className="actionbar end">
+          <button type="button" className="btn" onClick={close} disabled={busy}>
             Cancel
           </button>
-          <button type="button" className="danger" onClick={remove} disabled={busy}>
+          <button type="button" className="btn danger" onClick={remove} disabled={busy}>
             {busy ? (
               <>
                 <span className="spinner" /> Deleting…
@@ -109,7 +109,7 @@ export function DeleteTemplateDialog({
           </button>
         </div>
         {busy && (
-          <p className="catalog-status" role="status">
+          <p className="statusline" role="status">
             Removing the saved template file…
           </p>
         )}

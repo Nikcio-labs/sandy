@@ -26,13 +26,15 @@ export interface CreateFlowOptions {
   onBusyChange?: (busy: boolean) => void;
   /** Present when the wizard edits an existing template instead of creating one. */
   templateId?: string;
+  /** Called with the sandbox name after a successful launch from the wizard. */
+  onLaunched?: (sandbox: string) => void;
 }
 
 /**
  * The create-wizard state machine: kit discovery, agent/mixin selection,
  * template saving, and launching. The page component only renders steps.
  */
-export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
+export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFlowOptions) {
   const mounted = useMountedRef();
   const [step, setStep] = useState(0);
   const [providers, setProviders] = useState<Provider[] | null>(null);
@@ -310,6 +312,7 @@ export function useCreateFlow({ onBusyChange, templateId }: CreateFlowOptions) {
     if (!mounted.current) return;
     setLaunchOutput(output);
     setLaunched(true);
+    onLaunched?.(template.name);
   };
 
   const submit = async (shouldLaunch: boolean) => {

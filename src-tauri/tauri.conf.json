@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Sandy",
-  "version": "0.1.0",
-  "identifier": "dev.sandy.app",
+  "version": "0.3.3",
+  "identifier": "com.nikcio.sandy",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -38,6 +38,18 @@
         "center": true,
         "visible": false,
         "decorations": false
+      },
+      {
+        "label": "setup",
+        "title": "Sandy",
+        "width": 720,
+        "height": 640,
+        "minWidth": 560,
+        "minHeight": 480,
+        "center": true,
+        "visible": false,
+        "resizable": true,
+        "decorations": false
       }
     ],
     "security": {
@@ -57,7 +69,7 @@
     "homepage": "https://github.com/Nikcio-labs/sandy",
     "license": "MIT",
     "licenseFile": "../LICENSE",
-    "publisher": "Nikcio-labs",
+    "publisher": "Nikcio Labs",
     "shortDescription": "A desktop app for Docker Sandboxes, powered by the sbx CLI.",
     "longDescription": "Sandy is a desktop app for Docker Sandboxes with guided setup, reusable environment templates, and local sandbox management, powered by the sbx CLI.",
     "icon": [
@@ -75,7 +87,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVCRDcyNEE2MzNCNTYwQTQKUldTa1lMVXpwaVRYVzF2NVo5MHhJZXhxNjJYaDRCWkQzczV1Z1RIM1h0eDBwaUs3L0RIRFhrTEMK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzMDVEOTVGQTczQ0FBMjgKUldRb3FqeW5YOWtGNDUyWUdsd2lidmVBbitJZVptdzlUWmRkOExmbTNxVm5EOGpOWkR6NThEOVYK",
       "endpoints": [
         "https://github.com/Nikcio-labs/sandy/releases/latest/download/latest.json"
       ]
