@@ -1,0 +1,113 @@
+/*
+ * Form primitives: .field (labeled input), .fields (two-column grid),
+ * .check (checkbox row), .path-row (input + browse button), and
+ * .fieldset (framed group with a notched legend).
+ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+/* A helper paragraph that leads a field label needs its own clearance; the
+   label's small margin alone reads as a collision. */
+.help + .field {
+  margin-top: 14px;
+}
+
+.field input,
+.field select,
+.field textarea,
+.path-row > input {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 9px 10px;
+  font: inherit;
+  font-weight: 400;
+  border: 1px solid var(--field-border);
+  border-radius: 7px;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.field input:disabled,
+.field select:disabled,
+.path-row input:disabled {
+  background: var(--field-disabled);
+  color: var(--muted);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 36px;
+  line-height: 1.5;
+}
+
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -7px;
+}
+
+.path-row > button {
+  flex-shrink: 0;
+}
+
+.legend {
+  padding: 0 7px;
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+/* A framed group box around related fields, with its label notched into the
+   top border. The top padding leaves room for the notched legend so the
+   first heading never touches the border. */
+.fieldset {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 14px 18px 10px;
+  margin: 22px 0 22px;
+  min-width: 0;
+}
+
+.fieldset > .legend {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+/* A fieldset used purely for grouping: no frame, no margin. */
+.catalog-unframed {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}

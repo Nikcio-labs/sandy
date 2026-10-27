@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * The repeating `error-banner` alert pattern: a bold heading, body content,
- * and an optional retry action.
+ * The repeating error banner: a bold heading, body content, and an optional
+ * retry action, styled by the shared `.banner.error` component class.
  */
 export function ErrorBanner({
   title,
@@ -18,11 +18,11 @@ export function ErrorBanner({
   disabled?: boolean;
 }) {
   return (
-    <div className="error-banner" role="alert">
+    <div className="banner error" role="alert">
       <strong>{title}</strong>
       {children}
       {actionLabel && onAction && (
-        <button className="ghost" disabled={disabled} onClick={onAction}>
+        <button className="btn small" disabled={disabled} onClick={onAction}>
           {actionLabel}
         </button>
       )}

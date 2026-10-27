@@ -3,6 +3,7 @@ import Icon from "../../../common/components/Icon";
 import { Avatar } from "../../../common/components/Avatar";
 import { StatePill } from "../../../common/components/StatePill";
 import type { SandboxAction } from "../sandboxActions";
+import "./SandboxInspector.css";
 
 export function SandboxInspector({
   detail,
@@ -14,7 +15,7 @@ export function SandboxInspector({
   onClose,
   actionLabels,
 }: {
-  detail: SandboxInfo | null;
+  detail: SandboxInfo;
   pending: SandboxAction | undefined;
   running: boolean;
   installed: boolean;
@@ -23,93 +24,78 @@ export function SandboxInspector({
   onClose: () => void;
   actionLabels: Record<SandboxAction, string>;
 }) {
+  const busy = !!pending;
   return (
-    <aside className="inspector" aria-label="Sandbox details">
-      <section className="card details-card">
-        {detail ? (
-          <>
-            <div className="details-overview">
-              <div className="details-head">
-                <Avatar name={detail.name} />
-                <div>
-                  <h2>{detail.name}</h2>
-                  <StatePill state={detail.state} />
-                </div>
-                <button
-                  className="icon-button inspector-close"
-                  aria-label="Close sandbox details"
-                  title="Close sandbox details"
-                  onClick={onClose}
-                >
-                  <Icon name="close" size={18} />
-                </button>
-              </div>
-              <p className="local-label">
-                Local sandbox <span>·</span> {detail.agent || "No agent reported"}
-              </p>
-              <div className="sandbox-actions" aria-busy={!!pending}>
-                <button className="primary connect-action" disabled={!!pending || !installed} onClick={onOpen}>
-                  {running ? (
-                    <>
-                      <Icon name="monitor" size={20} />
-                      Open sandbox
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="terminal" size={19} />
-                      Start
-                    </>
-                  )}
-                </button>
-                <button
-                  className="ghost"
-                  disabled={!!pending || !running || !installed}
-                  onClick={() => onAction("stop")}
-                >
-                  <Icon name="stop" size={19} />
-                  Stop
-                </button>
-                <button
-                  className="ghost"
-                  disabled={!!pending || !running || !installed}
-                  onClick={() => onAction("restart")}
-                >
-                  <Icon name="refresh" size={19} />
-                  Restart
-                </button>
-              </div>
-              {pending && (
-                <p className="sandbox-pending" role="status">
-                  <span className="spinner" /> {actionLabels[pending]}
-                </p>
-              )}
-            </div>
-            <div className="details-body">
-              <h3>Details</h3>
-              <dl className="details-grid">
-                <dt>Name</dt>
-                <dd>{detail.name}</dd>
-                <dt>Agent</dt>
-                <dd>{detail.agent || "Not reported"}</dd>
-                <dt>Workspace</dt>
-                <dd>{detail.workspace || "No workspace"}</dd>
-                <dt>Status</dt>
-                <dd>
-                  <StatePill state={detail.state} />
-                </dd>
-              </dl>
-            </div>
-          </>
-        ) : (
-          <div className="inspector-empty">
-            <span className="empty-icon">
-              <Icon name="monitor" size={30} />
-            </span>
-            <h2>A closer look</h2>
-            <p>Select a sandbox to see its details and available actions.</p>
-          </div>
+    <aside className="panel inspector" aria-label="Sandbox details">
+      <div className="inshead">
+        <button
+          className="iconbtn insclose"
+          aria-label="Close sandbox details"
+          title="Close sandbox details"
+          onClick={onClose}
+        >
+          <Icon name="close" size={16} />
+        </button>
+        <Avatar name={detail.name} />
+        <h2>{detail.name}</h2>
+        <StatePill state={detail.state} pending={pending && actionLabels[pending]} />
+        <p className="help">
+          Local sandbox · {detail.agent || "No agent reported"}
+        </p>
+      </div>
+      <div className="insbody" aria-busy={busy}>
+        <button
+          className="btn primary"
+          disabled={busy || !installed}
+          onClick={onOpen}
+        >
+          <Icon name={running ? "terminal" : "create"} size={16} />
+          {running ? "Open sandbox" : "Start sandbox"}
+        </button>
+        <div className="actions">
+          <button
+            className="btn"
+            disabled={busy || !running || !installed}
+            onClick={() => onAction("stop")}
+          >
+            <Icon name="stop" size={14} />
+            Stop
+          </button>
+          <button
+            className="btn"
+            disabled={busy || !running || !installed}
+            onClick={() => onAction("restart")}
+          >
+            <Icon name="refresh" size={14} />
+            Restart
+          </button>
+        </div>
+        {pending && (
+          <p className="help" role="status">
+            <span className="spinner" aria-hidden="true" /> {actionLabels[pending]}
+          </p>
         )}
-      </section>
+        <dl className="details inspector-details">
+          <dt>Agent</dt>
+          <dd>{detail.agent || "Not reported"}</dd>
+          <dt>Workspace</dt>
+          <dd>
+            <code>{detail.workspace || "None (mountless)"}</code>
+          </dd>
+          <dt>CLI state</dt>
+          <dd>{detail.state.replace(/^[•○]\s*/, "")}</dd>
+        </dl>
+      </div>
+      <div className="boundary-note">
+        <strong>
+          {detail.workspace
+            ? "This folder is shared with your host"
+            : "Files stay in this sandbox"}
+        </strong>
+        {detail.workspace
+          ? "Agent edits change the files on your computer directly."
+          : "Stopping keeps internal files. Removing the sandbox deletes them."}
+      </div>
     </aside>
   );
 }

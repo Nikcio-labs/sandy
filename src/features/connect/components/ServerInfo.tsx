@@ -28,11 +28,11 @@ export function ServerInfo({
         <h3 id="connection-server-title">SSH server information</h3>
         {info && (
           <button
-            className="text-button"
+            className="textbtn"
             disabled={busy}
             onClick={() => onCopy(serverInfo, "Server information")}
           >
-            <Icon name="clipboard" size={16} /> Copy server info
+            Copy server info
           </button>
         )}
       </div>
@@ -60,10 +60,10 @@ export function ServerInfo({
             <dt>Port</dt>
             <dd>{info.port == null ? "From your SSH configuration" : info.port}</dd>
           </dl>
-          <div className="connection-command">
+          <div className="command">
             <code>{info.command}</code>
             <button
-              className="icon-button"
+              className="iconbtn"
               aria-label="Copy SSH command"
               title="Copy SSH command"
               disabled={busy}

@@ -1,0 +1,212 @@
+/*
+ * The window shell: frameless-window shell grid, custom titlebar with brand
+ * and window controls, the navigation rail, and the scrollable main area.
+ * Rendered by the AppShell component (Titlebar, Rail).
+ */
+
+.shell {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.titlebar {
+  height: 49px;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding-left: 15px;
+  flex-shrink: 0;
+}
+
+.titlebrand {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font: 600 18px var(--display);
+}
+
+.titlebrand img {
+  width: 28px;
+  height: 28px;
+}
+
+.wintitle {
+  margin-left: 18px;
+  font-size: 14px;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
+}
+
+.wincontrols {
+  display: flex;
+  align-self: stretch;
+  margin-left: auto;
+}
+
+.wincontrols button {
+  width: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  transition: none;
+  /* Grid centering keeps the plain-geometry glyphs (minimize/maximize)
+     optically centered like the SVG close glyph, which inline layout
+     left-aligned. */
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.wincontrols button:hover {
+  background: #eef0f7;
+}
+
+.wincontrols button:last-child:hover {
+  background: #d82d43;
+  color: #fff;
+}
+
+.wincontrols svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* The minimize/maximize glyphs are plain geometry instead of icons so their
+   stroke weight matches native title bars across display densities. */
+.wincontrol-minimize,
+.wincontrol-maximize {
+  display: block;
+  width: 11px;
+  height: 11px;
+}
+
+.wincontrol-minimize {
+  border-bottom: 1.4px solid currentColor;
+}
+
+.wincontrol-maximize {
+  border: 1.4px solid currentColor;
+  border-radius: 2.5px;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.rail {
+  border-right: 1px solid var(--line);
+  padding: 23px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: #f5f6fc;
+  overflow-y: auto;
+}
+
+.rail button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 7px;
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.rail button[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.rail button:hover:not(:disabled) {
+  background: #eceef8;
+}
+
+.rail .navsettings {
+  margin-top: auto;
+}
+
+/* The nav is a <nav> wrapper around the page buttons; display: contents
+   keeps the rail's flex column layout authoritative. */
+.railnav {
+  display: contents;
+}
+
+.railcount {
+  margin-left: auto;
+}
+
+.rail .railfoot {
+  border-top: 1px solid var(--line);
+  padding: 12px 10px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.railversion {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.railupdate {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.main {
+  padding: 29px 28px;
+  overflow: auto;
+  min-width: 0;
+  scrollbar-gutter: stable;
+}
+
+@media (min-width: 1050px) and (max-width: 1230px) {
+  .app {
+    grid-template-columns: 140px minmax(0, 1fr);
+  }
+
+  .main {
+    padding: 25px 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .app {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .rail {
+    padding: 17px 5px;
+  }
+
+  .rail button {
+    padding: 11px;
+    justify-content: center;
+  }
+
+  .rail button span,
+  .railfoot,
+  .wintitle {
+    display: none;
+  }
+
+  .main {
+    padding: 20px 12px;
+  }
+}

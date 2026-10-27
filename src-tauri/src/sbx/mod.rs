@@ -16,6 +16,7 @@ mod cli;
 mod install;
 mod lifecycle;
 mod listing;
+mod settings;
 mod status;
 mod terminal;
 
@@ -28,11 +29,12 @@ pub(crate) mod test_env;
 mod tests;
 
 pub use cli::{SSH_SETUP_COMMAND, is_sbx_installed, run_capture, run_capture_lines};
-pub use install::ensure_sbx_installed;
+pub use install::open_installer_terminal;
 pub use lifecycle::{
     ConnectionInfo, connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
 };
 pub use listing::{SandboxInfo, list_sandboxes};
+pub use settings::{SettingRecord, list_settings, set_setting, unset_setting};
 pub use status::{
     CheckExplanation, diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,
 };

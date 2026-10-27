@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
 import { listTemplates, templateWarnings } from "../../../lib/templates";
 import Icon from "../../../common/components/Icon";
@@ -6,8 +6,11 @@ import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import { useBusyReporting } from "../../../common/hooks/useBusyReporting";
 import { Toast, type ToastNotice } from "../../../common/components/Toast";
+import { copyText } from "../../../common/lib/clipboard";
 import { LaunchDialog } from "./LaunchDialog";
 import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
+import { PageHead } from "../../../common/components/PageHead";
+import "./TemplatesPage.css";
 
 export interface TemplatesPageProps {
   onCreate: () => void;
@@ -19,7 +22,6 @@ export interface TemplatesPageProps {
 }
 
 export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunched }: TemplatesPageProps) {
-  const id = useId();
   const mounted = useMountedRef();
   const [templates, setTemplates] = useState<SavedTemplate[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,165 +84,193 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
       .includes(search.trim().toLowerCase()),
   );
 
+  const copyYaml = async (template: SavedTemplate) => {
+    try {
+      await copyText(template.content);
+      setNotice({ kind: "success", text: "YAML copied" });
+    } catch {
+      setNotice({ kind: "error", text: "Couldn’t copy the YAML. Select and copy it manually." });
+    }
+  };
+
   return (
-    <section className="standalone-page catalog-page" aria-labelledby={`${id}-title`}>
-      <header className="page-head catalog-page-heading">
-        <div>
-          <h1 id={`${id}-title`}>Templates</h1>
-          <p className="page-sub">Your saved environments, ready for the next project.</p>
-        </div>
-        <button type="button" className="primary" onClick={onCreate}>
-          <Icon name="create" size={18} /> Create template
-        </button>
-      </header>
-      <div className="card catalog-panel" aria-busy={loading}>
-        <div className="catalog-section-heading">
-          <div>
-            <h2>Saved on this computer</h2>
-            <p className="catalog-muted">
-              Reuse the same tools with a different sandbox name or workspace. Your saved template
-              stays the same.
-            </p>
-          </div>
-          <button type="button" className="ghost" disabled={loading} onClick={() => void refresh()}>
+    <div>
+      <PageHead
+        title="Templates"
+        subtitle="Saved environments. New sandbox, same starting point."
+        action={
+          <button type="button" className="btn primary" onClick={onCreate}>
+            <Icon name="create" size={16} /> <span>Create template</span>
+          </button>
+        }
+      />
+      <section className="panel" aria-busy={loading}>
+        <div className="listhead">
+          <h2>Saved on this computer</h2>
+          {templates !== null && <span className="badge">{templates.length}</span>}
+          <label className="search">
+            <Icon name="search" size={14} />
+            <input
+              aria-label="Search templates"
+              type="search"
+              placeholder="Search templates…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            className="iconbtn"
+            aria-label="Refresh templates"
+            disabled={loading}
+            onClick={() => void refresh()}
+          >
             <Icon name="refresh" size={16} />
-            {loading ? "Refreshing…" : "Refresh"}
           </button>
         </div>
-        {error && (
-          <ErrorBanner
-            title="Couldn’t load saved templates."
-            actionLabel="Try again"
-            disabled={loading}
-            onAction={() => void refresh()}
-          >
-            <p>{error}</p>
-          </ErrorBanner>
-        )}
-        {warningsError && (
-          <ErrorBanner
-            title="Couldn’t check template file warnings."
-            actionLabel="Retry file check"
-            disabled={loading}
-            onAction={() => void refresh()}
-          >
-            <p>{warningsError}</p>
-          </ErrorBanner>
-        )}
-        {warnings.length > 0 && (
-          <details className="catalog-warnings" open>
-            <summary>Template file warnings ({warnings.length})</summary>
-            <p>Some saved files could not be read. Readable templates are still available below.</p>
-            <ul>
-              {warnings.map((warning, index) => (
-                <li key={index}>{warning}</li>
-              ))}
-            </ul>
-          </details>
-        )}
-        {loading && templates === null && (
-          <p className="catalog-status" role="status">
-            <span className="spinner" /> Loading saved templates…
-          </p>
-        )}
-        {templates !== null && templates.length === 0 && (
-          <div className="template-empty">
-            <span className="empty-icon">
-              <Icon name="template" size={32} />
-            </span>
-            <h2>A starting point worth keeping</h2>
-            <p>Create an environment with your agent and mixins, then save it here to use again.</p>
-            <button type="button" className="primary" onClick={onCreate}>
-              Create your first template <Icon name="arrow" size={16} />
-            </button>
-          </div>
-        )}
-        {!!templates?.length && (
-          <>
-            <label className="catalog-field catalog-search" htmlFor={`${id}-search`}>
-              Search saved templates
-              <input
-                id={`${id}-search`}
-                type="search"
-                value={search}
-                placeholder="Search templates"
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-            <p className="catalog-help" role="status">
-              {visible.length} of {templates.length} template
-              {templates.length === 1 ? "" : "s"}
-            </p>
-            <div className="catalog-template-list">
+        <div className="templatelist">
+          {error && (
+            <div className="panelnotice">
+              <ErrorBanner
+                title="Couldn’t load saved templates."
+                actionLabel="Try again"
+                disabled={loading}
+                onAction={() => void refresh()}
+              >
+                <p>{error}</p>
+              </ErrorBanner>
+            </div>
+          )}
+          {warningsError && (
+            <div className="panelnotice">
+              <ErrorBanner
+                title="Couldn’t check template file warnings."
+                actionLabel="Retry file check"
+                disabled={loading}
+                onAction={() => void refresh()}
+              >
+                <p>{warningsError}</p>
+              </ErrorBanner>
+            </div>
+          )}
+          {warnings.length > 0 && (
+            <details className="warnings" open>
+              <summary>Template file warnings ({warnings.length})</summary>
+              <p>Some saved files could not be read. Readable templates are still available below.</p>
+              <ul>
+                {warnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {loading && templates === null && (
+            <div className="empty" role="status">
+              <p className="help">
+                <span className="spinner" /> Loading saved templates…
+              </p>
+            </div>
+          )}
+          {templates !== null && templates.length === 0 && (
+            <div className="empty">
+              <span className="avatar">
+                <Icon name="kit" size={22} />
+              </span>
+              <h3>A starting point worth keeping</h3>
+              <p>Save an environment with an agent and compatible mixins, then reuse it here.</p>
+              <button type="button" className="btn primary" onClick={onCreate}>
+                Create template
+              </button>
+            </div>
+          )}
+          {!!templates?.length && (
+            <>
+              {!visible.length && (
+                <div className="empty">
+                  <span className="avatar sand">
+                    <Icon name="search" size={22} />
+                  </span>
+                  <h3>No matching templates</h3>
+                  <p>Try a name, agent, workspace, or file path.</p>
+                  <button type="button" className="btn" onClick={() => setSearch("")}>
+                    Clear search
+                  </button>
+                </div>
+              )}
               {visible.map((template) => (
-                <article className="catalog-template" key={template.id}>
-                  <div className="catalog-section-heading">
+                <article className="template" key={template.id}>
+                  <div className="split">
                     <div>
                       <h3>{template.name}</h3>
-                      <p className="catalog-template-meta">
-                        {template.agent} <span className="catalog-badge">Kit v{template.kit_version}</span>
-                      </p>
+                      <div className="actions templatebadges">
+                        <span className="badge">{template.agent}</span>
+                        <span className="badge violet">Kit v{template.kit_version}</span>
+                      </div>
                     </div>
-                    <div className="catalog-template-actions">
+                    <div className="actions">
                       {onEdit && (
                         <button
                           type="button"
-                          className="ghost"
+                          className="btn small"
                           aria-label={`Edit ${template.name}`}
                           onClick={() => onEdit(template.id)}
                         >
-                          <Icon name="edit" size={16} /> Edit
+                          <Icon name="edit" size={14} /> Edit
                         </button>
                       )}
                       <button
                         type="button"
-                        className="ghost"
+                        className="btn small"
                         aria-label={`Delete ${template.name}`}
                         onClick={(event) => {
                           returnFocus.current = event.currentTarget;
                           setDeleting(template);
                         }}
                       >
-                        <Icon name="trash" size={16} /> Delete
+                        <Icon name="trash" size={14} /> Delete
                       </button>
                       <button
                         type="button"
-                        className="primary"
+                        className="btn primary small"
                         aria-label={`Launch ${template.name}`}
                         onClick={() => setSelected(template)}
                       >
-                        Launch <Icon name="arrow" size={16} />
+                        Launch
                       </button>
                     </div>
                   </div>
-                  <dl className="catalog-review-grid">
+                  <dl className="details template-details">
                     <dt>Workspace</dt>
-                    <dd>{template.workspace || "None (mountless, isolated)"}</dd>
+                    <dd>{template.workspace || "None (mountless)"}</dd>
                     <dt>Template file</dt>
                     <dd>
                       <code>{template.path}</code>
                     </dd>
                   </dl>
-                  <details className="catalog-output">
+                  <details className="template-output">
                     <summary>Preview saved YAML</summary>
-                    <pre className="catalog-yaml" aria-label={`Saved YAML for ${template.name}`}>
+                    <pre aria-label={`Saved YAML for ${template.name}`}>
                       <code>{template.content}</code>
                     </pre>
+                    <button
+                      type="button"
+                      className="textbtn"
+                      onClick={() => void copyYaml(template)}
+                    >
+                      <Icon name="clipboard" size={13} /> Copy YAML
+                    </button>
                   </details>
                 </article>
               ))}
-            </div>
-            {!visible.length && (
-              <div className="catalog-empty-note">
-                <p>No templates match this search.</p>
-                <button type="button" className="ghost" onClick={() => setSearch("")}>
-                  Clear search
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              {search && (
+                <p className="resultcount" role="status">
+                  Showing {visible.length} of {templates.length} templates
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </section>
       {selected && (
         <LaunchDialog
           key={selected.id}
@@ -264,9 +294,9 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           }}
         />
       )}
-      <div className="dashboard-notifications" aria-live="polite" aria-atomic="true">
+      <div className="toasts" aria-live="polite" aria-atomic="true">
         {notice && <Toast notice={notice} onDismiss={() => setNotice(null)} />}
       </div>
-    </section>
+    </div>
   );
 }

@@ -16,27 +16,27 @@ export function KitInputs({
   const id = useId();
   const configurable = kits.filter((kit) => kit.arguments.length > 0);
   if (!configurable.length) {
-    return <p className="catalog-help">The selected kits don’t require any inputs.</p>;
+    return <p className="help">The selected kits don’t require any inputs.</p>;
   }
   return (
     <div className="catalog-kit-inputs">
       <h3>Kit inputs</h3>
-      <p className="catalog-muted">Required inputs are marked. Defaults come from each kit’s metadata.</p>
+      <p className="help intro">Required inputs are marked. Defaults come from each kit’s metadata.</p>
       {configurable.map((kit, kitIndex) => (
-        <fieldset className="catalog-input-group" key={kit.id} disabled={disabled}>
-          <legend>{kit.name}</legend>
-          <div className="catalog-fields">
+        <fieldset className="fieldset" key={kit.id} disabled={disabled}>
+          <legend className="legend">{kit.name}</legend>
+          <div className="fields">
             {kit.arguments.map((argument, argumentIndex) => {
               const inputId = `${id}-${kitIndex}-${argumentIndex}`;
               const value = argumentValue(values, kit, argument);
               return (
-                <label className="catalog-field" key={argument.name} htmlFor={inputId}>
+                <label className="field" key={argument.name} htmlFor={inputId}>
                   <span>
                     {argument.name}{" "}
                     {argument.required ? (
                       <span className="catalog-required">(required)</span>
                     ) : (
-                      <span className="catalog-help">(optional)</span>
+                      <span className="help">(optional)</span>
                     )}
                   </span>
                   {argument.choices.length ? (
@@ -68,7 +68,7 @@ export function KitInputs({
                       onChange={(event) => onChange(kit.id, argument.name, event.target.value)}
                     />
                   )}
-                  <span className="catalog-help" id={`${inputId}-help`}>
+                  <span className="help" id={`${inputId}-help`}>
                     {argument.description}
                     {argument.default !== null && (
                       <>

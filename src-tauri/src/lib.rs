@@ -29,14 +29,17 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(commands::handlers())
         // The main window is created hidden and revealed from React after the
-        // splash is dismissed; the plugin's VISIBLE flag would show() it as
+        // splash is dismissed (or by the setup window after first-run setup);
+        // the plugin's VISIBLE flag would show() it as
         // soon as its state restores, so visibility stays under the
         // frontend's control while size and position still restore. The
         // splash is denylisted: its geometry is hardcoded and it must stay
-        // centered and out of the persisted state file.
+        // centered and out of the persisted state file. The setup window
+        // joins it: a modal first-run screen, not a workspace the user
+        // arranges.
         .plugin(
             WindowStateBuilder::new()
-                .with_denylist(&["splash"])
+                .with_denylist(&["splash", "setup"])
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
                 .build(),
         )
@@ -106,6 +109,22 @@ pub fn run() {
             }
             log::info!(target: "app", "Sandy started");
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            // The setup window is the only thing on screen during first-run
+            // setup; if the user closes it anyway (Alt+F4, taskbar), the
+            // app must not stay hidden behind it.
+            if window.label() != "setup" || !matches!(event, tauri::WindowEvent::Destroyed) {
+                return;
+            }
+            let app = window.app_handle();
+            if let Some(main) = app.get_webview_window("main") {
+                let _ = main.show();
+                let _ = main.set_focus();
+            }
+            if let Some(splash) = app.get_webview_window("splash") {
+                let _ = splash.close();
+            }
         })
         // `run()` returns () and there is nowhere left to report a fatal
         // startup error; exiting with the message is the only option here.
