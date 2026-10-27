@@ -24,6 +24,10 @@ Every comment must be relevant to a developer landing on the code 6 months later
 
 If a comment fails that test, omit it; when touching code with such comments, remove them. Temporary or conversational comments (e.g. "TODO: revisit after the migration", "this is a workaround for the bug I introduced above") do not belong in the repo.
 
+## Shared components
+
+Always attempt to reuse existing components and shared styles (buttons, badges, dialogs, banners, icons, and the like under `src/common` and `src/styles`) before creating new ones. If nothing fits, extend the existing component rather than adding a parallel one — shared cohesion in the app comes from every surface looking and behaving the same.
+
 ## Development
 
 - Packages are pinned exactly, and installs reject anything published in the last 24 hours (`pnpm-workspace.yaml`, `minimumReleaseAge`) as supply-chain protection. Do not relax these settings or introduce loose version ranges.
