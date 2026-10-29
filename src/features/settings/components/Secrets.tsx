@@ -61,10 +61,8 @@ export default function Secrets() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  // The row the set-value or remove dialog acts on, and whether the
-  // add-secret dialog is open.
-  const [pending, setPending] = useState<PendingSecret | null>(null);
-  const [adding, setAdding] = useState(false);
+  // Which dialog is open, if any: the union keeps set and remove exclusive.
+  const [dialog, setDialog] = useState<null | { kind: "set"; target: PendingSecret } | { kind: "remove"; target: PendingSecret } | { kind: "add" }>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -141,7 +139,7 @@ export default function Secrets() {
           <button
             type="button"
             className="btn small"
-            onClick={() => setAdding(true)}
+            onClick={() => setDialog({ kind: "add" })}
             disabled={loading}
           >
             <Icon name="plus" size={14} /> Add secret
@@ -189,8 +187,8 @@ export default function Secrets() {
                   secret={secret}
                   shadowed={list?.shadowedServices.includes(secret.name) ?? false}
                   busy={busyKey === key}
-                  onSet={() => setPending({ ...secret })}
-                  onRemove={() => setPending({ ...secret })}
+                  onSet={() => setDialog({ kind: "set", target: { ...secret } })}
+                  onRemove={() => setDialog({ kind: "remove", target: { ...secret } })}
                 />
               );
             })}
@@ -224,11 +222,11 @@ export default function Secrets() {
           </div>
         </>
       )}
-      {adding && (
+      {dialog?.kind === "add" && (
         <AddSecretDialog
           knownNames={secrets.map((secret) => secret.name)}
           knownScopes={groups.map((group) => group.scope)}
-          onClose={() => setAdding(false)}
+          onClose={() => setDialog(null)}
           onAdd={(scope, name, value) =>
             run("add", async () => {
               await setSecret(scope, name, value);
@@ -236,24 +234,24 @@ export default function Secrets() {
           }
         />
       )}
-      {pending && (
+      {dialog?.kind === "set" && (
         <SetSecretDialog
-          pending={pending}
-          onClose={() => setPending(null)}
+          pending={dialog.target}
+          onClose={() => setDialog(null)}
           onSet={(value) =>
-            run(`${pending.scope}\u0000${pending.name}`, async () => {
-              await setSecret(pending.scope, pending.name, value);
+            run(`${dialog.target.scope}\u0000${dialog.target.name}`, async () => {
+              await setSecret(dialog.target.scope, dialog.target.name, value);
             })
           }
         />
       )}
-      {pending && (
+      {dialog?.kind === "remove" && (
         <RemoveSecretDialog
-          pending={pending}
-          onClose={() => setPending(null)}
+          pending={dialog.target}
+          onClose={() => setDialog(null)}
           onRemove={() =>
-            run(`${pending.scope}\u0000${pending.name}`, async () => {
-              await removeSecret(pending.scope, pending.name);
+            run(`${dialog.target.scope}\u0000${dialog.target.name}`, async () => {
+              await removeSecret(dialog.target.scope, dialog.target.name);
             })
           }
         />
