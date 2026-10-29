@@ -222,7 +222,9 @@ jobs:
             printf '"%s": { "signature": "%s", "url": "%s/%s" }' "$2" "$signature" "$release_url" "$asset"
           }
           linux="$(collect 'Sandy_*_amd64.AppImage' 'linux-x86_64')"
-          linux_arm="$(collect 'Sandy_*_arm64.AppImage' 'linux-aarch64')"
+          # The AppImage bundler uses the Go arch name (`aarch64`), not the
+          # Rust target abbreviation (`arm64`) used by the NSIS bundler.
+          linux_arm="$(collect 'Sandy_*_aarch64.AppImage' 'linux-aarch64')"
           # The glob `Sandy-*aarch64-...` (no dash after the star) matches the
           # renamed `Sandy-aarch64-...` asset and cannot match the x86_64 one.
           darwin="$(collect 'Sandy-*aarch64-apple-darwin.app.tar.gz' 'darwin-aarch64')"
