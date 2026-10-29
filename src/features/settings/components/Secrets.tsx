@@ -1,16 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ServiceSecretRecord } from "../../../lib/secrets";
 import { listSecrets, removeSecret, setSecret } from "../../../lib/secrets";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 import { SearchField } from "../../../common/components/SearchField";
+import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import "./Secrets.css";
+
+/** One scope group in the secrets pane. */
+interface ScopeGroup {
+  scope: string;
+  /** `global` or a sandbox name. */
+  sandbox: string | null;
+  secrets: ServiceSecretRecord[];
+}
+
+/** The pending row driving the set or remove dialog. */
+interface PendingSecret {
+  scope: string;
+  name: string;
+  secret: string;
+}
 
 /**
  * Settings → Secrets: every credential the installed CLI reports
- * (`sbx secret ls --json`), with a write-only value editor. Sandy renders
- * the CLI's names, scopes, and masked previews verbatim — no service list
- * is maintained here, and stored values can only be replaced, never read.
+ * (`sbx secret ls --json`), grouped by scope with a write-only value
+ * dialog. Sandy renders the CLI's names, scopes, and masked previews
+ * verbatim — no service list is maintained here, and stored values can
+ * only be replaced, never read.
  */
 export default function Secrets() {
   const [list, setList] = useState<Awaited<ReturnType<typeof listSecrets>> | null>(null);
@@ -18,8 +35,8 @@ export default function Secrets() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  // Draft values and per-scope scope picker for the "set" form.
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  // The row the set-value or remove dialog acts on.
+  const [pending, setPending] = useState<PendingSecret | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -38,27 +55,35 @@ export default function Secrets() {
   }, [refresh]);
 
   const secrets = list?.secrets ?? [];
-  const visible = useMemo(() => {
+  // Scope groups preserve the CLI's first-seen order; a group's header row
+  // is what shows where each secret lives, so grouping is by scope, not a
+  // rebuilt service list.
+  const groups = useMemo(() => {
     const needle = filter.trim().toLowerCase();
-    if (!needle) return secrets;
-    return secrets.filter((secret) =>
-      `${secret.name} ${secret.scope}`.toLowerCase().includes(needle),
-    );
+    const matches = (secret: ServiceSecretRecord) =>
+      !needle || `${secret.name} ${secret.scope}`.toLowerCase().includes(needle);
+    const order: string[] = [];
+    const byScope = new Map<string, ScopeGroup>();
+    for (const secret of secrets) {
+      if (!byScope.has(secret.scope)) {
+        byScope.set(secret.scope, {
+          scope: secret.scope,
+          sandbox: secret.scope === "global" ? null : secret.scope,
+          secrets: [],
+        });
+        order.push(secret.scope);
+      }
+      if (matches(secret)) byScope.get(secret.scope)!.secrets.push(secret);
+    }
+    return order.map((scope) => byScope.get(scope)!);
   }, [secrets, filter]);
 
-  const apply = async (scope: string, name: string) => {
-    const key = `${scope}\u0000${name}`;
-    const value = (drafts[key] ?? "").trim();
-    if (busyKey || !value) return;
+  const run = async (key: string, action: () => Promise<unknown>) => {
+    if (busyKey) return;
     setBusyKey(key);
     setError(null);
     try {
-      await setSecret(scope, name, value);
-      setDrafts((previous) => {
-        const next = { ...previous };
-        delete next[key];
-        return next;
-      });
+      await action();
       await refresh();
     } catch (failure) {
       setError(String(failure));
@@ -67,29 +92,13 @@ export default function Secrets() {
     }
   };
 
-  const remove = async (scope: string, name: string) => {
-    if (busyKey) return;
-    setBusyKey(`${scope}\u0000${name}`);
-    setError(null);
-    try {
-      await removeSecret(scope, name);
-      await refresh();
-    } catch (failure) {
-      setError(String(failure));
-    } finally {
-      setBusyKey(null);
-    }
-  };
-
-  // Rows lock individually only for their own request; other rows stay
-  // editable (unlike the settings editor, secrets never conflict).
   const busyKeyOf = (secret: ServiceSecretRecord) => `${secret.scope}\u0000${secret.name}`;
 
   return (
     <section className="pane-section" aria-busy={loading}>
       <p className="paneintro">
-        Every secret the installed <code>sbx</code> CLI stores, with its scope. Values are
-        write-only: type a new value to replace what is stored — existing values are never shown.
+        Every secret the installed <code>sbx</code> CLI stores, grouped by where it applies. Values
+        are write-only: set a new value to replace what is stored — existing values are never shown.
       </p>
       <div className="split pane-toolbar">
         <SearchField
@@ -124,28 +133,38 @@ export default function Secrets() {
           you launch them.
         </p>
       )}
-      <div className="secretlist">
-        {visible.map((secret) => {
-          const key = busyKeyOf(secret);
-          return (
-            <SecretRow
-              key={key}
-              secret={secret}
-              shadowed={list?.shadowedServices.includes(secret.name) ?? false}
-              busy={busyKey === key}
-              draft={drafts[key] ?? ""}
-              onDraft={(value) =>
-                setDrafts((previous) => ({ ...previous, [key]: value }))
-              }
-              onApply={() => void apply(secret.scope, secret.name)}
-              onRemove={() => void remove(secret.scope, secret.name)}
-            />
-          );
-        })}
-        {list !== null && filter && visible.length === 0 && (
-          <p className="note">No secrets match “{filter}”.</p>
-        )}
-      </div>
+      {groups.map((group) => (
+        <section key={group.scope} className="secretscope" aria-label={scopeTitle(group)}>
+          <h3 className="secretscopehead">
+            <Icon name={group.sandbox ? "box" : "globe"} size={15} />
+            {scopeTitle(group)}
+            <span className="badge violet secretscopecount">
+              {group.secrets.length}
+            </span>
+          </h3>
+          <div className="secretlist">
+            {group.secrets.map((secret) => {
+              const key = busyKeyOf(secret);
+              return (
+                <SecretRow
+                  key={key}
+                  secret={secret}
+                  shadowed={list?.shadowedServices.includes(secret.name) ?? false}
+                  busy={busyKey === key}
+                  onSet={() => setPending({ ...secret })}
+                  onRemove={() => setPending({ ...secret })}
+                />
+              );
+            })}
+            {list !== null && filter && group.secrets.length === 0 && (
+              <p className="note">No secrets match “{filter}” in this scope.</p>
+            )}
+          </div>
+        </section>
+      ))}
+      {list !== null && filter && groups.every((group) => group.secrets.length === 0) && (
+        <p className="note">No secrets match “{filter}”.</p>
+      )}
       {list !== null && list.envOnlyCount > 0 && (
         <p className="help">
           {list.envOnlyCount} environment variable{list.envOnlyCount === 1 ? "" : "s"} on this
@@ -167,17 +186,41 @@ export default function Secrets() {
           </div>
         </>
       )}
+      {pending && (
+        <SetSecretDialog
+          pending={pending}
+          onClose={() => setPending(null)}
+          onSet={(value) =>
+            run(`${pending.scope}\u0000${pending.name}`, async () => {
+              await setSecret(pending.scope, pending.name, value);
+            })
+          }
+        />
+      )}
+      {pending && (
+        <RemoveSecretDialog
+          pending={pending}
+          onClose={() => setPending(null)}
+          onRemove={() =>
+            run(`${pending.scope}\u0000${pending.name}`, async () => {
+              await removeSecret(pending.scope, pending.name);
+            })
+          }
+        />
+      )}
     </section>
   );
+}
+
+function scopeTitle(group: ScopeGroup) {
+  return group.sandbox ? `Sandbox ${group.sandbox}` : "Global (all sandboxes)";
 }
 
 function SecretRow({
   secret,
   shadowed,
   busy,
-  draft,
-  onDraft,
-  onApply,
+  onSet,
   onRemove,
 }: {
   secret: ServiceSecretRecord;
@@ -185,12 +228,9 @@ function SecretRow({
   shadowed: boolean;
   /** This row's request, or any in-flight request that locks the editor. */
   busy: boolean;
-  draft: string;
-  onDraft: (value: string) => void;
-  onApply: () => void;
+  onSet: () => void;
   onRemove: () => void;
 }) {
-  const dirty = draft.trim().length > 0;
   return (
     <article className="secret">
       <div className="settinginfo">
@@ -201,45 +241,238 @@ function SecretRow({
         </p>
         <div className="actions settingbadges">
           <span className="badge">{secret.type}</span>
-          <span className="badge violet">
-            {secret.scope === "global" ? "global scope" : `sandbox: ${secret.scope}`}
-          </span>
         </div>
       </div>
       <div className="settingcontrols">
-        <input
-          className="fieldcontrol settingvalue"
-          aria-label={`New value for ${secret.name} (${secret.scope})`}
-          type="password"
-          placeholder="New value…"
-          autoComplete="off"
-          disabled={busy}
-          value={draft}
-          onChange={(event) => onDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && dirty) onApply();
-          }}
-        />
         <div className="actions settingapply">
-          <button
-            type="button"
-            className="btn small"
-            disabled={busy || !dirty}
-            onClick={onApply}
-          >
-            Set
+          <button type="button" className="btn small" disabled={busy} onClick={onSet}>
+            Set value
           </button>
-          <button
-            type="button"
-            className="btn small danger"
-            disabled={busy}
-            onClick={onRemove}
-          >
+          <button type="button" className="btn small danger" disabled={busy} onClick={onRemove}>
             <Icon name="trash" size={14} /> Remove
           </button>
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * Asks for the new value, then stores it. The input starts empty and the
+ * dialog stays open on failure, so a rejected value can be retried without
+ * retyping.
+ */
+function SetSecretDialog({
+  pending,
+  onClose,
+  onSet,
+}: {
+  pending: PendingSecret;
+  onClose: () => void;
+  /** Returns the outcome so the dialog can stay open on failure. */
+  onSet: (value: string) => Promise<void>;
+}) {
+  const id = useId();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const mounted = useMountedRef();
+  const actionLock = useRef(false);
+  const input = useRef<HTMLInputElement>(null);
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!dialog.current?.open) {
+      dialog.current?.showModal();
+      input.current?.focus();
+    }
+  }, []);
+
+  const close = () => {
+    if (actionLock.current) return;
+    dialog.current?.close();
+  };
+
+  const store = async () => {
+    const trimmed = value.trim();
+    if (actionLock.current || !trimmed) return;
+    actionLock.current = true;
+    setSaving(true);
+    try {
+      await onSet(trimmed);
+      if (!mounted.current) return;
+      dialog.current?.close();
+    } catch {
+      // The pane's banner shows the failure; let the user retry or cancel.
+      if (mounted.current) {
+        actionLock.current = false;
+        setSaving(false);
+      }
+    }
+  };
+
+  return (
+    <dialog
+      ref={dialog}
+      className="appdialog"
+      aria-labelledby={`${id}-set-title`}
+      onCancel={(event) => {
+        if (actionLock.current) event.preventDefault();
+      }}
+      onClose={() => {
+        setValue("");
+        onClose();
+      }}
+    >
+      <div aria-busy={saving}>
+        <div className="sectionhead">
+          <h2 id={`${id}-set-title`}>Set {pending.name}</h2>
+          <button
+            type="button"
+            className="iconbtn"
+            aria-label="Close set-value dialog"
+            disabled={saving}
+            onClick={close}
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+        <p className="help intro">
+          {pending.scope === "global"
+            ? "This value becomes available to every sandbox through the proxy."
+            : `This value becomes available to sandbox ${pending.scope} through the proxy.`}{" "}
+          It replaces what is stored and is never shown again.
+        </p>
+        <label className="field">
+          New value
+          <input
+            ref={input}
+            type="password"
+            autoComplete="off"
+            disabled={saving}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && value.trim()) void store();
+            }}
+          />
+        </label>
+        <div className="actionbar end">
+          <button type="button" className="btn" onClick={close} disabled={saving}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn primary"
+            disabled={saving || !value.trim()}
+            onClick={() => void store()}
+          >
+            {saving ? (
+              <>
+                <span className="spinner" /> Setting…
+              </>
+            ) : (
+              "Set secret"
+            )}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+/** Asks for confirmation, then removes the secret from its scope. */
+function RemoveSecretDialog({
+  pending,
+  onClose,
+  onRemove,
+}: {
+  pending: PendingSecret;
+  onClose: () => void;
+  /** Returns the outcome so the dialog can stay open on failure. */
+  onRemove: () => Promise<void>;
+}) {
+  const id = useId();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const mounted = useMountedRef();
+  const actionLock = useRef(false);
+  const [removing, setRemoving] = useState(false);
+
+  useEffect(() => {
+    if (!dialog.current?.open) {
+      dialog.current?.showModal();
+      dialog.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    }
+  }, []);
+
+  const close = () => {
+    if (actionLock.current) return;
+    dialog.current?.close();
+  };
+
+  const remove = async () => {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setRemoving(true);
+    try {
+      await onRemove();
+      if (!mounted.current) return;
+      dialog.current?.close();
+    } catch {
+      // The pane's banner shows the failure; let the user retry or cancel.
+      if (mounted.current) {
+        actionLock.current = false;
+        setRemoving(false);
+      }
+    }
+  };
+
+  return (
+    <dialog
+      ref={dialog}
+      className="appdialog"
+      aria-labelledby={`${id}-remove-title`}
+      aria-describedby={`${id}-remove-description`}
+      onCancel={(event) => {
+        if (actionLock.current) event.preventDefault();
+      }}
+      onClose={onClose}
+    >
+      <div aria-busy={removing}>
+        <div className="sectionhead">
+          <h2 id={`${id}-remove-title`}>Remove {pending.name}?</h2>
+          <button
+            type="button"
+            className="iconbtn"
+            aria-label="Close remove dialog"
+            disabled={removing}
+            onClick={close}
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+        <p className="help intro" id={`${id}-remove-description`}>
+          {pending.scope === "global"
+            ? "Sandboxes will no longer authenticate through this service until a new value is stored."
+            : `Sandbox ${pending.scope} will no longer authenticate through this service until a new value is stored.`}
+        </p>
+        <div className="actionbar end">
+          <button type="button" className="btn" onClick={close} disabled={removing}>
+            Cancel
+          </button>
+          <button type="button" className="btn danger" onClick={remove} disabled={removing}>
+            {removing ? (
+              <>
+                <span className="spinner" /> Removing…
+              </>
+            ) : (
+              <>
+                <Icon name="trash" size={16} /> Remove secret
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 }
 

@@ -94,12 +94,16 @@ pub fn list_secrets() -> Result<SecretList, String> {
 /// Store a new value for one secret. The value travels over stdin (with a
 /// newline so interactive parsers see a complete line): `sbx secret set`
 /// accepts it non-interactively, and argv/logging never see the value.
+///
+/// `-f` skips the CLI's overwrite confirmation, which cannot be answered
+/// here: the prompt reads the terminal, not our piped stdin, so storing over
+/// an existing secret would always fail with "stdin is not a terminal".
 pub fn set_secret(scope: &str, name: &str, value: &str) -> Result<String, String> {
     let args = match scope {
-        "global" => vec!["secret", "set", name],
+        "global" => vec!["secret", "set", name, "-f"],
         sandbox => {
             super::lifecycle::validate_sandbox_name(sandbox)?;
-            vec!["secret", "set", name, "--sandbox", sandbox]
+            vec!["secret", "set", name, "-f", "--sandbox", sandbox]
         }
     };
     crate::sbx::run_capture_stdin(&args, &format!("{value}\n"))
@@ -126,10 +130,10 @@ mod tests {
     #[allow(clippy::unwrap_used)]
     #[test]
     fn secret_set_argv_carries_only_the_selector() {
-        let command = sbx_command(&["secret", "set", "github", "--sandbox", "box"]).unwrap();
+        let command = sbx_command(&["secret", "set", "github", "-f", "--sandbox", "box"]).unwrap();
         assert_eq!(
             command.get_args().collect::<Vec<_>>(),
-            ["secret", "set", "github", "--sandbox", "box"]
+            ["secret", "set", "github", "-f", "--sandbox", "box"]
         );
     }
 }

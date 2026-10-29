@@ -899,17 +899,18 @@ fn secrets_list_set_and_remove_target_the_right_scope() {
     mock.clear_commands();
 
     // Scoped set: the value goes over stdin, so the logged command line
-    // (captured via "$*" in the mock) carries only the selector flags.
+    // (captured via "$*" in the mock) carries only the selector flags; -f
+    // skips the overwrite prompt, which cannot read our piped stdin.
     assert!(set_secret("boxbox", "github", "hunter2").is_ok());
     assert_eq!(
         mock.commands().lines().last(),
-        Some("secret set github --sandbox boxbox")
+        Some("secret set github -f --sandbox boxbox")
     );
 
     // Global set: no --sandbox flag.
     mock.clear_commands();
     assert!(set_secret("global", "github", "hunter2").is_ok());
-    assert_eq!(mock.commands(), "secret set github\n");
+    assert_eq!(mock.commands(), "secret set github -f\n");
 
     // Invalid scopes are rejected before a CLI run.
     mock.clear_commands();
