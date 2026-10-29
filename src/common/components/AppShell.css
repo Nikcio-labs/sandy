@@ -176,6 +176,23 @@
   scrollbar-gutter: stable;
 }
 
+/* A page wrapper that must reach the window edges (a full-window pane):
+   flex column so the pane host's flex: 1 and negative margins resolve
+   against the real window height, not a content-sized block. */
+.main:has(.pane-open),
+.pagehost {
+  display: flex;
+  flex-direction: column;
+}
+
+.main:has(.pane-open) {
+  overflow: hidden;
+}
+
+.pagehost[hidden] {
+  display: none;
+}
+
 @media (min-width: 1050px) and (max-width: 1230px) {
   .app {
     grid-template-columns: 140px minmax(0, 1fr);

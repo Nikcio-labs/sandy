@@ -1,60 +1,15 @@
 /*
- * The template pane: the back-navigated detail card that replaces the
- * templates list. Owned by TemplateInspector; follows the Settings
- * pane pattern (panehead / panecontent, @starting-style entrance).
+ * The template pane body: content inside the shared .pane chrome
+ * (header, actions, and window-filling layout live in the shared panel
+ * styles). Owned by TemplateInspector.
  */
-
-.templatepane {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity 180ms var(--out),
-    transform 180ms var(--out);
-
-  @starting-style {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-}
-
-.templatepanehead {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 15px 18px;
-  border-bottom: 1px solid var(--line);
-}
-
-.templatepanehead h2 {
-  font-size: 20px;
-  letter-spacing: -0.4px;
-  overflow-wrap: anywhere;
-}
-
-.templatepanehead h2:focus {
-  outline: none;
-}
-
-.templatepanebody {
-  padding: 20px;
-}
 
 .templatepanebody .details {
   margin-top: 20px;
-}
-
-.templatepaneactions {
-  margin-top: 16px;
 }
 
 .templatepanebody pre {
   max-height: 430px;
   margin-top: 20px;
   tab-size: 2;
-}
-
-@media (max-width: 720px) {
-  .templatepanebody {
-    padding: 15px;
-  }
 }

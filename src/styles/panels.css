@@ -2,7 +2,9 @@
  * Panel surfaces and the scaffolding around lists: .panel (rounded card),
  * .listhead (panel header with title, count, search, and actions),
  * .search (bordered search input pill), and .resultcount (list footer).
- * Empty states share the list scaffolding vocabulary.
+ * Empty states share the list scaffolding vocabulary. Full-window panes
+ * (.pane-open host, .pane card with .panehead and .panecontent) replace
+ * a page's list with a back-navigated detail card.
  */
 
 .panel {
@@ -10,6 +12,80 @@
   background: var(--surface);
   border-radius: 11px;
   overflow: hidden;
+}
+
+/* A pane page stretches to the window: the .pane card scrolls its content
+   internally so its header stays pinned like an app-level surface. The
+   negative margins cancel .main's padding on every edge. */
+.pane-open {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin: -29px -28px;
+}
+
+@media (min-width: 1050px) and (max-width: 1230px) {
+  .pane-open {
+    margin: -25px -18px;
+  }
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  /* Entrance via transition + starting style (not keyframes): a quick
+     back-navigation retargets the running transition instead of restarting
+     it from zero. The base stylesheet's reduced-motion rule strips this. */
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 180ms var(--out),
+    transform 180ms var(--out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+.panehead {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+/* The heading absorbs the header's free width, so a long name wraps
+   instead of pushing the header actions out of the card. */
+.panehead h2 {
+  font-size: 20px;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.panehead h2:focus {
+  outline: none;
+}
+
+.panehead-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.panecontent {
+  padding: 20px;
+  overflow-y: auto;
 }
 
 .listhead {
@@ -107,6 +183,15 @@
 
   .listhead > .iconbtn {
     margin-left: auto;
+  }
+
+  /* The pane host cancels .main's narrower phone padding too. */
+  .pane-open {
+    margin: -20px -12px;
+  }
+
+  .panecontent {
+    padding: 15px;
   }
 }
 

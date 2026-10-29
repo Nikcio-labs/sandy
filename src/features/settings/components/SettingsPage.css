@@ -1,11 +1,18 @@
 /*
- * The Settings page layout: the home column width and the nested pane
- * (home list → back-navigated pane). Owned by SettingsPage; pane contents
- * own their internal styles.
+ * The Settings page layout: the home column width and settings-specific
+ * pane bits (pane contents own their internal styles). The pane chrome
+ * itself — .pane, .panehead, .panecontent, .pane-open — is shared panel
+ * scaffolding in src/styles/panels.css.
  */
 
+/* The pane card spans the full window, so the home column cap must not
+   apply while one is open. */
 .settingshome {
   max-width: 780px;
+}
+
+.settingshome.pane-open {
+  max-width: none;
 }
 
 /* Home → pane navigation. One card holds Updates and the link rows,
@@ -54,50 +61,8 @@
   color: var(--brand-dark);
 }
 
-/* Pane entrance via transition + starting style (not keyframes): a quick
-   back-navigation retargets the running transition instead of restarting
-   it from zero. The base stylesheet's reduced-motion rule strips this. */
-.settingspane {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity 180ms var(--out),
-    transform 180ms var(--out);
-
-  @starting-style {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-}
-
-.panehead {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 15px 18px;
-  border-bottom: 1px solid var(--line);
-}
-
-.panehead h2 {
-  font-size: 20px;
-}
-
-.panehead h2:focus {
-  outline: none;
-}
-
-.panecontent {
-  padding: 20px;
-}
-
 .paneintro {
   font-size: 14px;
   color: var(--muted);
   margin-bottom: 18px;
-}
-
-@media (max-width: 720px) {
-  .panecontent {
-    padding: 15px;
-  }
 }

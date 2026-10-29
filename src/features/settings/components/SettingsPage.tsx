@@ -55,9 +55,30 @@ export default function SettingsPage({
 }: SettingsPageProps) {
   const [pane, setPane] = useState<Pane | null>(null);
 
+  const paneMeta = pane !== null ? PANES.find((item) => item.id === pane) ?? null : null;
+
   return (
-    <div className="settingshome">
-      {pane === null ? (
+    <div className={`settingshome ${paneMeta ? "pane-open" : ""}`}>
+      {paneMeta ? (
+        <section className="panel pane" data-pane={pane}>
+          <header className="panehead">
+            <button
+              type="button"
+              className="iconbtn"
+              aria-label="Back to settings"
+              onClick={() => setPane(null)}
+            >
+              <Icon name="back" size={18} />
+            </button>
+            <h2 tabIndex={-1}>{paneMeta.label}</h2>
+          </header>
+          <div className="panecontent">
+            {pane === "providers" && <Providers disabled={busy} />}
+            {pane === "sandbox" && <SandboxSettings />}
+            {pane === "advanced" && <Advanced />}
+          </div>
+        </section>
+      ) : (
         <>
           <PageHead title="Settings" />
           {statusError && (
@@ -104,25 +125,6 @@ export default function SettingsPage({
             </div>
           )}
         </>
-      ) : (
-        <section className="panel settingspane" data-pane={pane}>
-          <header className="panehead">
-            <button
-              type="button"
-              className="iconbtn"
-              aria-label="Back to settings"
-              onClick={() => setPane(null)}
-            >
-              <Icon name="back" size={18} />
-            </button>
-            <h2 tabIndex={-1}>{PANES.find((item) => item.id === pane)!.label}</h2>
-          </header>
-          <div className="panecontent">
-            {pane === "providers" && <Providers disabled={busy} />}
-            {pane === "sandbox" && <SandboxSettings />}
-            {pane === "advanced" && <Advanced />}
-          </div>
-        </section>
       )}
     </div>
   );

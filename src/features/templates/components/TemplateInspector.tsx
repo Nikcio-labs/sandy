@@ -23,8 +23,8 @@ export function TemplateInspector({
   onCopyYaml: () => void;
 }) {
   return (
-    <section className="panel templatepane" aria-label={`Details for ${template.name}`}>
-      <header className="templatepanehead">
+    <section className="panel pane" aria-label={`Details for ${template.name}`}>
+      <header className="panehead">
         <button
           type="button"
           className="iconbtn"
@@ -36,13 +36,7 @@ export function TemplateInspector({
         <h2 tabIndex={-1} ref={headRef}>
           {template.name}
         </h2>
-      </header>
-      <div className="templatepanebody">
-        <div className="actions">
-          <span className="badge">{template.agent}</span>
-          <span className="badge violet">Kit v{template.kit_version}</span>
-        </div>
-        <div className="actions templatepaneactions">
+        <div className="panehead-actions">
           <button type="button" className="btn primary" onClick={() => onLaunch(template)}>
             <Icon name="create" size={16} /> Launch
           </button>
@@ -58,6 +52,12 @@ export function TemplateInspector({
           >
             <Icon name="trash" size={14} /> Delete
           </button>
+        </div>
+      </header>
+      <div className="panecontent templatepanebody">
+        <div className="actions">
+          <span className="badge">{template.agent}</span>
+          <span className="badge violet">Kit v{template.kit_version}</span>
         </div>
         <dl className="details">
           <dt>Workspace</dt>

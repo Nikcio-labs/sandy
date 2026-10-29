@@ -99,7 +99,7 @@ export default function App() {
                 }}
               />
             )}
-            <div hidden={view !== "settings"}>
+            <div hidden={view !== "settings"} className="pagehost">
               <SettingsPage
                 status={status}
                 statusError={statusError}

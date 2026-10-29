@@ -103,7 +103,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   };
 
   return (
-    <div className="templatehome">
+    <div className={`templatehome ${detail ? "pane-open" : ""}`}>
       {detail ? (
         <TemplateInspector
           key={detail.id}
