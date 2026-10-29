@@ -14,7 +14,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) s
 | `test` | Test changes |
 | `refactor` | Code changes that are neither features nor fixes |
 
-`feat`, `fix`, and `refactor` trigger a release-please release; other types land without one. Add `!` after the type (or a `BREAKING CHANGE:` footer in the body) for a major release:
+`feat` and `fix` trigger a release-please release; other types land without one. Add `!` after the type (or a `BREAKING CHANGE:` footer in the body) for a major release:
 
 ```
 feat!: change the saved template file format

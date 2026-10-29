@@ -1,21 +1,8 @@
 //! Source authorization: extending the sbx kit.allowedSources policy for
 //! enabled GitHub providers.
-use std::path::Path;
-
-use crate::catalog::{Provider, get_providers, github_repository};
+use crate::catalog::{Provider, github_repository};
 
 use super::SOURCE_POLICY;
-
-/// Explicit authorization hook for a provider UI. Only enabled GitHub providers
-/// can extend the user allowlist, and existing entries are always preserved.
-pub fn allow_source(root: &Path, provider_id: &str) -> Result<String, String> {
-    let providers = get_providers(root)?;
-    let provider = providers
-        .iter()
-        .find(|p| p.id == provider_id && p.enabled)
-        .ok_or("Enable this provider before authorizing its source")?;
-    allow_source_with(provider, &mut |args| crate::sbx::run_capture(args))
-}
 
 fn allowed_prefixes(record: &serde_json::Value) -> Result<Vec<String>, String> {
     let value = if let Some(text) = record["value"].as_str() {

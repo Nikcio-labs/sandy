@@ -1,6 +1,7 @@
 /*
  * The Sandy diagnostic log view inside the Advanced card: toolbar, filter,
- * entry list, and older-entries affordance.
+ * entry list, and older-entries affordance. Entry kind chips are the
+ * shared .badge with color variants per log target.
  */
 
 .debug-log-toolbar {
@@ -60,22 +61,19 @@
   background: var(--surface-sunken);
 }
 
-.debug-log-kind {
+.debug-log-kind.badge {
   flex: none;
   padding: 2px 8px;
-  border-radius: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  background: var(--brand-soft);
-  color: var(--brand-dark);
 }
 
-.debug-log-kind-http {
+/* Two extra classes to out-rank the shared .badge.violet regardless of
+   bundle order. */
+.debug-log-kind.badge.debug-log-kind-http {
   background: var(--green-soft);
   color: var(--green);
 }
 
-.debug-log-kind-command {
+.debug-log-kind.badge.debug-log-kind-command {
   background: var(--red-soft);
   color: var(--red);
 }

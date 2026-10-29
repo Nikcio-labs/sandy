@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 const paths = {
-  home: <path d="m3 10 9-7 9 7v10H15v-6H9v6H3z" />,
   box: (
     <>
       <path d="m3 7 9-4 9 4v10l-9 4-9-4z" />
@@ -34,15 +33,7 @@ const paths = {
       <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 16h.01" />
     </>
   ),
-  user: (
-    <>
-      <circle cx="12" cy="8" r="3" />
-      <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-    </>
-  ),
-  book: <path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15" />,
   arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
-  chevron: <path d="m9 5 7 7-7 7" />,
   "chevron-right": <path d="m9 5 7 7-7 7" />,
   back: <path d="m15 5-7 7 7 7" />,
   dune: (
@@ -64,23 +55,10 @@ const paths = {
       <path d="m16 16 5 5" />
     </>
   ),
-  more: (
-    <>
-      <circle cx="5" cy="12" r=".8" />
-      <circle cx="12" cy="12" r=".8" />
-      <circle cx="19" cy="12" r=".8" />
-    </>
-  ),
   trash: (
     <>
       <path d="M4 7h16M10 4h4M6 7l1 13h10l1-13" />
       <path d="M10 11v6m4-6v6" />
-    </>
-  ),
-  monitor: (
-    <>
-      <rect x="3" y="3" width="18" height="13" rx="2" />
-      <path d="M8 21h8m-4-5v5" />
     </>
   ),
   stop: (
@@ -138,6 +116,12 @@ const paths = {
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 16V8m-3.5 3.5L12 8l3.5 3.5" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.7 2.6 4 5.6 4 9s-1.3 6.4-4 9c-2.7-2.6-4-5.6-4-9s1.3-6.4 4-9Z" />
     </>
   ),
 } satisfies Record<string, ReactNode>;

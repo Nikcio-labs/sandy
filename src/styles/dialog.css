@@ -1,11 +1,12 @@
 /*
  * Dialogs: .appdialog (native <dialog> chrome shared by every modal) with
- * its floating .dialogclose button, plus the .dialogclose positioning used
- * by the standalone feature dialog.
+ * its floating .dialogclose button. Dialogs that need different dimensions
+ * add a second class and override with the two-class selector, because
+ * bundling can emit this rule after their own stylesheet.
  */
 
 /* Native <dialog> chrome shared by every modal: panel surface, floating
-   close button, and the study's dimmed blurred backdrop. */
+   close button, and a dimmed blurred backdrop. */
 .appdialog {
   position: relative;
   width: min(570px, calc(100vw - 36px));
@@ -19,7 +20,8 @@
   overflow-y: auto;
 }
 
-/* Every app dialog closes on a backdrop click, as in the study. */
+/* Backdrop click-to-close is opt-in; the cursor hints that the padding
+   box around the panel is clickable. */
 .appdialog[data-backdrop-close="true"] {
   cursor: default;
 }
@@ -47,9 +49,9 @@
   }
 }
 
-/* The study's 180ms dialog entrance: scale/translate/fade from the
-   starting style, with allow-discrete keeping the element visible while
-   the transition plays on open and close. The backdrop fades with it. */
+/* The 180ms dialog entrance: scale/translate/fade from the starting
+   style, with allow-discrete keeping the element visible while the
+   transition plays on open and close. The backdrop fades with it. */
 .appdialog[open] {
   transition:
     opacity 180ms var(--out),

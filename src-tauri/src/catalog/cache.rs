@@ -28,12 +28,19 @@ fn versions_path(root: &Path) -> PathBuf {
     cache_dir(root).join("versions.json")
 }
 
+/// Bumped whenever the shape or post-processing of a cached catalog changes,
+/// so entries written by older builds are never served. The built-in agents
+/// were once merged after the cache write, leaving cached catalogs without
+/// them; only a version bump makes those installs re-discover.
+const CATALOG_CACHE_VERSION: u32 = 2;
+
 /// A stable fingerprint of the provider configuration: the cache must only
 /// serve results that were produced by exactly this configuration.
 fn fingerprint(providers: &[Provider]) -> String {
     // The Provider fields are plain strings/bools, so the JSON round-trip is
     // deterministic; vector order is under the caller's control.
-    serde_json::to_string(providers).unwrap_or_default()
+    let providers = serde_json::to_string(providers).unwrap_or_default();
+    format!("{CATALOG_CACHE_VERSION}:{providers}")
 }
 
 /// A cached payload plus the configuration fingerprint that produced it. A

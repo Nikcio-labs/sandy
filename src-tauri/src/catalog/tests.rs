@@ -224,6 +224,38 @@ fn default_providers_exclude_removed_hub_and_saved_entries_are_dropped() {
 }
 
 #[test]
+fn discovery_merges_builtins_before_caching_so_hits_match_fresh_results() {
+    let root = std::env::temp_dir().join(format!("sandy-builtin-cache-{}", unique_id()));
+    let providers = [Provider {
+        id: "p".into(),
+        label: "P".into(),
+        kind: "github".into(),
+        // No fixture server: the provider discovery fails (with a warning),
+        // which is exactly the path where the built-ins matter most.
+        repository: "team/kits".into(),
+        reference: String::new(),
+        enabled: true,
+    }];
+    let fresh = super::discover_kits(&root, providers.to_vec(), false).unwrap();
+    assert!(
+        fresh
+            .kits
+            .iter()
+            .any(|kit| kit.provider_id == "builtin" && kit.kind == "agent"),
+        "a fresh discovery always reports the built-ins"
+    );
+    // The cache must hold the same catalog a fresh discovery produces; a
+    // catalog cached without the built-ins made every later discovery fall
+    // back to the frontend's unverified-copy warning.
+    let cached = super::cache::read_catalog(&root, &providers).expect("cached catalog");
+    assert_eq!(cached.kits, fresh.kits);
+    // And a cache hit returns them too.
+    let hit = super::discover_kits(&root, providers.to_vec(), false).unwrap();
+    assert_eq!(hit.kits, fresh.kits);
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn builtin_agents_match_the_documented_list() {
     assert_eq!(
         BUILTIN_AGENTS,
@@ -270,6 +302,15 @@ fn discovery_cache_serves_same_configuration_and_misses_on_change() {
     let mut changed = providers[0].clone();
     changed.reference = "v9.9.9".into();
     assert!(super::cache::read_catalog(&root, std::slice::from_ref(&changed)).is_none());
+
+    // A stale entry written by an older build (different cache version) is
+    // a miss, so it can never mask the current discovery behavior.
+    std::fs::write(
+        root.join("cache").join("catalog.json"),
+        r#"{"fingerprint":"1:nonsense","fetched_at":"","value":{"kits":[],"warnings":[]}}"#,
+    )
+    .unwrap();
+    assert!(super::cache::read_catalog(&root, &providers).is_none());
 
     // Corrupt cache content is a miss, not an error.
     std::fs::write(root.join("cache").join("catalog.json"), "not json").unwrap();

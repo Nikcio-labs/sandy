@@ -128,8 +128,10 @@ pub fn discover_kits(
     }
     let mode = GitMode::from_setting(get_discovery_use_git_protocol(root)?);
     let mut catalog = discover_with(&Api::public()?, mode, &providers)?;
-    cache::write_catalog(root, &providers, &catalog);
-    // The built-ins are documented v2 shortcuts, not guessed registry repositories.
+    // The built-ins are documented v2 shortcuts, not guessed registry
+    // repositories. They must be merged before caching: a cache hit has to
+    // return the same catalog a fresh discovery would, otherwise the frontend
+    // would keep flagging the built-ins as unverified on every discovery.
     for name in BUILTIN_AGENTS {
         let description = format!("Built-in {name} agent (v2)");
         catalog.kits.push(KitOption {
@@ -144,6 +146,7 @@ pub fn discover_kits(
             arguments: Vec::new(),
         });
     }
+    cache::write_catalog(root, &providers, &catalog);
     Ok(catalog)
 }
 

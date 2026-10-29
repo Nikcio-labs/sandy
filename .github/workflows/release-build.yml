@@ -31,9 +31,17 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             label: macOS (Apple silicon)
+          # macos-15 is the last Intel-capable runner image (x86_64 support
+          # ends mid-2028), and Intel runners are free on public repos only.
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            label: macOS (Intel)
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             label: Windows
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            label: Windows (ARM)
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             label: Windows (Microsoft Store)
@@ -41,6 +49,9 @@ jobs:
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             label: Linux
+          - os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            label: Linux (ARM)
 
     runs-on: ${{ matrix.os }}
     permissions:
@@ -107,12 +118,16 @@ jobs:
 
       - name: Prepare artifacts (macOS)
         if: runner.os == 'macOS'
+        shell: bash
+        # Both macOS targets bundle an identically named Sandy.app.tar.gz, so
+        # the updater artifacts get an arch suffix to coexist on the release.
         run: |
           mkdir -p artifacts
           find src-tauri/target -path '*release/bundle*' -name '*.dmg' -exec cp {} artifacts/ \;
-          # The updater installs the .app.tar.gz, not the .dmg.
-          find src-tauri/target -path '*release/bundle*' -name '*.app.tar.gz' -exec cp {} artifacts/ \;
-          find src-tauri/target -path '*release/bundle*' -name '*.app.tar.gz.sig' -exec cp {} artifacts/ \;
+          find src-tauri/target/${{ matrix.target }}/release/bundle/macos -name '*.app.tar.gz' \
+            -exec sh -c 'cp "$1" "artifacts/$(basename "${1%.app.tar.gz}")-${{ matrix.target }}.app.tar.gz"' _ {} \;
+          find src-tauri/target/${{ matrix.target }}/release/bundle/macos -name '*.app.tar.gz.sig' \
+            -exec sh -c 'cp "$1" "artifacts/$(basename "${1%.app.tar.gz.sig}")-${{ matrix.target }}.app.tar.gz.sig"' _ {} \;
           # The bare .app directory stays out on purpose: gh release upload
           # cannot upload directories, and users install from the .dmg.
 
@@ -207,13 +222,23 @@ jobs:
             printf '"%s": { "signature": "%s", "url": "%s/%s" }' "$2" "$signature" "$release_url" "$asset"
           }
           linux="$(collect 'Sandy_*_amd64.AppImage' 'linux-x86_64')"
-          darwin="$(collect 'Sandy.app.tar.gz' 'darwin-aarch64')"
+          # The AppImage bundler uses the Go arch name (`aarch64`), not the
+          # Rust target abbreviation (`arm64`) used by the NSIS bundler.
+          linux_arm="$(collect 'Sandy_*_aarch64.AppImage' 'linux-aarch64')"
+          # The glob `Sandy-*aarch64-...` (no dash after the star) matches the
+          # renamed `Sandy-aarch64-...` asset and cannot match the x86_64 one.
+          darwin="$(collect 'Sandy-*aarch64-apple-darwin.app.tar.gz' 'darwin-aarch64')"
+          darwin_intel="$(collect 'Sandy-*x86_64-apple-darwin.app.tar.gz' 'darwin-x86_64')"
           windows="$(collect 'Sandy_*_x64-setup.exe' 'windows-x86_64')"
+          windows_arm="$(collect 'Sandy_*_arm64-setup.exe' 'windows-aarch64')"
           {
             printf '{\n  "version": "%s",\n  "notes": %s,\n  "platforms": {\n' "$version" "$notes"
             printf '    %s,\n' "$linux"
+            printf '    %s,\n' "$linux_arm"
             printf '    %s,\n' "$darwin"
-            printf '    %s\n' "$windows"
+            printf '    %s,\n' "$darwin_intel"
+            printf '    %s,\n' "$windows"
+            printf '    %s\n' "$windows_arm"
             printf '  }\n}\n'
           } > latest.json
           python3 -m json.tool latest.json >/dev/null

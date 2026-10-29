@@ -2,8 +2,8 @@ import type { KitOption } from "../../../lib/kit";
 import Icon from "../../../common/components/Icon";
 
 /**
- * The wizard's running summary: the environment being assembled, updated as
- * the steps progress. Mirrors the study's "recipe" rail beside the steps.
+ * The wizard's running summary: the environment being assembled, updated
+ * as the steps progress.
  */
 export function RecipeAside({
   agent,

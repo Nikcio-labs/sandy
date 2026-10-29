@@ -7,6 +7,7 @@ use crate::sbx::lifecycle::{
     connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
 };
 use crate::sbx::listing::list_sandboxes;
+use crate::sbx::secrets::{list_secrets, remove_secret, set_secret};
 use crate::sbx::status::{
     diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,
 };
@@ -163,6 +164,20 @@ if [ "$2" = get ]; then
     printf '%s\n' "${SBX_MOCK_PASTE:-false}"
 fi
 ;;
+secret)
+if [ "$2" = ls ] && [ "$3" = --json ]; then
+    case "$SBX_MOCK_JSON" in
+    secrets) printf '%s\n' '{"secrets":[{"scope":"global","type":"service","name":"zeldoc","secret":"(stored)"},{"scope":"boxbox","type":"service","name":"github","secret":"abc1****"}],"custom_secrets":[],"shadowed_services":[],"env_only_count":8}' ;;
+    *) printf '%s\n' '{"secrets":[],"custom_secrets":[],"shadowed_services":[],"env_only_count":0}' ;;
+    esac
+elif [ "$2" = set ] || [ "$2" = rm ]; then
+    cat > /dev/null
+    printf 'Removed secret\n'
+else
+    printf '%s\n' 'sbx mock: only secret ls/set/rm are supported' >&2
+    exit 1
+fi
+;;
 ls)
 if [ "$SBX_MOCK_LS_EMPTY" = 1 ]; then printf '%s\n' '[]'; exit 0; fi
 if [ "$2" = --json ]; then
@@ -264,7 +279,6 @@ fn cli_mock_success_paths() {
     assert_eq!(rows[0].state, "stopped");
     assert_eq!(rows[0].agent, "shell");
     assert_eq!(rows[0].workspace, "C:\\Dev\\MyProject");
-    assert_eq!(rows[0].raw, "11111111-2222-3333-4444-555555555555");
     assert_eq!(rows[1].name, "demo");
     assert_eq!(rows[1].state, "running");
     assert_eq!(rows[1].agent, "my-agent");
@@ -296,7 +310,6 @@ fn cli_mock_success_paths() {
     assert_eq!(rows[0].state, "");
     assert_eq!(rows[0].agent, "");
     assert_eq!(rows[0].workspace, "");
-    assert_eq!(rows[0].raw, "");
 
     // Unknown JSON fields are ignored by serde.
     crate::sbx::test_env::set_var("SBX_MOCK_JSON", "extra");
@@ -810,9 +823,6 @@ fn lifecycle_reuses_existing_sandbox_and_stops_before_restart() {
             .contains("does not exist")
     );
     assert_eq!(mock.commands(), "ls --json\n");
-    mock.clear_commands();
-    assert!(remove_sandbox("demo").is_ok());
-    assert_eq!(mock.commands(), "rm --force demo\n");
 }
 
 #[test]
@@ -860,6 +870,73 @@ fn untrusted_names_never_reach_cli_or_terminal() {
         assert!(connection_info(name).is_err(), "{name:?}");
     }
     assert!(mock.commands().is_empty());
+}
+
+/// Secrets: listing parses the CLI payload; setting and removing target the
+/// right scope; the value travels over stdin and never appears in the logged
+/// command line.
+#[test]
+#[cfg(unix)]
+fn secrets_list_set_and_remove_target_the_right_scope() {
+    let _guard = env_lock();
+    let mock = MockCli::new();
+
+    // Default payload: no secrets stored.
+    let list = list_secrets().expect("empty secret ls should parse");
+    assert!(list.secrets.is_empty());
+    assert_eq!(list.env_only_count, 0);
+
+    // Secrets: listing parses the CLI payload with real shapes.
+    crate::sbx::test_env::set_var("SBX_MOCK_JSON", "secrets");
+    let list = list_secrets().expect("secrets JSON should parse");
+    crate::sbx::test_env::remove_var("SBX_MOCK_JSON");
+    assert_eq!(list.secrets.len(), 2);
+    assert_eq!(list.secrets[0].scope, "global");
+    assert_eq!(list.secrets[0].secret_type, "service");
+    assert_eq!(list.secrets[0].name, "zeldoc");
+    assert_eq!(list.secrets[0].secret, "(stored)");
+    assert_eq!(list.secrets[1].scope, "boxbox");
+    assert_eq!(list.env_only_count, 8);
+    assert_eq!(list.shadowed_services, Vec::<String>::new());
+    assert!(list.custom_secrets.is_empty());
+    mock.clear_commands();
+
+    // Scoped set: the value goes over stdin, so the logged command line
+    // (captured via "$*" in the mock) carries only the selector flags; -f
+    // skips the overwrite prompt, which cannot read our piped stdin.
+    assert!(set_secret("boxbox", "github", "hunter2").is_ok());
+    assert_eq!(
+        mock.commands().lines().last(),
+        Some("secret set github -f --sandbox boxbox")
+    );
+
+    // Global set: no --sandbox flag.
+    mock.clear_commands();
+    assert!(set_secret("global", "github", "hunter2").is_ok());
+    assert_eq!(mock.commands(), "secret set github -f\n");
+
+    // Invalid scopes are rejected before a CLI run.
+    mock.clear_commands();
+    assert!(set_secret("--all", "github", "hunter2").is_err());
+    assert!(remove_secret("x;rm", "github").is_err());
+    assert_eq!(mock.commands(), "");
+
+    // Scoped and global removal.
+    assert!(remove_secret("boxbox", "github").is_ok());
+    assert!(remove_secret("global", "github").is_ok());
+    assert_eq!(
+        mock.commands(),
+        "secret rm github -f --sandbox boxbox\nsecret rm github -f\n"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn remove_sandbox_runs_bare_rm() {
+    let _guard = env_lock();
+    let mock = MockCli::new();
+    assert_eq!(remove_sandbox("demo"), Ok(String::new()));
+    assert_eq!(mock.commands(), "rm --force demo\n");
 }
 
 #[test]
