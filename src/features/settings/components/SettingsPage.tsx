@@ -4,6 +4,7 @@ import Icon from "../../../common/components/Icon";
 import { Pane } from "../../../common/components/Pane";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Providers from "./Providers";
+import GithubToken from "./GithubToken";
 import Advanced from "./Advanced";
 import Updates from "./Updates";
 import SandboxSettings from "./SandboxSettings";
@@ -20,7 +21,7 @@ export interface SettingsPageProps {
   onCheckSetup: () => Promise<SetupStatus | null>;
 }
 
-type PaneId = "providers" | "secrets" | "sandbox" | "advanced";
+type PaneId = "providers" | "github" | "secrets" | "sandbox" | "advanced";
 
 const PANES: { id: PaneId; icon: "kit" | "key" | "settings" | "terminal"; label: string; description: string }[] = [
   {
@@ -28,6 +29,12 @@ const PANES: { id: PaneId; icon: "kit" | "key" | "settings" | "terminal"; label:
     icon: "kit",
     label: "Kit providers",
     description: "GitHub sources for agents, workloads, and mixins",
+  },
+  {
+    id: "github",
+    icon: "kit",
+    label: "GitHub token",
+    description: "Raise kit discovery's request limit with a personal access token",
   },
   {
     id: "secrets",
@@ -77,6 +84,7 @@ export default function SettingsPage({
       {paneMeta ? (
         <Pane label={paneMeta.label} onBack={() => setPane(null)}>
           {pane === "providers" && <Providers disabled={busy} />}
+          {pane === "github" && <GithubToken disabled={busy} />}
           {pane === "secrets" && <Secrets />}
           {pane === "sandbox" && <SandboxSettings />}
           {pane === "advanced" && <Advanced />}

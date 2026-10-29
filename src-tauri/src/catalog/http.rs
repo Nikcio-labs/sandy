@@ -10,11 +10,13 @@ use super::MAX_BODY;
 use reqwest::blocking::Client;
 use serde_json::Value;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub(super) struct Api {
     pub(super) client: Client,
     pub(super) github: String,
     pub(super) raw: String,
+    /// GitHub PAT; `request` enforces where it may be sent.
+    pub(super) token: Option<String>,
 }
 
 impl Api {
@@ -28,22 +30,23 @@ impl Api {
                 .map_err(|e| e.to_string())?,
             github: "https://api.github.com".into(),
             raw: "https://raw.githubusercontent.com".into(),
+            token: None,
         })
     }
 
-    pub(super) fn text(&self, url: &str) -> Result<String, String> {
-        self.request(url, None).map(|(text, _)| text)
+    /// GitHub API/raw requests, authenticated when a token is configured.
+    pub(super) fn github_text(&self, url: &str) -> Result<String, String> {
+        self.request(url, true).map(|(text, _)| text)
     }
 
-    pub(super) fn json(&self, url: &str) -> Result<Value, String> {
-        serde_json::from_str(&self.text(url)?).map_err(|e| format!("Invalid JSON from {url}: {e}"))
+    pub(super) fn github_json(&self, url: &str) -> Result<Value, String> {
+        serde_json::from_str(&self.github_text(url)?)
+            .map_err(|e| format!("Invalid JSON from {url}: {e}"))
     }
 
-    pub(super) fn request(
-        &self,
-        url: &str,
-        token: Option<&str>,
-    ) -> Result<(String, Option<String>), String> {
+    /// `github` selects the GitHub auth path; any future non-GitHub request
+    /// path must pass `false` so the token can never reach another host.
+    fn request(&self, url: &str, github: bool) -> Result<(String, Option<String>), String> {
         // Cache successes only; a rate limit or missing repository must remain visible.
         type HttpCache = Mutex<HashMap<String, (Instant, String, Option<String>)>>;
         static CACHE: OnceLock<HttpCache> = OnceLock::new();
@@ -53,7 +56,7 @@ impl Api {
         {
             return Ok((body.clone(), digest.clone()));
         }
-        let result = self.request_uncached(url, token);
+        let result = self.request_uncached(url, github);
         crate::logging::http_call("GET", url, &result);
         let (body, digest) = result?;
         let mut entries = cache.lock().map_err(|e| e.to_string())?;
@@ -70,27 +73,26 @@ impl Api {
     fn request_uncached(
         &self,
         url: &str,
-        token: Option<&str>,
+        github: bool,
     ) -> Result<(String, Option<String>), String> {
         let mut request = self.client.get(url);
-        if let Some(token) = token {
-            request = request.bearer_auth(token).header(
-                "Accept",
-                concat!(
-                    "application/vnd.oci.image.index.v1+json, ",
-                    "application/vnd.oci.image.manifest.v1+json, ",
-                    "application/vnd.docker.distribution.manifest.list.v2+json, ",
-                    "application/vnd.docker.distribution.manifest.v2+json"
-                ),
-            );
+        if github && let Some(token) = &self.token {
+            request = request.bearer_auth(token);
         }
         let response = request.send().map_err(|e| format!("{url}: {e}"))?;
         let status = response.status();
         if !status.is_success() {
-            let explanation = if status.as_u16() == 403 || status.as_u16() == 429 {
-                " (public API rate limit or access policy; retry later)"
-            } else {
-                ""
+            // Distinguish an unusable token from an exhausted allowance; the
+            // token itself is only ever in a header, never in the logged URL.
+            let explanation = match (github, self.token.is_some(), status.as_u16()) {
+                (true, true, 401) => {
+                    " (GitHub rejected the token; check that it is valid and not expired)"
+                }
+                (true, true, 403 | 429) => {
+                    " (rate limit reached despite the token; check its expiry and scopes, or retry later)"
+                }
+                (_, _, 403 | 429) => " (public API rate limit or access policy; retry later)",
+                _ => "",
             };
             return Err(format!("{url}: HTTP {status}{explanation}"));
         }
@@ -113,7 +115,7 @@ impl Api {
     pub(super) fn github_tags(&self, repository: &str) -> Result<Vec<Value>, String> {
         let mut tags = Vec::new();
         for page in 1..=100 {
-            let value = self.json(&format!(
+            let value = self.github_json(&format!(
                 "{}/repos/{repository}/tags?per_page=100&page={page}",
                 self.github
             ))?;

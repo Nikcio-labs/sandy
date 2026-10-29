@@ -1,5 +1,6 @@
 //! GitHub provider discovery: tags, repository trees, and raw kit
-//! descriptors fetched over the public HTTPS APIs.
+//! descriptors fetched over the public HTTPS APIs, authenticated with the
+//! user's GitHub token when one is configured.
 
 use std::collections::HashSet;
 
@@ -18,7 +19,7 @@ pub(super) fn discover_github(api: &Api, provider: &Provider) -> Result<Catalog,
         if let Some(sha) = tags.first().and_then(|tag| tag["commit"]["sha"].as_str()) {
             sha.to_string()
         } else {
-            let metadata = api.json(&format!("{}/repos/{repository}", api.github))?;
+            let metadata = api.github_json(&format!("{}/repos/{repository}", api.github))?;
             let branch = metadata["default_branch"]
                 .as_str()
                 .ok_or("GitHub repository has no default branch")?;
@@ -29,7 +30,7 @@ pub(super) fn discover_github(api: &Api, provider: &Provider) -> Result<Catalog,
         // Resolve it directly even when listing tags is unavailable or rate-limited.
         github_commit(api, &repository, &provider.reference)?
     };
-    let tree = api.json(&format!(
+    let tree = api.github_json(&format!(
         "{}/repos/{repository}/git/trees/{commit}?recursive=1",
         api.github
     ))?;
@@ -76,7 +77,7 @@ pub(super) fn discover_github(api: &Api, provider: &Provider) -> Result<Catalog,
                             .collect::<Vec<_>>()
                             .join("/");
                         let url = format!("{}/{repository}/{commit}/{encoded}", api.raw);
-                        (path, api.text(&url))
+                        (path, api.github_text(&url))
                     })
                 })
                 .collect::<Vec<_>>()
@@ -147,7 +148,7 @@ pub(super) fn discover_github(api: &Api, provider: &Provider) -> Result<Catalog,
 }
 
 fn github_commit(api: &Api, repository: &str, reference: &str) -> Result<String, String> {
-    api.json(&format!(
+    api.github_json(&format!(
         "{}/repos/{repository}/commits/{}",
         api.github,
         encoded_path(reference)

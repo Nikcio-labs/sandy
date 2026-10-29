@@ -1,5 +1,7 @@
 //! Public provider discovery. GitHub uses HTTPS APIs, never a local git/curl install.
-//! Blocking entry points belong on Tauri's blocking worker pool.
+//! Requests carry the user's GitHub token (Settings) when one is stored, and
+//! are anonymous otherwise. Blocking entry points belong on Tauri's blocking
+//! worker pool.
 //!
 //! Verified public interfaces:
 //! - GitHub /repos/{owner}/{repo}/tags and /git/trees/{commit}?recursive=1.
@@ -13,6 +15,7 @@ mod cache;
 mod descriptor;
 mod github;
 mod http;
+mod settings;
 mod store;
 mod types;
 
@@ -21,6 +24,7 @@ mod types;
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests;
 
+pub use settings::{get_github_token, save_github_token};
 pub use store::{get_providers, save_providers};
 pub(crate) use store::{github_repository, unique_id, write_json};
 #[cfg(test)]
@@ -62,9 +66,17 @@ pub fn provider_versions(
     if !refresh && let Some(values) = cache::read_versions(root, &provider) {
         return Ok(values);
     }
-    let values = versions_with(&Api::public()?, &provider)?;
+    let values = versions_with(&api_with_token(root)?, &provider)?;
     cache::write_versions(root, &provider, &values);
     Ok(values)
+}
+
+/// `Api` is cheap to build; the token is read per call so a save or clear in
+/// the UI takes effect on the next discovery without a restart.
+fn api_with_token(root: &std::path::Path) -> Result<Api, String> {
+    let mut api = Api::public()?;
+    api.token = get_github_token(root)?;
+    Ok(api)
 }
 
 fn versions_with(api: &Api, provider: &Provider) -> Result<Vec<String>, String> {
@@ -94,7 +106,7 @@ pub fn discover_kits(
     if !refresh && let Some(cached) = cache::read_catalog(root, &providers) {
         return Ok(cached);
     }
-    let mut catalog = discover_with(&Api::public()?, &providers)?;
+    let mut catalog = discover_with(&api_with_token(root)?, &providers)?;
     // The built-ins are documented v2 shortcuts, not guessed registry
     // repositories. They must be merged before caching: a cache hit has to
     // return the same catalog a fresh discovery would, otherwise the frontend
