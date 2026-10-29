@@ -76,7 +76,12 @@
   justify-content: flex-end;
 }
 
+/* The content area fills the pane below the pinned header so pane bodies
+   can stretch their own content (e.g. a growing code block); its own
+   overflow keeps the internal scroll here. */
 .panecontent {
+  flex: 1;
+  min-height: 0;
   padding: 20px;
   overflow-y: auto;
 }

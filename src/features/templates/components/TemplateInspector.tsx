@@ -61,7 +61,7 @@ export function TemplateInspector({
             <code>{template.path}</code>
           </dd>
         </dl>
-        <pre aria-label={`Saved YAML for ${template.name}`}>
+        <pre className="templatepane-yaml" aria-label={`Saved YAML for ${template.name}`}>
           <code>{template.content}</code>
         </pre>
         <button type="button" className="textbtn" onClick={onCopyYaml}>

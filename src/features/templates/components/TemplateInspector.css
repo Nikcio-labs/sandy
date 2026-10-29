@@ -8,8 +8,19 @@
   margin-top: 20px;
 }
 
-.templatepanebody pre {
-  max-height: 430px;
+/* The YAML block absorbs the pane's leftover height: the body stretches
+   to the .panecontent scroll area and the pre grows into the free space,
+   so the Copy action sits near the bottom of an otherwise empty pane.
+   min-height keeps a short document readable on small windows. */
+.templatepanebody {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.templatepane-yaml {
+  flex: 1;
+  min-height: 120px;
   margin-top: 20px;
   tab-size: 2;
 }
