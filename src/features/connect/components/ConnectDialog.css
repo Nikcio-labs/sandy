@@ -187,31 +187,9 @@
   flex-shrink: 0;
 }
 
-.connection-server-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.connection-server-head h3 {
-  margin: 0;
+.connection-server h3 {
+  margin: 0 0 12px;
   font-size: 16px;
-}
-
-/* The server information is the shared .details dl with its own columns;
-   dd text stays selectable for pasting into an SSH client. */
-.connection-info {
-  grid-template-columns: 70px minmax(0, 1fr);
-  gap: 9px 14px;
-  line-height: 1.5;
-  margin: 0 0 14px;
-}
-
-.connection-info dd {
-  user-select: text;
 }
 
 .connect-dialog .connection-loading,
