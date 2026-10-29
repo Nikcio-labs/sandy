@@ -100,20 +100,18 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   return (
     <div className={`templatehome ${detail ? "pane-open" : ""}`}>
       {detail ? (
-        <div className="templatepanebody">
-          <TemplateInspector
-            key={detail.id}
-            template={detail}
-            onBack={() => setInspected(null)}
-            onEdit={onEdit}
-            onDelete={(template, trigger) => {
-              returnFocus.current = trigger;
-              setDeleting(template);
-            }}
-            onLaunch={setSelected}
-            onCopyYaml={() => void copyYaml(detail)}
-          />
-        </div>
+        <TemplateInspector
+          key={detail.id}
+          template={detail}
+          onBack={() => setInspected(null)}
+          onEdit={onEdit}
+          onDelete={(template, trigger) => {
+            returnFocus.current = trigger;
+            setDeleting(template);
+          }}
+          onLaunch={setSelected}
+          onCopyYaml={() => void copyYaml(detail)}
+        />
       ) : (
         <>
           <PageHead

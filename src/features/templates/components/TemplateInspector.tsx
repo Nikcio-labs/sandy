@@ -48,24 +48,26 @@ export function TemplateInspector({
         </>
       }
     >
-      <div className="actions">
-        <span className="badge">{template.agent}</span>
-        <span className="badge violet">Kit v{template.kit_version}</span>
+      <div className="templatepanebody">
+        <div className="actions">
+          <span className="badge">{template.agent}</span>
+          <span className="badge violet">Kit v{template.kit_version}</span>
+        </div>
+        <dl className="details">
+          <dt>Workspace</dt>
+          <dd>{template.workspace || "None (mountless)"}</dd>
+          <dt>Template file</dt>
+          <dd>
+            <code>{template.path}</code>
+          </dd>
+        </dl>
+        <pre aria-label={`Saved YAML for ${template.name}`}>
+          <code>{template.content}</code>
+        </pre>
+        <button type="button" className="textbtn" onClick={onCopyYaml}>
+          <Icon name="clipboard" size={13} /> Copy YAML
+        </button>
       </div>
-      <dl className="details">
-        <dt>Workspace</dt>
-        <dd>{template.workspace || "None (mountless)"}</dd>
-        <dt>Template file</dt>
-        <dd>
-          <code>{template.path}</code>
-        </dd>
-      </dl>
-      <pre aria-label={`Saved YAML for ${template.name}`}>
-        <code>{template.content}</code>
-      </pre>
-      <button type="button" className="textbtn" onClick={onCopyYaml}>
-        <Icon name="clipboard" size={13} /> Copy YAML
-      </button>
     </Pane>
   );
 }

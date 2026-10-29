@@ -185,6 +185,13 @@
   flex-direction: column;
 }
 
+/* The settings host fills .main while a pane is open; without flex: 1
+   it stays content-sized and the pane clips instead of scrolling. */
+.pagehost {
+  flex: 1;
+  min-height: 0;
+}
+
 .main:has(.pane-open) {
   overflow: hidden;
 }
