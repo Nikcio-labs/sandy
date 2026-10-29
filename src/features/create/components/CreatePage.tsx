@@ -1,14 +1,15 @@
 import { useEffect, useId, useRef } from "react";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
-import Providers from "../../settings/components/Providers";
+import Sources from "../../settings/components/Sources";
+import type { Provider } from "../../../lib/catalog";
 import { useCreateFlow } from "../hooks/useCreateFlow";
-import { DiscoveryStep } from "./DiscoveryStep";
+import { SourcesPanel } from "./SourcesPanel";
 import { AgentStep } from "./AgentStep";
 import { MixinStep } from "./MixinStep";
 import { ReviewStep } from "./ReviewStep";
 import { FinishedPanel } from "./FinishedPanel";
-import { RecipeAside } from "./RecipeAside";
+import { SelectionChips } from "./SelectionChips";
 import "./CreatePage.css";
 
 export interface CreatePageProps {
@@ -22,8 +23,6 @@ export interface CreatePageProps {
   /** Dialog mode: the host dialog owns the close affordance and title. */
   inDialog?: boolean;
 }
-
-const STEPS = ["Providers", "Agent or workload", "Mixins & inputs", "Project & review"];
 
 export default function CreatePage({
   onClose,
@@ -44,6 +43,7 @@ export default function CreatePage({
     error,
     providers,
     catalog,
+    setCatalog,
     onProvidersChange,
     discover,
     agents,
@@ -101,6 +101,10 @@ export default function CreatePage({
     scroller?.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
+  const addProvider = (next: Provider[]) => next;
+
+  const title = saved ? "Your sandbox is ready" : editing ? "Edit template" : "Create a sandbox";
+
   return (
     <section
       ref={sectionRef}
@@ -110,19 +114,17 @@ export default function CreatePage({
     >
       <header className="pagehead sectionhead catalog-page-heading">
         <div>
-          <span className="eyebrow">
-            {editing ? "EDIT SAVED TEMPLATE" : "YOUR NEXT WORKSPACE"}
-          </span>
           <h1 id={`${id}-title`} className={inDialog ? "catalog-dialog-title" : undefined}>
-            {saved ? "Your template is ready" : editing ? "Edit template" : "Create a sandbox"}
+            {title}
           </h1>
-          <p className="help">
-            {saved
-              ? "A reusable starting point, saved on your computer."
-              : editing
-                ? "Change the kits, inputs, or project, then save the same template again."
-                : "Choose your tools. Bring your project. Make it yours."}
-          </p>
+          {!saved && step > 0 && agent && (
+            <SelectionChips
+              agent={agent}
+              mixins={mixins}
+              onRemoveMixin={removeMixin}
+              onEditAgent={() => moveTo(1)}
+            />
+          )}
         </div>
         {!inDialog && (
           <button type="button" className="btn" disabled={busy !== null} onClick={onClose}>
@@ -145,30 +147,10 @@ export default function CreatePage({
           </button>
         )}
       </header>
-      {!saved && (
-        <ol className="steps" aria-label="Sandbox creation steps">
-          {STEPS.map((label, index) => (
-            <li key={label}>
-              <button
-                type="button"
-                className={`${step === index ? "current" : ""} ${step > index ? "complete" : ""}`.trim() || undefined}
-                aria-current={step === index ? "step" : undefined}
-                disabled={busy !== null || index > step}
-                onClick={() => moveTo(index)}
-              >
-                <span className="step-number">
-                  {step > index ? <Icon name="check" size={14} /> : index + 1}
-                </span>
-                {label}
-              </button>
-            </li>
-          ))}
-        </ol>
-      )}
       {error && (
         <ErrorBanner
           title={saved ? "Launch needs attention." : "We couldn’t complete that step."}
-          actionLabel={step === 0 && !saved ? "Retry discovery" : undefined}
+          actionLabel={step === 0 && !saved ? "Try again" : undefined}
           disabled={busy !== null || !providers}
           onAction={step === 0 && !saved ? () => void discover() : undefined}
         >
@@ -194,44 +176,35 @@ export default function CreatePage({
         <>
           {step === 0 && (
             <div className="panel catalog-panel">
-              <h2>Start with your kit sources</h2>
-              <p className="help intro">
-                Enable the providers you want to use and choose their versions. Discovery reads kit
-                descriptors from those saved references.
-              </p>
-              <Providers
-                disabled={busy !== null}
-                onChange={onProvidersChange}
-              />
-              {providers && (
-                <DiscoveryStep
-                  providers={providers}
-                  busy={busy !== null}
-                  onDiscover={() => void discover()}
-                  onDiscoverRefresh={() => void discover(true)}
-                />
+              {busy === "discover" || busy === "load" ? (
+                <div className="catalog-discovering">
+                  <span className="spinner" />
+                  <h2>Finding kits…</h2>
+                  <p className="help intro">Reading what your sources offer.</p>
+                </div>
+              ) : (
+                <>
+                  <Sources
+                    disabled={busy !== null}
+                    onChange={onProvidersChange}
+                    onAdd={addProvider}
+                  />
+                  {providers && (
+                    <SourcesPanel
+                      providers={providers}
+                      busy={busy !== null}
+                      onDiscover={() => void discover()}
+                      onDiscoverRefresh={() => void discover(undefined, true)}
+                    />
+                  )}
+                </>
               )}
-            </div>
-          )}
-          {step > 0 && !catalog && (
-            <div className="panel catalog-panel">
-              <p className="help intro">
-                No discovery results. Review your kit sources and discover kits again.
-              </p>
-              <button
-                type="button"
-                className="btn primary"
-                disabled={busy !== null}
-                onClick={() => moveTo(0)}
-              >
-                Review kit sources
-              </button>
             </div>
           )}
           {step > 0 && catalog && (
             <>
-              {catalog.warnings.length > 0 && (
-                <details className="warnings" open>
+              {catalog.warnings.length > 0 && step === 1 && (
+                <details className="warnings">
                   <summary>Discovery notes ({catalog.warnings.length})</summary>
                   <ul>
                     {catalog.warnings.map((warning, index) => (
@@ -242,69 +215,68 @@ export default function CreatePage({
                     type="button"
                     className="textbtn"
                     disabled={busy !== null}
-                    onClick={() => moveTo(0)}
+                    onClick={() => {
+                      setAgentSearch("");
+                      setCatalog(null);
+                    }}
                   >
-                    Review sources and retry discovery
+                    Review sources
                   </button>
                 </details>
               )}
-              <div className="wizardgrid">
-                <div>
-                  {step === 1 && (
-                    <AgentStep
-                      agents={agents}
-                      agent={agent}
-                      search={agentSearch}
-                      onSearch={setAgentSearch}
-                      onSelect={selectAgent}
-                      onBack={() => moveTo(0)}
-                      onContinue={() => moveTo(2)}
-                      onReviewSources={() => moveTo(0)}
-                    />
-                  )}
-                  {step === 2 && agent && (
-                    <MixinStep
-                      agent={agent}
-                      compatible={compatible}
-                      matchingMixins={matchingMixins}
-                      mixinGroups={mixinGroups}
-                      mixins={mixins}
-                      values={flow.values}
-                      search={mixinSearch}
-                      onSearch={setMixinSearch}
-                      providerFilter={providerFilter}
-                      onProviderFilter={setProviderFilter}
-                      providerLabel={providerLabel}
-                      onToggleMixin={toggleMixin}
-                      onRemoveMixin={removeMixin}
-                      onArgumentChange={changeArgument}
-                      onBack={() => moveTo(1)}
-                      onContinue={() => inputValid && moveTo(3)}
-                    />
-                  )}
-                  {step === 3 && request && agent && (
-                    <ReviewStep
-                      agent={agent}
-                      mixins={mixins}
-                      selectedKits={flow.selectedKits}
-                      name={name}
-                      onName={setName}
-                      workspace={workspace}
-                      onWorkspace={setWorkspace}
-                      mountless={mountless}
-                      onMountless={setMountless}
-                      savePath={savePath}
-                      onSavePath={setSavePath}
-                      editing={editing}
-                      busy={busy !== null}
-                      request={request}
-                      onSubmit={(launch) => void submit(launch)}
-                      onBrowse={(target) => void browse(target)}
-                      onBack={() => moveTo(2)}
-                    />
-                  )}
-                </div>
-                <RecipeAside agent={agent} mixins={mixins} workspace={workspace} mountless={mountless} />
+              <div>
+                {step === 1 && (
+                  <AgentStep
+                    agents={agents}
+                    agent={agent}
+                    search={agentSearch}
+                    onSearch={setAgentSearch}
+                    onSelect={selectAgent}
+                    onContinue={() => moveTo(2)}
+                    onReviewSources={() => moveTo(0)}
+                  />
+                )}
+                {step === 2 && agent && (
+                  <MixinStep
+                    agent={agent}
+                    compatible={compatible}
+                    matchingMixins={matchingMixins}
+                    mixinGroups={mixinGroups}
+                    mixins={mixins}
+                    values={flow.values}
+                    search={mixinSearch}
+                    onSearch={setMixinSearch}
+                    providerFilter={providerFilter}
+                    onProviderFilter={setProviderFilter}
+                    providerLabel={providerLabel}
+                    onToggleMixin={toggleMixin}
+                    onRemoveMixin={removeMixin}
+                    onArgumentChange={changeArgument}
+                    onBack={() => moveTo(1)}
+                    onContinue={() => inputValid && moveTo(3)}
+                  />
+                )}
+                {step === 3 && request && agent && (
+                  <ReviewStep
+                    agent={agent}
+                    mixins={mixins}
+                    selectedKits={flow.selectedKits}
+                    name={name}
+                    onName={setName}
+                    workspace={workspace}
+                    onWorkspace={setWorkspace}
+                    mountless={mountless}
+                    onMountless={setMountless}
+                    savePath={savePath}
+                    onSavePath={setSavePath}
+                    editing={editing}
+                    busy={busy !== null}
+                    request={request}
+                    onSubmit={(launch) => void submit(launch)}
+                    onBrowse={(target) => void browse(target)}
+                    onBack={() => moveTo(2)}
+                  />
+                )}
               </div>
             </>
           )}

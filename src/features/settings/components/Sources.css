@@ -1,0 +1,122 @@
+/*
+ * The kit-source list: one quiet row per source with a switch, always
+ * showing what matters (is it on, what does it point at), and an inline
+ * editor that opens on demand. Shared by the create flow and Settings.
+ */
+
+.sourcerow {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 13px 16px;
+  margin: 0 0 9px;
+  min-width: 0;
+}
+
+.sourcerow.invalid {
+  border-color: var(--red-border);
+}
+
+.sourcerow-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.sourcerow-head > .textbtn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.sourcerow-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sourcerow-name strong {
+  font: 600 15.5px var(--display);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* The repository + reference line is the row's real address; the display
+   name is only a label. Muted so the name leads. */
+.sourcerow-repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--faint);
+  overflow-wrap: anywhere;
+}
+
+.sourcerow-repo svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* A switch reads as on/off at a glance; a checkbox reads as "one of many".
+   The input is visually hidden but keeps native semantics and focus. */
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.switch-track {
+  width: 34px;
+  height: 20px;
+  border-radius: 99px;
+  background: var(--line-strong);
+  padding: 2px;
+  display: flex;
+  transition: background 130ms ease;
+}
+
+.switch-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(20 26 61 / 0.25);
+  transition: translate 130ms ease;
+}
+
+.switch input:checked + .switch-track {
+  background: var(--green);
+}
+
+.switch input:checked + .switch-track .switch-thumb {
+  transform: translateX(14px);
+}
+
+.switch input:disabled + .switch-track {
+  opacity: 0.45;
+}
+
+.switch input:focus-visible + .switch-track {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.sourcerow-body {
+  border-top: 1px solid var(--line);
+  margin-top: 13px;
+  padding-top: 15px;
+}
+
+.sourcerow-body .inline-error {
+  margin: 4px 0 12px;
+}

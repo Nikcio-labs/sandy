@@ -1,11 +1,11 @@
 import Icon from "../../../common/components/Icon";
 
 /**
- * The discovery trigger below the provider editor: the cached "Discover kits"
- * action and the "Fetch fresh" cache bypass. Unsaved provider changes are
- * persisted by discovery itself, so they don't block the action.
+ * The action footer of the sources step: the retry and the cache bypass.
+ * The wizard re-discovers on its own whenever sources change, so this only
+ * appears after a failed or empty discovery.
  */
-export function DiscoveryStep({
+export function SourcesPanel({
   providers,
   busy,
   onDiscover,
@@ -26,20 +26,19 @@ export function DiscoveryStep({
       >
         {busy ? (
           <>
-            <span className="spinner" /> Discovering kits…
+            <span className="spinner" /> Looking for kits…
           </>
         ) : (
           <>
-            Discover kits <Icon name="arrow" size={16} />
+            Try again <Icon name="arrow" size={16} />
           </>
         )}
       </button>
       <button type="button" className="btn" disabled={busy} onClick={onDiscoverRefresh}>
-        <Icon name="refresh" size={16} /> Fetch fresh from sources
+        <Icon name="refresh" size={16} /> Ignore saved results
       </button>
       <span className="help">
-        Discovery reuses the last result for these sources without calling GitHub. Use Fetch fresh
-        to bypass that cache. Unsaved provider changes are saved when you discover.
+        Results are cached per source. “Ignore saved results” asks GitHub again.
       </span>
     </div>
   );

@@ -38,6 +38,10 @@ export interface CreateFlowOptions {
 /**
  * The create-wizard state machine: kit discovery, agent/mixin selection,
  * template saving, and launching. The page component only renders steps.
+ *
+ * Steps: 0 sources (only shown on demand), 1 agent, 2 mixins, 3 details.
+ * Creating starts discovery automatically, so the sources step stays out of
+ * the common path; it appears when discovery fails or finds nothing.
  */
 export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFlowOptions) {
   const mounted = useMountedRef();
@@ -63,13 +67,16 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
   const [launchOutput, setLaunchOutput] = useState("");
   const [copyNotice, setCopyNotice] = useState("");
   const lock = useRef(false);
+  // Guards the automatic first discovery against StrictMode's double effect
+  // invocation; a duplicated discovery would double the GitHub round-trips.
+  const autoDiscovered = useRef(false);
   // The id stays for the whole visit, so a provider reset (which drops the
   // saved kit metadata) still saves back to the same template.
   const [editingId] = useState(templateId ?? null);
 
-  // Load the saved provider configuration up front. The Providers editor still
-  // reports changes back; this only guarantees step 0 can render (with a
-  // surfaced error) even if that load fails.
+  // Load the saved provider configuration up front. The Sources editor still
+  // reports changes back; this only guarantees the sources step can render
+  // (with a surfaced error) even if that load fails.
   useEffect(() => {
     let active = true;
     getProviders()
@@ -138,6 +145,17 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     };
   }, [templateId]);
 
+  // Creating: discover as soon as the saved provider configuration arrives,
+  // without asking. A failure or an empty result is the only moment the
+  // sources step enters the flow.
+  useEffect(() => {
+    if (templateId || autoDiscovered.current || !providers) return;
+    autoDiscovered.current = true;
+    void discover(providers);
+    // Runs once per visit, on the first loaded provider configuration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providers, templateId]);
+
   useBusyReporting(busy !== null, onBusyChange);
 
   const kits = catalog?.kits ?? [];
@@ -160,7 +178,7 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
   );
   const providerLabel = (providerId: string) =>
     providers?.find((provider) => provider.id === providerId)?.label ??
-    (providerId === "builtin" ? "Built-in agents" : providerId);
+    (providerId === "builtin" ? "Built-in" : providerId);
   const inputValid = argumentsAreValid(selectedKits, values);
   const request: SaveTemplateRequest | null = agent
     ? {
@@ -186,10 +204,21 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
   const moveTo = (next: number) => {
     setError(null);
     // Later steps render from the discovery snapshot; without one, send the
-    // user back to the provider step instead of showing a blank page.
+    // user back to the sources step instead of showing a blank page.
     if (next > 0 && !catalog) {
       setStep(0);
       return;
+    }
+    // The template name is the one field users are most likely to accept a
+    // sensible suggestion for, so entering the details step prefills it from
+    // the agent rather than showing an empty required field.
+    if (next === 3 && !name.trim() && agent) {
+      setName(
+        agent.name
+          .toLowerCase()
+          .replace(/[^a-z0-9_.-]+/g, "-")
+          .replace(/^-+|-+$/g, ""),
+      );
     }
     setStep(next);
   };
@@ -243,16 +272,17 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     });
   };
 
-  const discover = async (refresh = false) => {
+  const discover = async (override?: Provider[], refresh = false) => {
     // Provider edits are persisted by saveProviders below, so unsaved changes
     // do not need to block discovery.
-    if (lock.current || !providers) return;
+    const config = override ?? providers;
+    if (lock.current || !config) return;
     lock.current = true;
     setBusy("discover");
     setError(null);
     try {
       // Defaults from get_providers may not have a file yet. Persist before discovery.
-      const persistedProviders = await saveProviders(providers);
+      const persistedProviders = await saveProviders(config);
       const result = await discoverKits(persistedProviders, refresh);
       if (!mounted.current) return;
       const { kits, warnings } = verifiedFrom(result);
@@ -366,7 +396,9 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
       await navigator.clipboard.writeText(saved.content);
       setCopyNotice("YAML copied to clipboard.");
     } catch (failure) {
-      setCopyNotice(`Couldn’t copy YAML. Select the preview to copy it manually. ${String(failure)}`);
+      setCopyNotice(
+        `Couldn’t copy YAML. Select the preview to copy it manually. ${String(failure)}`,
+      );
     }
   };
 
@@ -376,25 +408,12 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     // unchanged saved configuration; that must not reset the wizard's progress.
     const changed = providers !== null && JSON.stringify(providers) !== JSON.stringify(next);
     setProviders(next);
-    if (changed && catalog) {
-      setCatalog(null);
-      setStep(0);
-      if (editingId) {
-        // The edited template's catalog is the saved kit metadata; a real
-        // discovery is the only way to verify alternative kits. The id stays:
-        // re-selecting kits after discovery updates the same template.
-        setAgent(null);
-        setMixins([]);
-        setValues({});
-        setError(
-          "Provider changes need a new discovery. This template stays in edit mode: re-select its kits and save to update it.",
-        );
-      } else {
-        setError(
-          "Provider changes need a new discovery. Review your sources and discover kits again.",
-        );
-      }
-    }
+    if (!changed || editingId) return;
+    // Sources changed, so the snapshot is stale: re-discover immediately and
+    // return to the agent step when it succeeds. The configuration itself is
+    // persisted by discovery, so there is no separate save action.
+    setCatalog(null);
+    void discover(next);
   };
 
   const selectAgent = (kit: KitOption) => {
@@ -436,6 +455,8 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     values,
     providers,
     catalog,
+    /** Drops the discovery snapshot so the sources step takes over. */
+    setCatalog,
     onProvidersChange,
     discover,
     agents,

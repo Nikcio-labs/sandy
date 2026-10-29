@@ -1,8 +1,7 @@
 /*
- * The create wizard page: in-place page layout, step navigation, discovery
- * warnings, and the wizard grid with the environment summary rail. Owned by
- * CreatePage and RecipeAside; the shared stylesheets cover panels, fields,
- * option cards, and action bars.
+ * The create wizard page: in-place page layout, the selection chips, the
+ * discovery state, and the kit-card grid. Owned by CreatePage and the step
+ * components; the shared stylesheets cover panels, fields, and action bars.
  */
 
 /* The create wizard replaces the page content in-place under the shared
@@ -22,7 +21,7 @@
 }
 
 .catalog-panel {
-  padding: 20px;
+  padding: 24px;
   min-width: 0;
 }
 
@@ -47,121 +46,144 @@
   }
 }
 
-.catalog-choice-group {
-  margin-top: 24px;
+/* ---- The running selection as chips ---- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
 }
 
-.catalog-choice-group > legend {
-  font-size: 14px;
-  font-weight: 650;
-  margin-bottom: 12px;
-}
-
-/* ---- The wizard's environment summary rail ---- */
-
-.wizardgrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 192px;
-  gap: 24px;
-  align-items: start;
-}
-
-.recipe {
-  border-left: 1px solid var(--line);
-  padding-left: 20px;
-  font-size: 14px;
-}
-
-.recipe h3 {
-  font-size: 17px;
-  margin-bottom: 14px;
-}
-
-.recipe p {
-  margin-bottom: 9px;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.recipe strong {
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.5;
   color: var(--ink);
 }
 
-.recipe p:has(> svg) {
-  display: flex;
-  align-items: center;
+.chip svg {
+  width: 13px;
+  height: 13px;
+  color: var(--muted);
+}
+
+.chip-agent {
+  color: var(--brand-dark);
+  border-color: var(--brand-border);
+  background: var(--brand-faint);
+  cursor: pointer;
+}
+
+.chip-agent:hover {
+  border-color: var(--brand);
+}
+
+.chip-agent svg {
+  color: var(--brand-dark);
+}
+
+.chip-empty {
+  color: var(--faint);
+  border-style: dashed;
+  background: transparent;
+}
+
+.chip-x {
+  display: inline-flex;
+  border: 0;
+  background: transparent;
+  padding: 2px;
+  margin: 0 -3px 0 0;
+  color: var(--muted);
+  border-radius: 50%;
+}
+
+.chip-x:hover {
+  color: var(--red);
+}
+
+/* ---- Discovery state ---- */
+
+.catalog-discovering {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 46px 20px;
+  text-align: center;
+}
+
+.catalog-discovering .spinner {
+  margin-bottom: 10px;
+}
+
+/* ---- The agent grid: one flat set of choices ---- */
+
+/* Two classes to out-rank the shared .options column rule, which bundling
+   can emit after this file regardless of import order. */
+.options.agentgrid {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+/* ---- Kit cards: the shared .option tile, reading-first ---- */
+
+.kitcard {
   gap: 6px;
 }
 
-.recipe p:has(> svg) svg {
-  width: 12px;
-  height: 12px;
+.kitcard-description {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.recipemark {
-  height: 76px;
-  display: grid;
-  place-items: center;
-  border: 1px dashed #b8b0ef;
-  border-radius: 11px;
-  background: var(--brand-faint);
-  color: var(--brand-dark);
-  margin-bottom: 17px;
-}
-
-.recipemark svg {
-  width: 35px;
-  height: 35px;
-}
-
-@media (max-width: 720px) {
-  .wizardgrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .recipe {
-    display: none;
-  }
+.kitcard-note {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--faint);
 }
 
 /* ---- Review and finished states ---- */
 
 .catalog-selected,
-.catalog-kit-inputs,
-.catalog-review {
+.catalog-kit-inputs {
   border-top: 1px solid var(--line);
   padding-top: 24px;
   margin-top: 27px;
 }
 
-.catalog-finished > .help.intro {
-  max-width: 650px;
-}
-
-.catalog-selected ol {
-  padding-left: 24px;
-  font-size: 14px;
+.catalog-selected ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
 }
 
 .catalog-selected li {
-  margin: 8px 0;
-  padding-left: 5px;
-}
-
-.catalog-selected li > span {
-  display: inline-block;
-  min-width: 130px;
-  overflow-wrap: anywhere;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14.5px;
+  font-weight: 550;
 }
 
 .catalog-selected li > button {
-  margin-left: 18px;
+  margin-left: auto;
 }
 
-.catalog-required {
-  color: var(--red);
-  font-size: 14px;
-  font-weight: 500;
+.catalog-finished > .help.intro {
+  max-width: 650px;
 }
 
 /* The review grid is the shared .details dl with wider columns; dd text is
@@ -197,6 +219,39 @@
   display: block;
   margin-top: 6px;
   color: var(--muted);
+}
+
+/* Advanced territory: the save location and the raw setup file live behind
+   disclosures so the launch decision is never buried under them. */
+.catalog-advanced {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+.catalog-advanced:first-of-type {
+  border-top: 0;
+  margin-top: 8px;
+  padding-top: 0;
+}
+
+.catalog-advanced > summary {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--muted);
+  padding: 4px 0;
+}
+
+.catalog-advanced > summary:hover {
+  color: var(--ink);
+}
+
+.catalog-advanced[open] > summary {
+  color: var(--ink);
+}
+
+.catalog-advanced > *:not(summary) {
+  margin-top: 12px;
 }
 
 pre.catalog-yaml {

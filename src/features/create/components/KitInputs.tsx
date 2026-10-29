@@ -16,12 +16,14 @@ export function KitInputs({
   const id = useId();
   const configurable = kits.filter((kit) => kit.arguments.length > 0);
   if (!configurable.length) {
-    return <p className="help">The selected kits don’t require any inputs.</p>;
+    return null;
   }
   return (
     <div className="catalog-kit-inputs">
       <h3>Kit inputs</h3>
-      <p className="help intro">Required inputs are marked. Defaults come from each kit’s metadata.</p>
+      <p className="help intro">
+        Required inputs are marked. Defaults come from each kit’s metadata.
+      </p>
       {configurable.map((kit, kitIndex) => (
         <fieldset className="fieldset" key={kit.id} disabled={disabled}>
           <legend className="legend">{kit.name}</legend>
@@ -73,7 +75,8 @@ export function KitInputs({
                     {argument.default !== null && (
                       <>
                         {" "}
-                        Default: <code>{argument.default === "" ? "(empty)" : argument.default}</code>.
+                        Default:{" "}
+                        <code>{argument.default === "" ? "(empty)" : argument.default}</code>.
                       </>
                     )}
                   </span>

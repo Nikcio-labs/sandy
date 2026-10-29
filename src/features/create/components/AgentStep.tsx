@@ -1,8 +1,7 @@
 import { useId } from "react";
 import type { KitOption } from "../../../lib/catalog";
-import Icon from "../../../common/components/Icon";
 import { SearchField } from "../../../common/components/SearchField";
-import { KitDetails } from "./KitDetails";
+import { KitCard } from "./KitCard";
 
 export function AgentStep({
   agents,
@@ -10,7 +9,6 @@ export function AgentStep({
   search,
   onSearch,
   onSelect,
-  onBack,
   onContinue,
   onReviewSources,
 }: {
@@ -19,71 +17,70 @@ export function AgentStep({
   search: string;
   onSearch: (value: string) => void;
   onSelect: (kit: KitOption) => void;
-  onBack: () => void;
   onContinue: () => void;
   onReviewSources: () => void;
 }) {
   const id = useId();
+  // Built-ins are the zero-setup choices; a discovery result can shadow a
+  // built-in name, and that kit is the more specific one to show.
+  const seen = new Set<string>();
+  const ordered = agents
+    .slice()
+    .sort((left, right) => {
+      const leftBuiltin = left.provider_id === "builtin" ? 0 : 1;
+      const rightBuiltin = right.provider_id === "builtin" ? 0 : 1;
+      return leftBuiltin - rightBuiltin || left.name.localeCompare(right.name);
+    })
+    .filter((kit) => (seen.has(kit.name) ? false : (seen.add(kit.name), true)));
   return (
     <div className="panel catalog-panel">
-      <h2>Choose an agent or workload</h2>
-      <p className="help intro">
-        Built-in agent shortcuts use kit v2. A v3 workload starts a v3-only environment. Remote kit
-        sources below come from discovered descriptors.
-      </p>
-      <SearchField
-        id={`${id}-agent-search`}
-        value={search}
-        onChange={onSearch}
-        placeholder="Search agents and workloads…"
-        label="Search agents and workloads"
-        wide
-      />
-      {([2, 3] as const).map((version) => {
-        const items = agents.filter((kit) => kit.schema_version === version);
-        return (
-          items.length > 0 && (
-            <fieldset className="catalog-unframed catalog-choice-group" key={version}>
-              <legend>{version === 2 ? "Kit v2 agents" : "Kit v3 workloads"}</legend>
-              <div className="options">
-                {items.map((kit) => (
-                  <label className={`option ${agent?.id === kit.id ? "selected" : ""}`} key={kit.id}>
-                    <input
-                      type="radio"
-                      name={`${id}-agent`}
-                      value={kit.id}
-                      checked={agent?.id === kit.id}
-                      onChange={() => onSelect(kit)}
-                    />
-                    <KitDetails kit={kit} />
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          )
-        );
-      })}
+      <div className="sectionhead">
+        <div>
+          <h2>What will you build with?</h2>
+          <p className="help intro">Pick the coding agent your sandbox runs.</p>
+        </div>
+        <SearchField
+          id={`${id}-agent-search`}
+          value={search}
+          onChange={onSearch}
+          placeholder="Search agents…"
+          label="Search agents"
+        />
+      </div>
+      <div className="options agentgrid">
+        {ordered.map((kit) => (
+          <label className={`option ${agent?.id === kit.id ? "selected" : ""}`} key={kit.id}>
+            <input
+              type="radio"
+              name={`${id}-agent`}
+              value={kit.id}
+              checked={agent?.id === kit.id}
+              onChange={() => onSelect(kit)}
+            />
+            <KitCard kit={kit} />
+          </label>
+        ))}
+      </div>
       {!agents.length && (
         <div className="note">
-          <h3>
-            {search ? "No matching agents or workloads" : "No agents or workloads were discovered"}
-          </h3>
+          <h3>{search ? "No matching agents" : "Nothing was found in your sources"}</h3>
           <p>
             {search
               ? "Try a different search."
-              : "Review the discovery notes, then check your enabled providers and references."}
+              : "Check that your sources are reachable, then try again."}
           </p>
-          <button type="button" className="btn" onClick={() => (search ? onSearch("") : onReviewSources())}>
-            {search ? "Clear search" : "Review providers"}
+          <button
+            type="button"
+            className="btn"
+            onClick={() => (search ? onSearch("") : onReviewSources())}
+          >
+            {search ? "Clear search" : "Check sources"}
           </button>
         </div>
       )}
       <div className="actionbar">
-        <button type="button" className="btn" onClick={onBack}>
-          Back
-        </button>
         <button type="button" className="btn primary" disabled={!agent} onClick={onContinue}>
-          Choose mixins <Icon name="arrow" size={16} />
+          {agent ? `Add tools to ${agent.name}` : "Choose an agent to continue"}
         </button>
       </div>
     </div>
