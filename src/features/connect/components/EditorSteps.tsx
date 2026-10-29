@@ -36,14 +36,7 @@ export function EditorSteps({
       </li>
       <li>
         Choose <strong>Connect to Host…</strong> and enter{" "}
-        <code>{info ? `${info.user}@${info.host}` : `_default_user_@${sandboxName}.sbx`}</code>.
-        {info?.port != null && (
-          <>
-            {" "}
-            Use the SSH command below with <strong>Add New SSH Host…</strong> to include port{" "}
-            <code>{info.port}</code>.
-          </>
-        )}
+        <code>{info?.host ?? `${sandboxName}.sbx`}</code>.
       </li>
       <li>
         Connect, then use <strong>Open Folder</strong> to choose your project inside the sandbox.
