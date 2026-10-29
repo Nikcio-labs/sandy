@@ -7,3 +7,9 @@
 .templatelinks {
   border-top: 1px solid var(--line);
 }
+
+/* Registered local files are read-only: distinguish them from saved templates. */
+.badge.local {
+  background: var(--green-soft);
+  color: var(--green);
+}

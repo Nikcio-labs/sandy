@@ -117,6 +117,7 @@ export const templates: SavedTemplate[] = [
     workspace: "/home/user/projects/web",
     kit_version: 2,
     content: yamlFor("Web app", "claude-code", "/home/user/projects/web"),
+    registered: false,
   },
   {
     id: "tpl-2",
@@ -126,6 +127,7 @@ export const templates: SavedTemplate[] = [
     workspace: "",
     kit_version: 2,
     content: yamlFor("Scratch", "shell", ""),
+    registered: false,
   },
 ];
 

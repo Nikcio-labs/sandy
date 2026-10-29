@@ -24,7 +24,8 @@ mod tests;
 pub use launch::launch_template;
 pub use library::{
     SaveTemplateRequest, SavedTemplate, TemplateDetails, UpdateTemplateRequest, delete_template,
-    list_templates, read_template_details, save_template, template_warnings, update_template,
+    list_templates, read_template_details, register_template, save_template, template_warnings,
+    update_template,
 };
 
 use std::sync::Mutex;
@@ -57,6 +58,21 @@ pub fn pick_template_path(app: &tauri::AppHandle) -> Result<Option<String>, Stri
         .set_file_name("sbxenv.yaml")
         .add_filter("Environment YAML", &["yaml", "yml"])
         .blocking_save_file();
+    path.map(|path| match path.into_path() {
+        Ok(path) => path_string(&strip_verbatim(&path)),
+        Err(error) => Err(error.to_string()),
+    })
+    .transpose()
+}
+
+/// Picks an existing environment file to register in the library where it is.
+pub fn pick_local_template(app: &tauri::AppHandle) -> Result<Option<String>, String> {
+    let path = app
+        .dialog()
+        .file()
+        .set_title("Choose an environment template file to add")
+        .add_filter("Environment YAML", &["yaml", "yml"])
+        .blocking_pick_file();
     path.map(|path| match path.into_path() {
         Ok(path) => path_string(&strip_verbatim(&path)),
         Err(error) => Err(error.to_string()),

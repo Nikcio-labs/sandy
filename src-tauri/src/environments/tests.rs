@@ -1,14 +1,14 @@
 // Tests may unwrap/expect freely — a panic is exactly the failure mode we want.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::LIBRARY;
 use super::launch::launch_template;
 use super::launch::{SandboxRuntime, launch_with};
 use super::library::{
     SaveTemplateRequest, UpdateTemplateRequest, delete_template, list_templates,
-    read_template_details, save_template, template_warnings, update_template,
+    read_template_details, register_template, save_template, template_warnings, update_template,
 };
 use super::schema::Environment;
 use super::source_policy::{allow_source_with, prefix_matches};
@@ -30,6 +30,7 @@ impl ProgressLog {
 #[derive(Default)]
 struct MockRuntime {
     calls: Vec<Vec<String>>,
+    directories: Vec<String>,
     existing: bool,
     fail_create: bool,
     fail_start: bool,
@@ -79,9 +80,13 @@ impl SandboxRuntime for MockRuntime {
 
     fn create_streaming(
         &mut self,
+        dir: Option<&Path>,
         args: &[&str],
         line: &mut dyn FnMut(&str),
     ) -> Result<String, String> {
+        if let Some(dir) = dir {
+            self.directories.push(path_string(dir).unwrap());
+        }
         if !self.fail_create {
             line("pulling docker.io/team/claude:1.0");
         }
@@ -293,6 +298,226 @@ fn prevents_workspace_files_and_overwrite() {
             .contains("never overwritten")
     );
     assert_eq!(std::fs::read_to_string(existing).unwrap(), "important");
+}
+
+#[test]
+fn registered_templates_launch_without_provider_authorization_and_stay_untouched() {
+    let fixture = Fixture::new();
+    // A hand-written environment file like a user would already have: OCI
+    // sources Sandy has no provider record for, plus a mountless workspace.
+    let file = fixture.base.join("my-stack").join("sbxenv.yaml");
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    let yaml = "schemaVersion: \"1\"\nname: my-stack\nagent: claude\nkits:\n  - docker.io/team/claude:1.0\n  - source: docker.io/team/browser:1.0\n    args:\n      region: eu\n";
+    std::fs::write(&file, yaml).unwrap();
+    let before = std::fs::read_to_string(&file).unwrap();
+
+    let registered = register_template(&fixture.root, path_string(&file).unwrap()).unwrap();
+    assert!(registered.registered);
+    assert_eq!(registered.name, "my-stack");
+    assert_eq!(registered.agent, "claude");
+    assert_eq!(registered.workspace, "");
+    assert_eq!(registered.kit_version, 2);
+    assert_eq!(registered.content, yaml);
+    assert_eq!(registered.path, path_string(&file).unwrap());
+
+    // Listed like any other template, and launching skips provider
+    // authorization: sbx enforces its own source policy at create time.
+    let listed = list_templates(&fixture.root).unwrap();
+    assert_eq!(listed.len(), 1);
+    assert!(listed[0].registered);
+    let mut runtime = MockRuntime::default();
+    let result = launch_with(
+        &fixture.root,
+        &registered.id,
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert!(result.contains("Created and started sandbox my-stack"));
+    // No `settings` calls: no provider authorization was attempted.
+    assert_eq!(runtime.calls[0], ["exists", "my-stack"]);
+    // The create command runs from the file's own directory against the
+    // original file, so its relative paths resolve correctly.
+    assert_eq!(
+        &runtime.calls[1][..5],
+        ["env", "create", "--force", "--name", "my-stack"]
+    );
+    assert_eq!(runtime.calls[1][5], path_string(&file).unwrap());
+    assert_eq!(
+        runtime.directories,
+        [path_string(file.parent().unwrap()).unwrap()]
+    );
+    // Resuming an existing sandbox of the same name does not recreate it.
+    assert!(
+        launch_with(
+            &fixture.root,
+            &registered.id,
+            Some("my-stack".into()),
+            None,
+            &mut MockRuntime {
+                existing: true,
+                ..Default::default()
+            },
+            &mut |_| {},
+        )
+        .is_ok()
+    );
+    // The file is never rewritten by Sandy: editing is refused, updating is
+    // refused, and delete only forgets the registration.
+    let details_error = read_template_details(&fixture.root, &registered.id).unwrap_err();
+    assert!(details_error.contains("registered from a local file"));
+    let update = UpdateTemplateRequest {
+        name: "renamed".into(),
+        workspace: String::new(),
+        agent: saved_agent(),
+        mixins: vec![],
+        arguments: BTreeMap::new(),
+    };
+    assert!(
+        update_template(&fixture.root, &registered.id, update)
+            .unwrap_err()
+            .contains("registered from a local file")
+    );
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), before);
+    delete_template(&fixture.root, &registered.id).unwrap();
+    assert!(std::fs::exists(&file).unwrap());
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), before);
+    assert!(list_templates(&fixture.root).unwrap().is_empty());
+
+    // Re-registering after forgetting works, but duplicates do not.
+    register_template(&fixture.root, path_string(&file).unwrap()).unwrap();
+    assert_eq!(
+        register_template(&fixture.root, path_string(&file).unwrap()).unwrap_err(),
+        format!("{} is already in the template library", file.display())
+    );
+}
+
+#[test]
+fn register_template_rejects_missing_and_invalid_files() {
+    let fixture = Fixture::new();
+    let missing = fixture.base.join("missing").join("sbxenv.yaml");
+    assert!(
+        register_template(&fixture.root, path_string(&missing).unwrap())
+            .unwrap_err()
+            .contains("not a file")
+    );
+    assert!(
+        register_template(&fixture.root, "relative/sbxenv.yaml".into())
+            .unwrap_err()
+            .contains("absolute")
+    );
+    let file = fixture.base.join("broken.yaml");
+    std::fs::write(&file, "invalid: [yaml").unwrap();
+    assert!(
+        register_template(&fixture.root, path_string(&file).unwrap())
+            .unwrap_err()
+            .contains("invalid environment YAML")
+    );
+    let unnamed = fixture.base.join("unnamed.yaml");
+    std::fs::write(
+        &unnamed,
+        "schemaVersion: \"1\"\nname: not_a_valid name!\nagent: claude\n",
+    )
+    .unwrap();
+    assert!(
+        register_template(&fixture.root, path_string(&unnamed).unwrap())
+            .unwrap_err()
+            .contains("Environment name")
+    );
+    // A Sandy-saved template cannot be registered twice through the picker.
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    assert!(
+        register_template(&fixture.root, saved.path)
+            .unwrap_err()
+            .contains("already in the template library")
+    );
+}
+
+#[test]
+fn registered_relative_workspace_launches_from_the_file_directory() {
+    let fixture = Fixture::new();
+    // workspace: "." mounts the directory containing the environment file.
+    let project = fixture.base.join("project");
+    std::fs::create_dir_all(&project).unwrap();
+    let file = project.join("sbxenv.yaml");
+    std::fs::write(
+        &file,
+        "schemaVersion: \"1\"\nname: project\nagent: claude\nworkspace: .\nkits:\n  - ./mixins/local\n",
+    )
+    .unwrap();
+    let registered = register_template(&fixture.root, path_string(&file).unwrap()).unwrap();
+    assert_eq!(registered.workspace, ".");
+
+    let mut runtime = MockRuntime::default();
+    launch_with(
+        &fixture.root,
+        &registered.id,
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
+    // The create command runs from the file's directory and passes the
+    // original file: sbx resolves workspace "." and the kit path itself.
+    assert_eq!(
+        &runtime.calls[1][..5],
+        ["env", "create", "--force", "--name", "project"]
+    );
+    assert_eq!(runtime.calls[1][5], path_string(&file).unwrap());
+    assert_eq!(runtime.directories, [path_string(&project).unwrap()]);
+    assert!(!fixture.root.join("launches").exists());
+}
+
+#[test]
+fn registered_launch_delegates_workspace_checks_to_sbx() {
+    let fixture = Fixture::new();
+    let file = fixture.base.join("sbxenv.yaml");
+    std::fs::write(
+        &file,
+        "schemaVersion: \"1\"\nname: project\nagent: claude\n",
+    )
+    .unwrap();
+    let registered = register_template(&fixture.root, path_string(&file).unwrap()).unwrap();
+    // Launching with the file's own directory as the workspace is the
+    // documented safe placement: sbx mounts the file read-only at the root.
+    // Sandy does not pre-check placement for registered files: sbx protects
+    // workspace-root files itself and refuses deeper nesting at create time.
+    let mut runtime = MockRuntime::default();
+    launch_with(
+        &fixture.root,
+        &registered.id,
+        None,
+        Some(path_string(&fixture.base).unwrap()),
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert_eq!(
+        &runtime.calls[1][..5],
+        ["env", "create", "--force", "--name", "project"]
+    );
+    assert_eq!(runtime.calls[1][5], path_string(&file).unwrap());
+    assert_eq!(runtime.directories, [path_string(&fixture.base).unwrap()]);
+}
+
+#[test]
+fn registered_directory_template_warns_when_file_disappears() {
+    let fixture = Fixture::new();
+    let file = fixture.base.join("external.yaml");
+    std::fs::write(
+        &file,
+        "schemaVersion: \"1\"\nname: external\nagent: claude\n",
+    )
+    .unwrap();
+    let registered = register_template(&fixture.root, path_string(&file).unwrap()).unwrap();
+    std::fs::remove_file(&file).unwrap();
+    assert!(list_templates(&fixture.root).unwrap().is_empty());
+    let warnings = template_warnings(&fixture.root).unwrap();
+    assert_eq!(warnings.len(), 1);
+    assert!(warnings[0].contains(&registered.path));
 }
 
 #[test]

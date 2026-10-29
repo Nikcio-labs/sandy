@@ -34,7 +34,7 @@ export function TemplateInspector({
           <button type="button" className="btn primary" onClick={() => onLaunch(template)}>
             <Icon name="create" size={16} /> Launch
           </button>
-          {onEdit && (
+          {onEdit && !template.registered && (
             <button type="button" className="btn" onClick={() => onEdit(template.id)}>
               <Icon name="edit" size={14} /> Edit
             </button>
@@ -44,7 +44,7 @@ export function TemplateInspector({
             className="btn danger"
             onClick={(event) => onDelete(template, event.currentTarget)}
           >
-            <Icon name="trash" size={14} /> Delete
+            <Icon name="trash" size={14} /> {template.registered ? "Remove" : "Delete"}
           </button>
         </>
       }
@@ -53,6 +53,7 @@ export function TemplateInspector({
         <div className="actions">
           <span className="badge">{template.agent}</span>
           <span className="badge violet">Kit v{template.kit_version}</span>
+          {template.registered && <span className="badge local">Local file</span>}
         </div>
         <dl className="details">
           <dt>Workspace</dt>
@@ -62,6 +63,12 @@ export function TemplateInspector({
             <code>{template.path}</code>
           </dd>
         </dl>
+        {template.registered && (
+          <p className="help">
+            Registered from a file on this computer. Sandy does not change it; edit the file itself
+            and refresh to pick up your changes.
+          </p>
+        )}
         <pre className="templatepane-yaml" aria-label={`Saved YAML for ${template.name}`}>
           <code>{template.content}</code>
         </pre>

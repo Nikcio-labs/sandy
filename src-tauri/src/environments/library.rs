@@ -26,6 +26,10 @@ pub struct SavedTemplate {
     pub workspace: String,
     pub kit_version: u8,
     pub content: String,
+    /// Registered from a file that already existed on disk: the file is owned
+    /// by the user, so it is never rewritten or deleted by Sandy.
+    #[serde(default)]
+    pub registered: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,6 +80,10 @@ pub(super) struct TemplateRecord {
     pub(super) path: String,
     pub(super) agent: KitOption,
     pub(super) mixins: Vec<KitOption>,
+    /// Registered in place from an existing file the user owns; never edited
+    /// or deleted by Sandy. Absent (false) for templates Sandy created.
+    #[serde(default)]
+    pub(super) registered: bool,
 }
 
 pub(super) fn records(root: &Path) -> Result<Vec<TemplateRecord>, String> {
@@ -160,6 +168,7 @@ pub fn save_template(root: &Path, request: SaveTemplateRequest) -> Result<SavedT
         path: path_string(&path)?,
         agent: request.agent,
         mixins: request.mixins,
+        registered: false,
     };
     library.push(record.clone());
     if let Err(error) = write_json(&root.join("templates.json"), &library) {
@@ -182,7 +191,83 @@ fn summary(record: &TemplateRecord, environment: &Environment, content: String) 
             .unwrap_or_default(),
         kit_version: record.agent.schema_version,
         content,
+        registered: record.registered,
     }
+}
+
+/// Adds an existing sbxenv.yaml file on disk to the library without moving or
+/// rewriting it. The record snapshots the kit metadata implied by the file so
+/// the summary and launch authorization keep working, but the file itself
+/// stays the user's: only `sbx` may validate it, and Sandy never edits or
+/// deletes it.
+pub fn register_template(root: &Path, path: String) -> Result<SavedTemplate, String> {
+    let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
+    let path = PathBuf::from(path);
+    if !path.is_absolute() {
+        return Err("Choose an absolute template file path".into());
+    }
+    if !path.is_file() {
+        return Err(format!("{} is not a file", path.display()));
+    }
+    let path = canonicalize(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let content = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let environment: Environment = serde_yaml_ng::from_str(&content)
+        .map_err(|e| format!("{}: invalid environment YAML: {e}", path.display()))?;
+    validate_name(&environment.name)?;
+
+    let mut library = records(root)?;
+    let path_text = path_string(&path)?;
+    if library.iter().any(|record| record.path == path_text) {
+        return Err(format!(
+            "{} is already in the template library",
+            path.display()
+        ));
+    }
+    // Snapshot the kits the file references with their sources as identity, so
+    // the summary and launch authorization reflect what the file asks for.
+    // Deeper kit metadata stays unknown: validating it is the sbx CLI's job.
+    let first = environment.kits.first();
+    let agent = match first {
+        Some(kit) => KitOption {
+            id: kit.source().into(),
+            name: environment.agent.clone(),
+            source: kit.source().into(),
+            schema_version: 2,
+            kind: "agent".into(),
+            ..KitOption::default()
+        },
+        None => KitOption {
+            id: environment.agent.clone(),
+            name: environment.agent.clone(),
+            schema_version: 2,
+            kind: "agent".into(),
+            ..KitOption::default()
+        },
+    };
+    let mixins = environment
+        .kits
+        .iter()
+        .skip(1)
+        .map(|kit| KitOption {
+            id: kit.source().into(),
+            name: kit.source().into(),
+            source: kit.source().into(),
+            schema_version: 2,
+            kind: "mixin".into(),
+            ..KitOption::default()
+        })
+        .collect();
+    let record = TemplateRecord {
+        id: unique_id(),
+        path: path_text,
+        agent,
+        mixins,
+        registered: true,
+    };
+    library.push(record.clone());
+    write_json(&root.join("templates.json"), &library)
+        .map_err(|error| format!("Template library could not be saved: {error}"))?;
+    Ok(summary(&record, &environment, content))
 }
 
 pub(super) fn read_template(
@@ -192,8 +277,14 @@ pub(super) fn read_template(
         std::fs::read_to_string(&record.path).map_err(|e| format!("{}: {e}", record.path))?;
     let environment: Environment = serde_yaml_ng::from_str(&content)
         .map_err(|e| format!("{}: invalid environment YAML: {e}", record.path))?;
-    validate_selection(&record.agent, &record.mixins)?;
     validate_name(&environment.name)?;
+    // Registered files are the user's: Sandy only recorded a summary at
+    // registration time, so the recorded kit metadata cannot go stale and
+    // `sbx` validates the file itself at create time.
+    if record.registered {
+        return Ok((summary(record, &environment, content), environment));
+    }
+    validate_selection(&record.agent, &record.mixins)?;
     if environment.schema_version != "1" || environment.agent != record.agent.name {
         return Err(format!(
             "{}: environment schema or agent changed; save a new template with the selected kits",
@@ -233,6 +324,13 @@ pub fn read_template_details(root: &Path, id: &str) -> Result<TemplateDetails, S
         .iter()
         .find(|record| record.id == id)
         .ok_or("Unknown saved template")?;
+    // Registered files have no recorded kit metadata to prefill the wizard
+    // with, and they must not be rewritten.
+    if record.registered {
+        return Err(
+            "This template is registered from a local file and cannot be edited here".into(),
+        );
+    }
     let (template, environment) = read_template(record)?;
     let expected = selected(&record.agent, &record.mixins);
     let mut arguments: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
@@ -262,6 +360,13 @@ pub fn update_template(
         .position(|record| record.id == id)
         .ok_or("Unknown saved template")?;
     let record = library.remove(index);
+    // Registered files belong to the user: rewriting one would silently
+    // discard changes made outside Sandy.
+    if record.registered {
+        return Err(
+            "This template is registered from a local file and cannot be edited here".into(),
+        );
+    }
     let save = SaveTemplateRequest {
         name: request.name,
         workspace: request.workspace,
@@ -304,6 +409,7 @@ pub fn update_template(
         path: record.path,
         agent: save.agent,
         mixins: save.mixins,
+        registered: false,
     };
     library.insert(index, updated.clone());
     write_json(&root.join("templates.json"), &library)
@@ -321,16 +427,20 @@ pub fn delete_template(root: &Path, id: &str) -> Result<(), String> {
         .position(|record| record.id == id)
         .ok_or("Unknown saved template")?;
     let record = library.remove(index);
-    // The template file is deleted wherever it lives. A missing file is
-    // already gone: deleting the stale record still helps.
-    match std::fs::remove_file(&record.path) {
-        Ok(()) => {
-            // Library-owned templates live in an empty templates/<id>/ folder;
-            // custom locations never have one, and remove_dir keeps files.
-            let _ = std::fs::remove_dir(root.join("templates").join(&record.id));
+    // Registered files are only forgotten, never deleted: they exist outside
+    // Sandy and belong to the user.
+    if !record.registered {
+        // The template file is deleted wherever it lives. A missing file is
+        // already gone: deleting the stale record still helps.
+        match std::fs::remove_file(&record.path) {
+            Ok(()) => {
+                // Library-owned templates live in an empty templates/<id>/ folder;
+                // custom locations never have one, and remove_dir keeps files.
+                let _ = std::fs::remove_dir(root.join("templates").join(&record.id));
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => return Err(format!("Cannot delete {}: {e}", record.path)),
         }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-        Err(e) => return Err(format!("Cannot delete {}: {e}", record.path)),
     }
     write_json(&root.join("templates.json"), &library)
         .map_err(|error| format!("Template library could not be saved: {error}"))

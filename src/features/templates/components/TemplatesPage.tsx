@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
-import { listTemplates, templateWarnings } from "../../../lib/templates";
+import { listTemplates, registerTemplate, templateWarnings } from "../../../lib/templates";
+import { pickLocalTemplate } from "../../../lib/catalog";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
@@ -40,11 +41,12 @@ export default function TemplatesPage({
   const [inspected, setInspected] = useState<string | null>(null);
   const [selected, setSelected] = useState<SavedTemplate | null>(null);
   const [deleting, setDeleting] = useState<SavedTemplate | null>(null);
+  const [adding, setAdding] = useState(false);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
   const loadingLock = useRef(false);
   const generation = useRef(0);
 
-  useBusyReporting(selected !== null, onBusyChange);
+  useBusyReporting(selected !== null || adding, onBusyChange);
 
   const refresh = useCallback(async () => {
     if (loadingLock.current) return;
@@ -86,6 +88,26 @@ export default function TemplatesPage({
     };
   }, [refresh]);
 
+  const addLocal = async () => {
+    if (adding) return;
+    setAdding(true);
+    setError(null);
+    try {
+      const path = await pickLocalTemplate();
+      if (path) {
+        await registerTemplate(path);
+        if (mounted.current) {
+          setNotice({ kind: "success", text: "Template added from your computer." });
+          await refresh();
+        }
+      }
+    } catch (failure) {
+      if (mounted.current) setError(String(failure));
+    } finally {
+      if (mounted.current) setAdding(false);
+    }
+  };
+
   const visible = (templates ?? []).filter((template) =>
     `${template.name} ${template.agent} ${template.workspace} ${template.path}`
       .toLowerCase()
@@ -123,9 +145,19 @@ export default function TemplatesPage({
             title="Templates"
             subtitle="Saved environments. New sandbox, same starting point."
             action={
-              <button type="button" className="btn primary" onClick={onCreate}>
-                <Icon name="create" size={16} /> <span>Create template</span>
-              </button>
+              <div className="actions">
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={loading}
+                  onClick={() => void addLocal()}
+                >
+                  <Icon name="folder" size={16} /> <span>Add local template</span>
+                </button>
+                <button type="button" className="btn primary" onClick={onCreate}>
+                  <Icon name="create" size={16} /> <span>Create template</span>
+                </button>
+              </div>
             }
           />
           <section className="panel" aria-busy={loading}>
@@ -203,9 +235,14 @@ export default function TemplatesPage({
                   <p>
                     Save an environment with an agent and compatible mixins, then reuse it here.
                   </p>
-                  <button type="button" className="btn primary" onClick={onCreate}>
-                    Create template
-                  </button>
+                  <div className="actions">
+                    <button type="button" className="btn" onClick={() => void addLocal()}>
+                      <Icon name="folder" size={16} /> Add local template
+                    </button>
+                    <button type="button" className="btn primary" onClick={onCreate}>
+                      Create template
+                    </button>
+                  </div>
                 </div>
               )}
               {!!templates?.length && (
@@ -238,6 +275,7 @@ export default function TemplatesPage({
                           {template.workspace || "mountless"}
                         </small>
                       </span>
+                      {template.registered && <span className="badge local">Local file</span>}
                       <Icon name="chevron-right" size={16} />
                     </button>
                   ))}

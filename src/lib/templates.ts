@@ -22,6 +22,8 @@ export interface SavedTemplate {
   workspace: string;
   kit_version: number;
   content: string;
+  /** Registered from a file already on disk: read-only, never edited or deleted by Sandy. */
+  registered: boolean;
 }
 
 export interface LaunchTemplateRequest {
@@ -49,6 +51,9 @@ export interface TemplateDetails {
 
 export const saveTemplate = (request: SaveTemplateRequest) =>
   invoke<SavedTemplate>("save_template", { request });
+/** Adds an existing environment file to the library without moving or changing it. */
+export const registerTemplate = (path: string) =>
+  invoke<SavedTemplate>("register_template", { path });
 export const listTemplates = () => invoke<SavedTemplate[]>("list_templates");
 export const templateWarnings = () => invoke<string[]>("template_warnings");
 export const readTemplateDetails = (id: string) =>
