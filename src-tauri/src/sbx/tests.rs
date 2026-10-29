@@ -863,7 +863,7 @@ fn remove_sandbox_runs_bare_rm() {
     let _guard = env_lock();
     let mock = MockCli::new();
     assert_eq!(remove_sandbox("demo"), Ok(String::new()));
-    assert_eq!(mock.commands(), "rm demo\n");
+    assert_eq!(mock.commands(), "rm --force demo\n");
 }
 
 #[test]

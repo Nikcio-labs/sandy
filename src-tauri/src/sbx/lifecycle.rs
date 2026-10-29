@@ -44,12 +44,12 @@ pub fn restart_sandbox(name: &str) -> Result<String, String> {
         .map_err(|e| format!("Sandbox {name} was stopped but could not be started:\n{e}"))
 }
 
-/// Delete a sandbox and its internal files. Whether `sbx rm` accepts a
-/// running sandbox is the CLI's call; its error is surfaced unchanged so the
-/// UI never assumes a state the CLI has not reported.
+/// Delete a sandbox and its internal files. `--force` skips the CLI's own
+/// confirmation prompt, which cannot run here: sbx is invoked without a
+/// terminal, and the app's confirm dialog has already asked the user.
 pub fn remove_sandbox(name: &str) -> Result<String, String> {
     validate_sandbox_name(name)?;
-    run_capture(&["rm", name])
+    run_capture(&["rm", "--force", name])
 }
 
 #[derive(Debug, Serialize, Clone)]
