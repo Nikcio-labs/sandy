@@ -213,7 +213,7 @@ export default function Secrets() {
 }
 
 function scopeTitle(group: ScopeGroup) {
-  return group.sandbox ? `Sandbox ${group.sandbox}` : "Global (all sandboxes)";
+  return group.sandbox ?? "Global (all sandboxes)";
 }
 
 function SecretRow({
@@ -339,7 +339,7 @@ function SetSecretDialog({
         <p className="help intro">
           {pending.scope === "global"
             ? "This value becomes available to every sandbox through the proxy."
-            : `This value becomes available to sandbox ${pending.scope} through the proxy.`}{" "}
+            : `This value becomes available to ${pending.scope} through the proxy.`}{" "}
           It replaces what is stored and is never shown again.
         </p>
         <label className="field">
@@ -453,7 +453,7 @@ function RemoveSecretDialog({
         <p className="help intro" id={`${id}-remove-description`}>
           {pending.scope === "global"
             ? "Sandboxes will no longer authenticate through this service until a new value is stored."
-            : `Sandbox ${pending.scope} will no longer authenticate through this service until a new value is stored.`}
+            : `${pending.scope} will no longer authenticate through this service until a new value is stored.`}
         </p>
         <div className="actionbar end">
           <button type="button" className="btn" onClick={close} disabled={removing}>
