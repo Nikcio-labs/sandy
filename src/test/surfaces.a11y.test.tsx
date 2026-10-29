@@ -68,7 +68,6 @@ describe("Create wizard steps", () => {
     await openCreateWizard();
     await clickButton("Discover kits");
     await settle();
-    // Pick the first agent option card.
     const agent = document.querySelector<HTMLInputElement>('.option input[type="radio"]');
     expect(agent, "no agent options rendered").toBeDefined();
     await act(async () => {

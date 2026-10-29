@@ -178,8 +178,8 @@
 }
 
 /* Focus is highlighted on the pill via .search:focus-within; the input's
-   own focus ring would draw a second ring inside it. The shared --brand
-   ring keeps one focus vocabulary app-wide (and stays visible on paper). */
+   own focus ring would draw a second ring inside it. --brand-soft would
+   be near-invisible against the paper background. */
 .search input:focus-visible {
   outline: none;
 }

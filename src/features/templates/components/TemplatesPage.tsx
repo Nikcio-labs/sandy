@@ -253,9 +253,8 @@ export default function TemplatesPage({
         </>
       )}
       {selected && (
-        // Dialog keys carry a role prefix: they are siblings of the pane
-        // (keyed by the same template id), and duplicate keys would break
-        // reconciliation while both are mounted.
+        // The dialog is a sibling of the detail pane, which uses the same
+        // template id as its key; a distinct prefix keeps the two apart.
         <LaunchDialog
           key={`launch-${selected.id}`}
           template={selected}

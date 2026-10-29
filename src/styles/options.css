@@ -41,8 +41,8 @@
   box-shadow: inset 0 0 0 1px var(--brand);
 }
 
-/* The option ring matches the app-wide --brand focus vocabulary; a soft
-   ring here would vanish against the white panel (WCAG 1.4.11). */
+/* The option ring keeps the app-wide focus vocabulary; --brand-soft would
+   be near-invisible against the white panel. */
 .option:focus-within {
   outline: 2px solid var(--brand);
   outline-offset: 3px;

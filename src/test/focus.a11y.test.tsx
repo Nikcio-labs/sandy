@@ -39,11 +39,9 @@ const expectNoViolations = async (label: string) => {
 const tab = async (times: number) => {
   await act(async () => {
     for (let index = 0; index < times; index += 1) {
-      const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true });
-      document.activeElement?.dispatchEvent(event);
-      // Tab handling in a plain page moves focus natively only via real key
-      // events, which the automation layer sends through userEvent; focusNext
-      // is the equivalent programmatic step.
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+      );
       const focusables = [
         ...document.querySelectorAll<HTMLElement>(
           'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
@@ -65,7 +63,6 @@ describe("Keyboard focus", () => {
     const active = document.activeElement as HTMLElement | null;
     expect(active?.tagName).toBe("BUTTON");
     const style = getComputedStyle(active!);
-    // The shared ring is a brand outline; assert it is not 'none'.
     expect(style.outlineStyle).not.toBe("none");
     expect(style.outlineWidth).not.toBe("0px");
     await expectNoViolations("focused nav");

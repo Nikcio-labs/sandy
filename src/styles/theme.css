@@ -42,8 +42,8 @@
   /* Text. */
   --ink: #141a3d;
   --muted: #596382;
-  /* The faintest text tier still clears WCAG AA (4.5:1) on every surface
-     it is used on, including --surface-sunken and the rail's tint. */
+  /* The faintest text tier must clear AA on every surface it lands on,
+     including --surface-sunken and the rail's tint. */
   --faint: #636d8c;
 
   /* Action (violet). */
@@ -54,8 +54,8 @@
   --brand-faint: #f6f4ff;
 
   /* Form chrome. */
-  /* Inputs are identified by their boundary alone, so it clears WCAG
-     1.4.11 non-text contrast (3:1); disabled fields are exempt. */
+  /* Inputs are identified by their boundary alone, so it must clear the
+     3:1 non-text minimum; disabled fields are exempt. */
   --field-border: #8493b9;
   --field-disabled: #f4f5fa;
 

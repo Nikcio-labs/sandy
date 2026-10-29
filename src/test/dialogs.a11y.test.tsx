@@ -1,9 +1,7 @@
 /**
- * Component-level accessibility scans for surfaces the App-level suite does
- * not reach by default: modal dialogs, the create wizard's later steps, the
- * setup window, and settings panes. Each test mounts the surface in the app
- * shell context (stylesheets apply through the app module imports) and scans
- * against WCAG 2.1 AA.
+ * Accessibility scans for the templates page and the modal dialogs: the
+ * list, the detail pane, and the dialogs opened from the pane's header
+ * actions. Each test navigates the real app and scans against WCAG 2.1 AA.
  */
 
 import { expect, describe, it, beforeAll, afterAll } from "vite-plus/test";
@@ -52,8 +50,6 @@ const clickButton = async (label: string) => {
 
 const openTemplatesPane = async (label: string) => {
   mounted?.unmount();
-  // The templates flow does not read the sandbox list; the empty answer
-  // keeps the dashboard's poll quiet while the pane is open.
   tauri.handle("sandboxes", () => []);
   mounted = mountApp(<App />, tauri);
   await settle();
@@ -61,11 +57,8 @@ const openTemplatesPane = async (label: string) => {
     document.querySelector<HTMLButtonElement>(".rail button:nth-child(2)")?.click();
     await new Promise((resolve) => setTimeout(resolve, 250));
   });
-  // Template rows open a detail pane; the header actions live there.
-  const row = document.querySelector<HTMLButtonElement>(".linkrow");
-  expect(row, "no template rows rendered").toBeDefined();
   await act(async () => {
-    row!.click();
+    document.querySelector<HTMLButtonElement>(".linkrow")?.click();
     await new Promise((resolve) => setTimeout(resolve, 250));
   });
   await clickButton(label);

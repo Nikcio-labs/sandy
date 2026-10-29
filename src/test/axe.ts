@@ -41,7 +41,6 @@ const configure = () => {
 /** Scan the current document and return the violations, sorted by impact. */
 export const runAxe = async (label = "page"): Promise<AxeViolation[]> => {
   configure();
-  axe.reset();
   const impactOrder = ["critical", "serious", "moderate", "minor"];
   const results: AxeResults = await axe.run(document.body, {
     runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },

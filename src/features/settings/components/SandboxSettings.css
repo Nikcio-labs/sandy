@@ -68,8 +68,8 @@
 }
 
 /* The bool control: a real switch with a traveling knob and a violet on
-   state. The off state clears non-text contrast (WCAG 1.4.11) against the
-   panel surface; the on state reuses the brand. */
+   state. The off track must clear the 3:1 non-text minimum against the
+   panel surface. */
 .switch {
   padding: 3px;
   border: 0;

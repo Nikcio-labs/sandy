@@ -113,10 +113,9 @@ export function Rail({
       <nav className="railnav">
         {navigation.map((item) => {
           const active = view === item.id;
-          // The visible label and count badge are the button's rendered text,
-          // so the accessible name must contain both (axe
-          // label-content-name-mismatch): "Sandboxes" alone would not match
-          // the visible "Sandboxes 2".
+          // The name must contain the button's rendered text, count badge
+          // included — an accessible name that omits visible text is worse
+          // than none for speech-interaction users.
           const name =
             item.id === "sandboxes" && count !== null
               ? `${item.label}, ${count} sandboxes`
@@ -133,8 +132,8 @@ export function Rail({
               <Icon name={item.icon} />
               <span>{item.label}</span>
               {item.id === "sandboxes" && count !== null && (
-                // The space keeps the rendered text tokenized ("Sandboxes 2",
-                // not "Sandboxes2"), which the accessible name must match.
+                // Without the separating space the rendered text is
+                // "Sandboxes2", one token the accessible name cannot match.
                 <>
                   {" "}
                   <span className="badge railcount">{count}</span>
