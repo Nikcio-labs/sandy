@@ -2,7 +2,9 @@
  * Panel surfaces and the scaffolding around lists: .panel (rounded card),
  * .listhead (panel header with title, count, search, and actions),
  * .search (bordered search input pill), and .resultcount (list footer).
- * Empty states share the list scaffolding vocabulary.
+ * Empty states share the list scaffolding vocabulary. Full-window panes
+ * (.pane-open host, .pane card with .panehead and .panecontent) replace
+ * a page's list with a back-navigated detail card.
  */
 
 .panel {
@@ -10,6 +12,128 @@
   background: var(--surface);
   border-radius: 11px;
   overflow: hidden;
+}
+
+/* A pane page fills the main area: the host stretches below .main's
+   padding and the .pane card scrolls its content internally so its
+   header stays pinned like an app-level surface. */
+.pane-open {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  /* Entrance via transition + starting style (not keyframes): a quick
+     back-navigation retargets the running transition instead of restarting
+     it from zero. The base stylesheet's reduced-motion rule strips this. */
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 180ms var(--out),
+    transform 180ms var(--out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+.panehead {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+/* The heading absorbs the header's free width, so a long name wraps
+   instead of pushing the header actions out of the card. */
+.panehead h2 {
+  font-size: 20px;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.panehead h2:focus {
+  outline: none;
+}
+
+.panehead-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* The content area fills the pane below the pinned header so pane bodies
+   can stretch their own content (e.g. a growing code block); its own
+   overflow keeps the internal scroll here. */
+.panecontent {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Link rows for home lists (Settings sections, saved templates): a
+   full-width row button with a leading icon, a label plus description,
+   and a trailing chevron, separated by the card's hairlines. */
+.linkrow {
+  width: 100%;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  padding: 20px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.linkrow:last-child {
+  border-bottom: 0;
+}
+
+.linkrow:hover {
+  background: var(--surface-soft);
+}
+
+.linkrow > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.linkrow strong {
+  display: block;
+  font: 600 17px var(--display);
+  margin-bottom: 5px;
+  overflow-wrap: anywhere;
+}
+
+.linkrow small {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.linkrow > svg:first-child {
+  color: var(--brand-dark);
+}
+
+@media (max-width: 720px) {
+  .linkrow {
+    padding: 15px;
+  }
 }
 
 .listhead {
@@ -107,6 +231,10 @@
 
   .listhead > .iconbtn {
     margin-left: auto;
+  }
+
+  .panecontent {
+    padding: 15px;
   }
 }
 

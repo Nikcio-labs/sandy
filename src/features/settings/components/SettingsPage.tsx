@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
+import { Pane } from "../../../common/components/Pane";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Providers from "./Providers";
 import Advanced from "./Advanced";
@@ -18,9 +19,9 @@ export interface SettingsPageProps {
   onCheckSetup: () => Promise<SetupStatus | null>;
 }
 
-type Pane = "providers" | "sandbox" | "advanced";
+type PaneId = "providers" | "sandbox" | "advanced";
 
-const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; description: string }[] = [
+const PANES: { id: PaneId; icon: "kit" | "settings" | "terminal"; label: string; description: string }[] = [
   {
     id: "providers",
     icon: "kit",
@@ -53,11 +54,26 @@ export default function SettingsPage({
   active,
   onCheckSetup,
 }: SettingsPageProps) {
-  const [pane, setPane] = useState<Pane | null>(null);
+  const [pane, setPane] = useState<PaneId | null>(null);
+
+  // The page stays mounted while hidden; a leaked open pane would keep
+  // .main in its pane layout (clipping the visible page) after navigating
+  // away, so the pane closes whenever Settings stops being visible.
+  useEffect(() => {
+    if (!active) setPane(null);
+  }, [active]);
+
+  const paneMeta = PANES.find((item) => item.id === pane) ?? null;
 
   return (
-    <div className="settingshome">
-      {pane === null ? (
+    <div className={`settingshome ${paneMeta ? "pane-open" : ""}`}>
+      {paneMeta ? (
+        <Pane label={paneMeta.label} onBack={() => setPane(null)}>
+          {pane === "providers" && <Providers disabled={busy} />}
+          {pane === "sandbox" && <SandboxSettings />}
+          {pane === "advanced" && <Advanced />}
+        </Pane>
+      ) : (
         <>
           <PageHead title="Settings" />
           {statusError && (
@@ -89,7 +105,7 @@ export default function SettingsPage({
                   <button
                     key={item.id}
                     type="button"
-                    className="setlink"
+                    className="linkrow"
                     onClick={() => setPane(item.id)}
                   >
                     <Icon name={item.icon} size={20} />
@@ -104,25 +120,6 @@ export default function SettingsPage({
             </div>
           )}
         </>
-      ) : (
-        <section className="panel settingspane" data-pane={pane}>
-          <header className="panehead">
-            <button
-              type="button"
-              className="iconbtn"
-              aria-label="Back to settings"
-              onClick={() => setPane(null)}
-            >
-              <Icon name="back" size={18} />
-            </button>
-            <h2 tabIndex={-1}>{PANES.find((item) => item.id === pane)!.label}</h2>
-          </header>
-          <div className="panecontent">
-            {pane === "providers" && <Providers disabled={busy} />}
-            {pane === "sandbox" && <SandboxSettings />}
-            {pane === "advanced" && <Advanced />}
-          </div>
-        </section>
       )}
     </div>
   );
