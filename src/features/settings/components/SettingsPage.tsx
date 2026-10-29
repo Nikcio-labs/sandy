@@ -7,6 +7,7 @@ import Providers from "./Providers";
 import Advanced from "./Advanced";
 import Updates from "./Updates";
 import SandboxSettings from "./SandboxSettings";
+import Secrets from "./Secrets";
 import { PageHead } from "../../../common/components/PageHead";
 import "./SettingsPage.css";
 
@@ -19,14 +20,20 @@ export interface SettingsPageProps {
   onCheckSetup: () => Promise<SetupStatus | null>;
 }
 
-type PaneId = "providers" | "sandbox" | "advanced";
+type PaneId = "providers" | "secrets" | "sandbox" | "advanced";
 
-const PANES: { id: PaneId; icon: "kit" | "settings" | "terminal"; label: string; description: string }[] = [
+const PANES: { id: PaneId; icon: "kit" | "key" | "settings" | "terminal"; label: string; description: string }[] = [
   {
     id: "providers",
     icon: "kit",
     label: "Kit providers",
     description: "GitHub sources for agents, workloads, and mixins",
+  },
+  {
+    id: "secrets",
+    icon: "key",
+    label: "Secrets",
+    description: "Stored credentials the sbx CLI hands to your sandboxes",
   },
   {
     id: "sandbox",
@@ -70,6 +77,7 @@ export default function SettingsPage({
       {paneMeta ? (
         <Pane label={paneMeta.label} onBack={() => setPane(null)}>
           {pane === "providers" && <Providers disabled={busy} />}
+          {pane === "secrets" && <Secrets />}
           {pane === "sandbox" && <SandboxSettings />}
           {pane === "advanced" && <Advanced />}
         </Pane>
