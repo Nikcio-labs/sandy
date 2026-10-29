@@ -1,19 +1,9 @@
 /*
- * The Settings page layout: the home column width and settings-specific
- * pane bits (pane contents own their internal styles). The pane chrome
- * itself — .pane, .panehead, .panecontent, .pane-open — is shared panel
+ * The Settings page layout: the home list and settings-specific pane bits
+ * (pane contents own their internal styles). The pane chrome itself —
+ * .pane, .panehead, .panecontent, .pane-open — is shared panel
  * scaffolding in src/styles/panels.css.
  */
-
-/* The pane card spans the full window, so the home column cap must not
-   apply while one is open. */
-.settingshome {
-  max-width: 780px;
-}
-
-.settingshome.pane-open {
-  max-width: none;
-}
 
 /* Home → pane navigation. One card holds Updates and the link rows,
    separated by the card's own hairlines. */

@@ -3,16 +3,6 @@
  * chevron) inside the panel card. Owned by TemplatesPage.
  */
 
-.templatehome {
-  max-width: 780px;
-}
-
-/* The pane card spans the full main area, so the home column cap must
-   not apply while one is open. */
-.templatehome.pane-open {
-  max-width: none;
-}
-
 .templatelinks {
   border-top: 1px solid var(--line);
 }
