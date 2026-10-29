@@ -14,25 +14,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { installTauriMock, type TauriMock } from "./tauri-mock";
 import { defaultHandlers } from "./fixtures";
 
-// The global stylesheets are imported by `main.tsx`, which the tests never
-// mount; importing them here gives axe the same cascade the app runs with
-// (design tokens, element baselines, focus rings) — without it, contrast and
-// visible-text rules evaluate unstyled fallbacks.
-import "../styles/theme.css";
-import "../styles/base.css";
-import "../styles/buttons.css";
-import "../styles/badges.css";
-import "../styles/avatar.css";
-import "../styles/panels.css";
-import "../styles/layout.css";
-import "../styles/banner.css";
-import "../styles/forms.css";
-import "../styles/dialog.css";
-import "../styles/primitives.css";
-import "../styles/options.css";
-import "../styles/feedback.css";
-import "../styles/groups.css";
-import "../styles/steps.css";
+// The same global cascade the app windows get, via the shared import list
+// in src/styles/index.css — without it axe judges unstyled fallbacks.
+import "../styles/index.css";
 
 // React 19 gates `act` on this global; unflagged act environments only warn,
 // once per render, which drowns real test output.

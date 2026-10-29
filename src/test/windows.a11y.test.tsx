@@ -5,12 +5,12 @@
  */
 
 import { expect, describe, it, beforeAll, afterAll } from "vite-plus/test";
-import { act } from "react";
 import { page } from "vite-plus/test/browser";
 import SetupWindow from "../common/components/SetupWindow";
 import App from "../App";
 import { installTauri, mountApp, type Mounted } from "./mount";
 import { runAxe, formatViolations } from "./axe";
+import { settle } from "./wait";
 import type { TauriMock } from "./tauri-mock";
 
 let tauri: TauriMock;
@@ -23,12 +23,6 @@ beforeAll(() => {
 afterAll(() => {
   mounted?.unmount();
 });
-
-const settle = async (ms = 250) => {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, ms));
-  });
-};
 
 const expectNoViolations = async (label: string) => {
   const violations = await runAxe(label);

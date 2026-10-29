@@ -85,6 +85,14 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      # The browser bundle is ~150 MB and only changes with the Playwright
+      # version in the lockfile; without the cache every run redownloads it.
+      - name: Cache the browser test runner's Chromium
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Install Chromium for the browser test runner
         run: pnpm exec playwright install --with-deps chromium
 

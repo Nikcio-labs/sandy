@@ -9,10 +9,10 @@
  */
 
 import { expect, describe, it, beforeAll, afterAll } from "vite-plus/test";
-import { act } from "react";
 import App from "../App";
 import { installTauri, mountApp, desktopViewport, type Mounted } from "./mount";
 import { runAxe, formatViolations } from "./axe";
+import { settle } from "./wait";
 import type { TauriMock } from "./tauri-mock";
 
 let tauri: TauriMock;
@@ -27,13 +27,6 @@ afterAll(() => {
   mounted?.unmount();
 });
 
-/** Let the app's async boot (setup check, list fetch) settle inside act. */
-const settle = async (ms = 300) => {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, ms));
-  });
-};
-
 const expectNoViolations = async (label: string) => {
   const violations = await runAxe(label);
   expect(violations, `${label}:\n${formatViolations(violations)}`).toEqual([]);
@@ -42,7 +35,7 @@ const expectNoViolations = async (label: string) => {
 describe("App (shell + dashboard)", () => {
   it("dashboard has no WCAG 2.1 AA violations", async () => {
     mounted = mountApp(<App />, tauri);
-    await settle();
+    await settle(300);
     await expectNoViolations("dashboard");
   }, 90_000);
 
@@ -52,7 +45,7 @@ describe("App (shell + dashboard)", () => {
       throw new Error("the sandbox daemon is not reachable");
     });
     mounted = mountApp(<App />, tauri);
-    await settle();
+    await settle(300);
     await expectNoViolations("dashboard error");
   }, 90_000);
 });

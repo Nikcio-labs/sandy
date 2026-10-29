@@ -9,6 +9,7 @@ import { act } from "react";
 import App from "../App";
 import { installTauri, mountApp, desktopViewport, type Mounted } from "./mount";
 import { runAxe, formatViolations } from "./axe";
+import { waitFor, settle } from "./wait";
 import { sandboxes } from "./fixtures";
 import type { TauriMock } from "./tauri-mock";
 
@@ -24,12 +25,6 @@ afterAll(() => {
   mounted?.unmount();
 });
 
-const settle = async (ms = 250) => {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, ms));
-  });
-};
-
 const expectNoViolations = async (label: string) => {
   const violations = await runAxe(label);
   expect(violations, `${label}:\n${formatViolations(violations)}`).toEqual([]);
@@ -44,25 +39,23 @@ const clickButton = async (label: string) => {
   expect(button, `no button labelled ${label}`).toBeDefined();
   await act(async () => {
     button!.click();
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await settle();
   });
 };
 
-const openTemplatesPane = async (label: string) => {
+/** Navigate to Templates and open a template's detail pane. */
+const openTemplatesPane = async () => {
   mounted?.unmount();
   tauri.handle("sandboxes", () => []);
   mounted = mountApp(<App />, tauri);
-  await settle();
-  await act(async () => {
-    document.querySelector<HTMLButtonElement>(".rail button:nth-child(2)")?.click();
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  });
+  await waitFor(() => document.querySelector(".rail button") !== null);
+  await clickButton("Templates");
+  await waitFor(() => document.querySelector(".linkrow") !== null);
   await act(async () => {
     document.querySelector<HTMLButtonElement>(".linkrow")?.click();
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await settle();
   });
-  await clickButton(label);
-  await settle();
+  await waitFor(() => document.querySelector(".pane") !== null);
 };
 
 describe("Templates page", () => {
@@ -70,23 +63,14 @@ describe("Templates page", () => {
     mounted?.unmount();
     tauri.handle("sandboxes", () => []);
     mounted = mountApp(<App />, tauri);
-    await settle();
+    await waitFor(() => document.querySelector(".rail button") !== null);
     await clickButton("Templates");
-    await settle();
+    await waitFor(() => document.querySelector(".linkrow") !== null);
     await expectNoViolations("templates list");
   }, 90_000);
 
   it("template detail pane has no violations", async () => {
-    mounted?.unmount();
-    tauri.handle("sandboxes", () => []);
-    mounted = mountApp(<App />, tauri);
-    await settle();
-    await clickButton("Templates");
-    await settle();
-    await act(async () => {
-      document.querySelector<HTMLButtonElement>(".linkrow")?.click();
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    });
+    await openTemplatesPane();
     await expectNoViolations("template detail pane");
   }, 90_000);
 });
@@ -96,9 +80,9 @@ describe("Dialogs", () => {
     mounted?.unmount();
     tauri.handle("sandboxes", () => sandboxes);
     mounted = mountApp(<App />, tauri);
-    await settle();
+    await waitFor(() => document.querySelector(".rail button") !== null);
     await clickButton("Create sandbox");
-    await settle();
+    await waitFor(() => document.querySelector("dialog[open]") !== null);
     await expectNoViolations("create wizard step 1");
   }, 90_000);
 
@@ -106,19 +90,23 @@ describe("Dialogs", () => {
     mounted?.unmount();
     tauri.handle("sandboxes", () => sandboxes);
     mounted = mountApp(<App />, tauri);
-    await settle();
+    await waitFor(() => document.querySelector(".rowselect") !== null);
     await clickButton("Open web");
-    await settle();
+    await waitFor(() => document.querySelector("dialog[open]") !== null);
     await expectNoViolations("connect dialog");
   }, 90_000);
 
   it("launch dialog has no violations", async () => {
-    await openTemplatesPane("Launch");
+    await openTemplatesPane();
+    await clickButton("Launch");
+    await waitFor(() => document.querySelector("dialog[open]") !== null);
     await expectNoViolations("launch dialog");
   }, 90_000);
 
   it("delete-template dialog has no violations", async () => {
-    await openTemplatesPane("Delete");
+    await openTemplatesPane();
+    await clickButton("Delete");
+    await waitFor(() => document.querySelector("dialog[open]") !== null);
     await expectNoViolations("delete dialog");
   }, 90_000);
 });

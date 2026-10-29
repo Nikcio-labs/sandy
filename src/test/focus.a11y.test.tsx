@@ -11,6 +11,7 @@ import { act } from "react";
 import App from "../App";
 import { installTauri, mountApp, desktopViewport, type Mounted } from "./mount";
 import { runAxe, formatViolations } from "./axe";
+import { settle } from "./wait";
 import type { TauriMock } from "./tauri-mock";
 
 let tauri: TauriMock;
@@ -25,12 +26,6 @@ afterAll(() => {
   mounted?.unmount();
 });
 
-const settle = async (ms = 300) => {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, ms));
-  });
-};
-
 const expectNoViolations = async (label: string) => {
   const violations = await runAxe(label);
   expect(violations, `${label}:\n${formatViolations(violations)}`).toEqual([]);
@@ -39,9 +34,6 @@ const expectNoViolations = async (label: string) => {
 const tab = async (times: number) => {
   await act(async () => {
     for (let index = 0; index < times; index += 1) {
-      document.activeElement?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
-      );
       const focusables = [
         ...document.querySelectorAll<HTMLElement>(
           'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',

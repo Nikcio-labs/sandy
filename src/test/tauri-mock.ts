@@ -14,8 +14,6 @@ type Handler = (args: Record<string, unknown>) => unknown;
 export type TauriMock = {
   /** Set (or replace) a command handler. */
   handle: (command: string, handler: Handler) => void;
-  /** Reset every handler to the plugin defaults. */
-  reset: () => void;
   /** The handlers currently installed. */
   handlers: Map<string, Handler>;
 };
@@ -65,73 +63,64 @@ export function installTauriMock(label = "main"): TauriMock {
       | ((response: CallbackMessage) => void)
       | undefined;
 
-  const installPluginDefaults = () => {
-    // Event listeners resolve through the mocked invoke, so the event
-    // plugin's register call goes through the handler map like any command.
-    handlers.set("plugin:event|listen", (args) => {
-      const callback = callbackFor(args.handler as number);
-      if (callback) {
-        listeners.push({ event: args.event as string, handler: callback });
-      }
-      return listeners.length;
-    });
-    handlers.set("plugin:event|unlisten", () => {});
-    // Window getters and window-control actions (the frameless window's
-    // minimize/maximize/close and the reveal flow).
-    handlers.set("plugin:window|get_all_windows", () => [label]);
-    for (const action of [
-      "show",
-      "hide",
-      "close",
-      "minimize",
-      "unminimize",
-      "maximize",
-      "unmaximize",
-      "toggle_maximize",
-      "set_focus",
-      "inner_position",
-      "outer_position",
-      "inner_size",
-      "outer_size",
-      "is_fullscreen",
-      "is_minimized",
-      "is_maximized",
-      "is_focused",
-      "is_visible",
-      "title",
-      "current_monitor",
-      "primary_monitor",
-      "scale_factor",
-    ]) {
-      handlers.set(`plugin:window|${action}`, () =>
-        action === "scale_factor"
-          ? 1
-          : action === "title"
-            ? "Sandy"
-            : action.endsWith("_size")
-              ? { width: 1280, height: 800 }
-              : action.endsWith("_position")
-                ? { x: 0, y: 0 }
-                : action.endsWith("_monitor")
-                  ? null
-                  : action.startsWith("is_")
-                    ? false
-                    : null,
-      );
+  // Event listeners resolve through the mocked invoke, so the event
+  // plugin's register call goes through the handler map like any command.
+  handlers.set("plugin:event|listen", (args) => {
+    const callback = callbackFor(args.handler as number);
+    if (callback) {
+      listeners.push({ event: args.event as string, handler: callback });
     }
-    handlers.set("plugin:updater|check", () => null);
-    handlers.set("plugin:app|version", () => "0.1.0");
-  };
-
-  installPluginDefaults();
+    return listeners.length;
+  });
+  handlers.set("plugin:event|unlisten", () => {});
+  // Window getters and window-control actions (the frameless window's
+  // minimize/maximize/close and the reveal flow).
+  handlers.set("plugin:window|get_all_windows", () => [label]);
+  for (const action of [
+    "show",
+    "hide",
+    "close",
+    "minimize",
+    "unminimize",
+    "maximize",
+    "unmaximize",
+    "toggle_maximize",
+    "set_focus",
+    "inner_position",
+    "outer_position",
+    "inner_size",
+    "outer_size",
+    "is_fullscreen",
+    "is_minimized",
+    "is_maximized",
+    "is_focused",
+    "is_visible",
+    "title",
+    "current_monitor",
+    "primary_monitor",
+    "scale_factor",
+  ]) {
+    handlers.set(`plugin:window|${action}`, () =>
+      action === "scale_factor"
+        ? 1
+        : action === "title"
+          ? "Sandy"
+          : action.endsWith("_size")
+            ? { width: 1280, height: 800 }
+            : action.endsWith("_position")
+              ? { x: 0, y: 0 }
+              : action.endsWith("_monitor")
+                ? null
+                : action.startsWith("is_")
+                  ? false
+                  : null,
+    );
+  }
+  handlers.set("plugin:updater|check", () => null);
+  handlers.set("plugin:app|version", () => "0.1.0");
 
   return {
     handle: (command, handler) => handlers.set(command, handler),
-    reset: () => {
-      handlers.clear();
-      listeners.length = 0;
-      installPluginDefaults();
-    },
     handlers,
   };
 }
