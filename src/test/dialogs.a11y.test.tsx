@@ -11,6 +11,7 @@ import { act } from "react";
 import App from "../App";
 import { installTauri, mountApp, desktopViewport, type Mounted } from "./mount";
 import { runAxe, formatViolations } from "./axe";
+import { sandboxes } from "./fixtures";
 import type { TauriMock } from "./tauri-mock";
 
 let tauri: TauriMock;
@@ -36,7 +37,7 @@ const expectNoViolations = async (label: string) => {
   expect(violations, `${label}:\n${formatViolations(violations)}`).toEqual([]);
 };
 
-const openDialogByLabel = async (label: string) => {
+const clickButton = async (label: string) => {
   const accessibleName = (candidate: HTMLButtonElement) =>
     candidate.getAttribute("aria-label") ?? candidate.textContent ?? "";
   const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find((candidate) =>
@@ -49,53 +50,82 @@ const openDialogByLabel = async (label: string) => {
   });
 };
 
+const openTemplatesPane = async (label: string) => {
+  mounted?.unmount();
+  // The templates flow does not read the sandbox list; the empty answer
+  // keeps the dashboard's poll quiet while the pane is open.
+  tauri.handle("sandboxes", () => []);
+  mounted = mountApp(<App />, tauri);
+  await settle();
+  await act(async () => {
+    document.querySelector<HTMLButtonElement>(".rail button:nth-child(2)")?.click();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  });
+  // Template rows open a detail pane; the header actions live there.
+  const row = document.querySelector<HTMLButtonElement>(".linkrow");
+  expect(row, "no template rows rendered").toBeDefined();
+  await act(async () => {
+    row!.click();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  });
+  await clickButton(label);
+  await settle();
+};
+
+describe("Templates page", () => {
+  it("template list has no violations", async () => {
+    mounted?.unmount();
+    tauri.handle("sandboxes", () => []);
+    mounted = mountApp(<App />, tauri);
+    await settle();
+    await clickButton("Templates");
+    await settle();
+    await expectNoViolations("templates list");
+  }, 90_000);
+
+  it("template detail pane has no violations", async () => {
+    mounted?.unmount();
+    tauri.handle("sandboxes", () => []);
+    mounted = mountApp(<App />, tauri);
+    await settle();
+    await clickButton("Templates");
+    await settle();
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>(".linkrow")?.click();
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    });
+    await expectNoViolations("template detail pane");
+  }, 90_000);
+});
+
 describe("Dialogs", () => {
   it("create wizard (step 1) has no violations", async () => {
     mounted?.unmount();
+    tauri.handle("sandboxes", () => sandboxes);
     mounted = mountApp(<App />, tauri);
     await settle();
-    await openDialogByLabel("Create sandbox");
+    await clickButton("Create sandbox");
     await settle();
     await expectNoViolations("create wizard step 1");
   }, 90_000);
 
   it("connect dialog has no violations", async () => {
     mounted?.unmount();
+    tauri.handle("sandboxes", () => sandboxes);
     mounted = mountApp(<App />, tauri);
     await settle();
-    await openDialogByLabel("Open web");
+    await clickButton("Open web");
     await settle();
     await expectNoViolations("connect dialog");
   }, 90_000);
 
   it("launch dialog has no violations", async () => {
-    mounted?.unmount();
-    tauri.handle("sandboxes", () => []);
-    mounted = mountApp(<App />, tauri);
-    await settle();
-    // The dashboard's empty list has no route to Templates; mount the page
-    // through the app's own navigation.
-    const templatesTab = document.querySelector<HTMLButtonElement>(".rail button:nth-child(2)");
-    await act(async () => {
-      templatesTab?.click();
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    });
-    await openDialogByLabel("Launch");
-    await settle();
+    await openTemplatesPane("Launch");
     await expectNoViolations("launch dialog");
   }, 90_000);
 
   it("delete-template dialog has no violations", async () => {
-    mounted?.unmount();
-    tauri.handle("sandboxes", () => []);
-    mounted = mountApp(<App />, tauri);
-    await settle();
-    await act(async () => {
-      document.querySelector<HTMLButtonElement>(".rail button:nth-child(2)")?.click();
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    });
-    await openDialogByLabel("Delete");
-    await settle();
+    await openTemplatesPane("Delete");
     await expectNoViolations("delete dialog");
   }, 90_000);
 });

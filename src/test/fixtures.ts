@@ -142,14 +142,12 @@ export const sandboxes: SandboxInfo[] = [
     state: "running",
     agent: "claude-code",
     workspace: "/home/user/projects/web",
-    raw: "sbx-web",
   },
   {
     name: "experiments",
     state: "stopped",
     agent: "opencode",
     workspace: "",
-    raw: "sbx-experiments",
   },
 ];
 
