@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { KitArguments, KitOption } from "../../../lib/kit";
 import { SearchField } from "../../../common/components/SearchField";
-import { KitCard } from "./KitCard";
+import { KitItem } from "./KitItem";
 import { KitInputs } from "./KitInputs";
 
 export function MixinStep({
@@ -83,7 +83,7 @@ export function MixinStep({
       )}
       {mixinGroups.map((providerId) => (
         <fieldset className="catalog-unframed" key={providerId}>
-          <div className="options">
+          <div className="optionlist">
             {matchingMixins
               .filter((kit) => kit.provider_id === providerId)
               .map((kit) => {
@@ -99,7 +99,7 @@ export function MixinStep({
                       disabled={duplicateName}
                       onChange={(event) => onToggleMixin(kit, event.target.checked)}
                     />
-                    <KitCard kit={kit} />
+                    <KitItem kit={kit} />
                     {duplicateName && (
                       <span className="help">Same name as a tool already selected.</span>
                     )}

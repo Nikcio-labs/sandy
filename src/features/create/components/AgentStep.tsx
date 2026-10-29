@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { KitOption } from "../../../lib/catalog";
 import { SearchField } from "../../../common/components/SearchField";
-import { KitCard } from "./KitCard";
+import { KitItem } from "./KitItem";
 
 export function AgentStep({
   agents,
@@ -47,7 +47,7 @@ export function AgentStep({
           label="Search agents"
         />
       </div>
-      <div className="options agentgrid">
+      <div className="optionlist" role="radiogroup" aria-label="Agents and workloads">
         {ordered.map((kit) => (
           <label className={`option ${agent?.id === kit.id ? "selected" : ""}`} key={kit.id}>
             <input
@@ -57,7 +57,7 @@ export function AgentStep({
               checked={agent?.id === kit.id}
               onChange={() => onSelect(kit)}
             />
-            <KitCard kit={kit} />
+            <KitItem kit={kit} />
           </label>
         ))}
       </div>

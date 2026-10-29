@@ -163,6 +163,14 @@
   margin-top: 27px;
 }
 
+.kitinputs-legend {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink);
+  padding: 0;
+  margin-bottom: 12px;
+}
+
 .catalog-selected ul {
   list-style: none;
   padding: 0;

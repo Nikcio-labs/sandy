@@ -25,8 +25,8 @@ export function KitInputs({
         Required inputs are marked. Defaults come from each kit’s metadata.
       </p>
       {configurable.map((kit, kitIndex) => (
-        <fieldset className="fieldset" key={kit.id} disabled={disabled}>
-          <legend className="legend">{kit.name}</legend>
+        <fieldset className="catalog-unframed" key={kit.id} disabled={disabled}>
+          <legend className="kitinputs-legend">{kit.name}</legend>
           <div className="fields">
             {kit.arguments.map((argument, argumentIndex) => {
               const inputId = `${id}-${kitIndex}-${argumentIndex}`;

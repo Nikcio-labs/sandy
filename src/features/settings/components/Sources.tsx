@@ -88,19 +88,23 @@ export default function Sources({
       )}
       {providers !== null && !loading && (
         <>
-          {providers.map((provider) => (
-            <SourceRow
-              key={provider.id}
-              provider={provider}
-              disabled={!!disabled}
-              onUpdate={(next) =>
-                update(providers.map((item) => (item.id === provider.id ? next : item)))
-              }
-              onRemove={() => update(providers.filter((item) => item.id !== provider.id))}
-            />
-          ))}
+          <div className="sourcelist">
+            {providers.map((provider) => (
+              <SourceRow
+                key={provider.id}
+                provider={provider}
+                disabled={!!disabled}
+                onUpdate={(next) =>
+                  update(providers.map((item) => (item.id === provider.id ? next : item)))
+                }
+                onRemove={() => update(providers.filter((item) => item.id !== provider.id))}
+              />
+            ))}
+          </div>
           {!providers.length && (
-            <p className="note">No sources yet. Add one below to get started.</p>
+            <p className="help" role="status">
+              No sources yet. Add one below to get started.
+            </p>
           )}
           <div className="actionbar">
             <button

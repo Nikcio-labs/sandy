@@ -1,20 +1,28 @@
 /*
  * The kit-source list: one quiet row per source with a switch, always
  * showing what matters (is it on, what does it point at), and an inline
- * editor that opens on demand. Shared by the create flow and Settings.
+ * editor that opens on demand. Rows are hairline-divided, not boxed cards.
+ * Shared by the create flow and Settings.
  */
 
 .sourcerow {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: 13px 16px;
-  margin: 0 0 9px;
+  border: 0;
+  background: transparent;
+  padding: 13px 4px;
+  margin: 0;
   min-width: 0;
 }
 
-.sourcerow.invalid {
-  border-color: var(--red-border);
+.sourcelist > .sourcerow {
+  border-top: 1px solid var(--line);
+}
+
+.sourcelist > .sourcerow:last-of-type {
+  border-bottom: 1px solid var(--line);
+}
+
+.sourcerow.invalid > .sourcerow-name strong {
+  color: var(--red);
 }
 
 .sourcerow-head {
@@ -91,7 +99,7 @@
   border-radius: 50%;
   background: var(--surface);
   box-shadow: 0 1px 2px rgb(20 26 61 / 0.25);
-  transition: translate 130ms ease;
+  transition: transform 130ms var(--out);
 }
 
 .switch input:checked + .switch-track {

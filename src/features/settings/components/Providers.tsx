@@ -139,6 +139,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
         <form onSubmit={save}>
           <fieldset className="catalog-unframed" disabled={disabled || saving}>
             <legend className="sr-only">Provider configuration</legend>
+            <div className="sourcelist">
             {providers.map((provider) => (
               <SourceRow
                 key={provider.id}
@@ -150,11 +151,12 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
                 onRemove={() => update(providers.filter((item) => item.id !== provider.id))}
               />
             ))}
-            {!providers.length && (
-              <p className="note">
-                No providers configured. Add a GitHub repository to get started.
-              </p>
-            )}
+          </div>
+          {!providers.length && (
+            <p className="help" role="status">
+              No providers configured. Add a GitHub repository to get started.
+            </p>
+          )}
             <div className="actionbar">
               <button
                 type="button"
