@@ -1,8 +1,7 @@
 import { useId } from "react";
 import type { KitArguments, KitOption } from "../../../lib/kit";
-import Icon from "../../../common/components/Icon";
 import { SearchField } from "../../../common/components/SearchField";
-import { KitDetails } from "./KitDetails";
+import { KitItem } from "./KitItem";
 import { KitInputs } from "./KitInputs";
 
 export function MixinStep({
@@ -52,30 +51,28 @@ export function MixinStep({
     >
       <div className="sectionhead">
         <div>
-          <h2>Make it your own</h2>
+          <h2>Add tools to {agent.name}</h2>
           <p className="help intro">
-            Showing only kit v{agent.schema_version} mixins compatible with {agent.name}, including
-            each mixin’s required agent.
+            Everything works without extras. Add-ons customize the sandbox.
           </p>
         </div>
-        <span className="badge pill">{mixins.length} selected</span>
+        <SearchField
+          id={`${id}-mixin-search`}
+          value={search}
+          onChange={onSearch}
+          placeholder="Search add-ons…"
+          label="Search add-ons"
+        />
       </div>
-      <SearchField
-        id={`${id}-mixin-search`}
-        value={search}
-        onChange={onSearch}
-        placeholder="Search compatible mixins…"
-        label="Search mixins"
-        wide
-      />
-      <label className="field" htmlFor={`${id}-provider-filter`}>
-        Group by provider
-        <select
-          id={`${id}-provider-filter`}
-          value={providerFilter}
-          onChange={(event) => onProviderFilter(event.target.value)}
-        >
-            <option value="">All providers</option>
+      {mixinGroups.length > 1 && (
+        <label className="field" htmlFor={`${id}-provider-filter`}>
+          Source
+          <select
+            id={`${id}-provider-filter`}
+            value={providerFilter}
+            onChange={(event) => onProviderFilter(event.target.value)}
+          >
+            <option value="">All sources</option>
             {[...new Set(compatible.map((kit) => kit.provider_id))].map((providerId) => (
               <option key={providerId} value={providerId}>
                 {providerLabel(providerId)}
@@ -83,16 +80,17 @@ export function MixinStep({
             ))}
           </select>
         </label>
+      )}
       {mixinGroups.map((providerId) => (
-        <fieldset className="catalog-unframed catalog-choice-group" key={providerId}>
-          <legend>{providerLabel(providerId)}</legend>
-          <div className="options">
+        <fieldset className="catalog-unframed" key={providerId}>
+          <div className="optionlist">
             {matchingMixins
               .filter((kit) => kit.provider_id === providerId)
               .map((kit) => {
                 const selected = mixins.some((item) => item.id === kit.id);
                 const duplicateName =
-                  !selected && (agent.name === kit.name || mixins.some((item) => item.name === kit.name));
+                  !selected &&
+                  (agent.name === kit.name || mixins.some((item) => item.name === kit.name));
                 return (
                   <label className={`option ${selected ? "selected" : ""}`} key={kit.id}>
                     <input
@@ -101,11 +99,9 @@ export function MixinStep({
                       disabled={duplicateName}
                       onChange={(event) => onToggleMixin(kit, event.target.checked)}
                     />
-                    <KitDetails kit={kit} />
+                    <KitItem kit={kit} />
                     {duplicateName && (
-                      <span className="help">
-                        Another kit with this name is already selected.
-                      </span>
+                      <span className="help">Same name as a tool already selected.</span>
                     )}
                   </label>
                 );
@@ -117,27 +113,20 @@ export function MixinStep({
         <div className="note">
           <p>
             {compatible.length
-              ? "No mixins match these filters."
-              : "No compatible mixins were discovered. You can continue with the selected agent or workload alone."}
+              ? "Nothing matches your search."
+              : "No add-ons were found for this agent. You can continue without any."}
           </p>
-          {(search || providerFilter) && (
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                onSearch("");
-                onProviderFilter("");
-              }}
-            >
-              Clear filters
+          {search && (
+            <button type="button" className="btn" onClick={() => onSearch("")}>
+              Clear search
             </button>
           )}
         </div>
       )}
       {mixins.length > 0 && (
         <div className="catalog-selected">
-          <h3>Selected mixins · applied in this order</h3>
-          <ol>
+          <h3>Your add-ons</h3>
+          <ul>
             {mixins.map((kit) => (
               <li key={kit.id}>
                 <span>{kit.name}</span>
@@ -151,21 +140,16 @@ export function MixinStep({
                 </button>
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       )}
-      <KitInputs
-        kits={selectedKits}
-        values={values}
-        disabled={false}
-        onChange={onArgumentChange}
-      />
+      <KitInputs kits={selectedKits} values={values} disabled={false} onChange={onArgumentChange} />
       <div className="actionbar">
         <button type="button" className="btn" onClick={onBack}>
           Back
         </button>
         <button type="submit" className="btn primary">
-          Project details <Icon name="arrow" size={16} />
+          Name your sandbox
         </button>
       </div>
     </form>

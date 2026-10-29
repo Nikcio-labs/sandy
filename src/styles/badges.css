@@ -22,6 +22,12 @@
   color: var(--brand-dark);
 }
 
+/* Quiet positive label: zero-setup choices that need no action ("Included"). */
+.badge.soft {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
 /* Rounded pill with a visible border, for counts and metadata that
    should read as selectable-chip-like rather than plain labels. */
 .badge.pill {

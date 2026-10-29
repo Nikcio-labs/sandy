@@ -1,14 +1,72 @@
 /*
- * The option-card pattern: a selectable card (radio or checkbox semantics
- * via a hidden input) shown as a quiet bordered tile with a fading check
- * mark instead of a visible form control. Used for kit choices and
- * connection methods.
+ * The option pattern: a selectable row (radio or checkbox semantics via a
+ * hidden input). Rows sit in a .optionlist and are separated by hairlines
+ * instead of boxed as individual cards, so a long list reads as one table.
+ * Used for kit choices and connection methods.
  */
 
 .options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
+}
+
+.optionlist {
+  display: flex;
+  flex-direction: column;
+}
+
+.optionlist .option {
+  display: flex;
+  /* The shared .option is a column card; rows read across. */
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  padding: 13px 4px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.optionlist .option:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.optionlist .option:hover {
+  background: var(--surface-sunken);
+}
+
+/* Selected and hover-selected rows tint instead of lighting up a border:
+   the row is the selection, so the mark sits beside the title. */
+.optionlist .option.selected,
+.optionlist .option:has(input:checked) {
+  background: var(--brand-faint);
+  box-shadow: inset 3px 0 0 var(--brand);
+  border-color: var(--line);
+}
+
+.optionlist .option:focus-within {
+  outline: 2px solid var(--brand-soft);
+  outline-offset: -2px;
+}
+
+.optionlist .option > input {
+  position: static;
+  width: 15px;
+  height: 15px;
+  opacity: 1;
+  margin-top: 3px;
+  pointer-events: none;
+}
+
+/* The fading check mark is a card-era affordance; list rows show the
+   native control, so the mask never appears. */
+.optionlist .option::after {
+  content: none;
 }
 
 .option {
@@ -111,4 +169,43 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   user-select: text;
+}
+
+/* ---- Kit rows ---- */
+
+.kititem-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.kititem-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.kititem-title strong {
+  font: 600 15.5px var(--display);
+}
+
+.kititem-note {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--faint);
+}
+
+.kititem-description {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

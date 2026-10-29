@@ -4,7 +4,7 @@ import type { Provider } from "../../../lib/catalog";
 import { getProviders, saveProviders } from "../../../lib/catalog";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { normalizeRepository, repositoryIsValid } from "../providerRepository";
-import { ProviderEditor } from "./ProviderEditor";
+import { SourceRow } from "./SourceRow";
 
 export interface ProvidersProps {
   onChange?: (providers: Provider[]) => void;
@@ -12,6 +12,11 @@ export interface ProvidersProps {
   disabled?: boolean;
 }
 
+/**
+ * The Settings kit-source editor: the same row design as the create flow,
+ * with an explicit save because changes here persist without a discovery
+ * round-trip.
+ */
 export default function Providers({ onChange, onDirtyChange, disabled = false }: ProvidersProps) {
   const [providers, setProviders] = useState<Provider[] | null>(null);
   const [saved, setSaved] = useState("");
@@ -27,9 +32,8 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
   const dirty = providers !== null && JSON.stringify(providers) !== saved;
   // An empty reference is valid: discovery resolves it to the latest tag.
   const incomplete =
-    providers?.some(
-      (provider) => provider.enabled && !repositoryIsValid(provider.repository),
-    ) ?? false;
+    providers?.some((provider) => provider.enabled && !repositoryIsValid(provider.repository)) ??
+    false;
 
   useEffect(() => {
     let active = true;
@@ -100,26 +104,22 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
   };
 
   return (
-    <section className="group group-body" aria-labelledby={`${id}-title`} aria-busy={loading || saving}>
+    <section
+      className="group group-body"
+      aria-labelledby={`${id}-title`}
+      aria-busy={loading || saving}
+    >
       <div className="sectionhead">
         <div>
-          <h2 id={`${id}-title`}>Kit providers</h2>
-          <p className="help intro">
-            Choose where Sandy finds agents, workloads, and mixins. Save your references before
-            discovering kits.
-          </p>
+          <h2 id={`${id}-title`}>Kit sources</h2>
+          <p className="help intro">Where Sandy finds agents, workloads, and mixins.</p>
         </div>
         {providers !== null && (
           <span className="badge pill">
-            {providers.filter((provider) => provider.enabled).length} enabled
+            {providers.filter((provider) => provider.enabled).length} on
           </span>
         )}
       </div>
-      <p className="help">
-        Enabling a GitHub repository authorizes Sandy to add a repository-scoped entry to{" "}
-        <code>sbx kit.allowedSources</code> when you launch its kits. Existing policy entries are
-        preserved. Managed policy restrictions are reported rather than overridden.
-      </p>
       {loading && (
         <p className="statusline" role="status">
           <span className="spinner" /> Loading saved providers…
@@ -139,8 +139,9 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
         <form onSubmit={save}>
           <fieldset className="catalog-unframed" disabled={disabled || saving}>
             <legend className="sr-only">Provider configuration</legend>
+            <div className="sourcelist">
             {providers.map((provider) => (
-              <ProviderEditor
+              <SourceRow
                 key={provider.id}
                 provider={provider}
                 disabled={disabled || saving}
@@ -150,11 +151,12 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
                 onRemove={() => update(providers.filter((item) => item.id !== provider.id))}
               />
             ))}
-            {!providers.length && (
-              <p className="note">
-                No providers configured. Add a GitHub repository to get started.
-              </p>
-            )}
+          </div>
+          {!providers.length && (
+            <p className="help" role="status">
+              No providers configured. Add a GitHub repository to get started.
+            </p>
+          )}
             <div className="actionbar">
               <button
                 type="button"
@@ -173,7 +175,7 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
                   ])
                 }
               >
-                Add provider
+                Add a source
               </button>
               {!providers.some(
                 (provider) =>
@@ -202,15 +204,15 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
             </div>
             <div className="actionbar">
               <button type="submit" className="btn primary" disabled={!dirty || saving}>
-                {saving ? "Saving providers…" : "Save providers"}
+                {saving ? "Saving…" : "Save changes"}
               </button>
               <span className="help" role="status">
                 {notice ||
                   (incomplete
                     ? "Give each enabled repository a valid repository URL."
                     : dirty
-                      ? "Unsaved provider changes"
-                      : "Using the saved provider configuration")}
+                      ? "Unsaved changes"
+                      : "Everything is saved.")}
               </span>
             </div>
           </fieldset>
