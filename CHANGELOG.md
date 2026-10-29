@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/Nikcio-labs/sandy/compare/v0.4.0...v0.4.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **ci:** match the linux arm64 appimage name in the updater manifest ([#82](https://github.com/Nikcio-labs/sandy/issues/82)) ([4101ac9](https://github.com/Nikcio-labs/sandy/commit/4101ac9def60006845341bc8d2bbdec9368d8eb0))
+
 ## [0.4.0](https://github.com/Nikcio-labs/sandy/compare/v0.3.3...v0.4.0) (2026-10-29)
 
 
