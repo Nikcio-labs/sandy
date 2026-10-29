@@ -44,12 +44,6 @@ pub fn restart_sandbox(name: &str) -> Result<String, String> {
         .map_err(|e| format!("Sandbox {name} was stopped but could not be started:\n{e}"))
 }
 
-/// Remove just the requested sandbox, without an interactive CLI prompt.
-pub fn remove_sandbox(name: &str) -> Result<String, String> {
-    validate_sandbox_name(name)?;
-    run_capture(&["rm", "--force", name])
-}
-
 #[derive(Debug, Serialize, Clone)]
 pub struct ConnectionInfo {
     pub host: String,
