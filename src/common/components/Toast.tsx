@@ -12,7 +12,7 @@ export function Toast({ notice, onDismiss }: { notice: ToastNotice; onDismiss: (
 
   useEffect(() => {
     if (!leaving) return;
-    const timer = setTimeout(onDismiss, 180);
+    const timer = setTimeout(onDismiss, 120);
     return () => clearTimeout(timer);
   }, [leaving, onDismiss]);
 
@@ -23,6 +23,15 @@ export function Toast({ notice, onDismiss }: { notice: ToastNotice; onDismiss: (
       <button className="iconbtn" aria-label="Dismiss notification" onClick={dismiss}>
         <Icon name="close" size={14} />
       </button>
+    </div>
+  );
+}
+
+/** The fixed bottom-right region every page renders its notice into. */
+export function ToastHost({ notice, onDismiss }: { notice: ToastNotice | null; onDismiss: () => void }) {
+  return (
+    <div className="toasts" aria-live="polite" aria-atomic="true">
+      {notice && <Toast notice={notice} onDismiss={onDismiss} />}
     </div>
   );
 }

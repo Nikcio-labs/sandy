@@ -14,8 +14,8 @@ export interface CreateDialogProps {
 
 /**
  * The create wizard in a wide modal dialog, over the page the user came
- * from — matching the design study's single create entry point. The
- * wizard body is the same CreatePage the flow used as a standalone page.
+ * from. The wizard body is the same CreatePage the flow used as a
+ * standalone page.
  */
 export default function CreateDialog({ onClose, onBusyChange, onLaunched, templateId }: CreateDialogProps) {
   const id = useId();
@@ -49,7 +49,7 @@ export default function CreateDialog({ onClose, onBusyChange, onLaunched, templa
       onClose={close}
       onClick={(event) => {
         // A click on the backdrop (the dialog padding box outside the
-        // content) dismisses, as in the design study's overlay.
+        // content) dismisses.
         if (event.target === dialog.current) close();
       }}
     >

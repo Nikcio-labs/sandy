@@ -1,6 +1,5 @@
 import type { SetupStatus } from "../../lib/sandbox";
 import { login, enableImagePaste, openInstallerTerminal } from "../../lib/sandbox";
-import type { IconName } from "../../common/components/Icon";
 
 export interface SetupStep {
   id: string;
@@ -14,9 +13,7 @@ export interface SetupStep {
    * scrolls.
    */
   guide?: string[];
-  command?: string;
   action: string;
-  icon: IconName;
   isDone: (status: SetupStatus | null) => boolean;
   run: () => Promise<string | void>;
   /**
@@ -43,7 +40,6 @@ export const SETUP_STEPS: SetupStep[] = [
       "When it prints “Install finished.”, click Check install.",
     ],
     action: "Install sbx",
-    icon: "terminal",
     isDone: (status) => !!status?.sbx_installed,
     // The install runs in a visible terminal: sudo and winget prompts need a
     // real console the user can answer, so Sandy cannot capture it. SSH
@@ -56,9 +52,7 @@ export const SETUP_STEPS: SetupStep[] = [
     title: "Sign in to Docker",
     description:
       "Your browser opens to connect your Docker account. Sandy picks up the result and sets up SSH access for you.",
-    command: "sbx login",
     action: "Sign in",
-    icon: "user",
     isDone: (status) => !!status?.signed_in,
     run: login,
   },
@@ -67,9 +61,7 @@ export const SETUP_STEPS: SetupStep[] = [
     label: "Image paste",
     title: "Enable image pasting",
     description: "Paste screenshots from your clipboard straight into agent chats.",
-    command: "sbx settings set clipboard.imagePaste true",
     action: "Enable pasting",
-    icon: "clipboard",
     isDone: (status) => !!status?.image_paste_on,
     run: enableImagePaste,
     optional: true,

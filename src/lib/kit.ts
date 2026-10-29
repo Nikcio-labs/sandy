@@ -3,32 +3,6 @@ import type { SaveTemplateRequest } from "./templates";
 
 export type { KitArgument, KitArguments, KitOption, SaveTemplateRequest };
 
-// Documented Docker shortcuts, used only if discovery doesn't return built-ins.
-// https://docs.docker.com/ai/sandboxes/customize/kits/#sandbox-managed-agent-configuration
-// https://docs.docker.com/ai/sandboxes/configuration/environment-files/#use-a-cloud-environment
-// These are v2 agent identities, never inferred Docker Hub image tags.
-export const BUILTIN_AGENTS: KitOption[] = [
-  "claude",
-  "codex",
-  "copilot",
-  "cursor",
-  "devin",
-  "gemini",
-  "kiro",
-  "opencode",
-  "shell",
-].map((name) => ({
-  id: `builtin:${name}`,
-  name,
-  description: `Docker Sandboxes built-in ${name} environment.`,
-  source: name,
-  schema_version: 2,
-  kind: "agent",
-  provider_id: "builtin",
-  required_agent: null,
-  arguments: [],
-}));
-
 /** Unknown or incomplete metadata must never turn into a selectable kit. */
 export function hasKitMetadata(kit: KitOption): boolean {
   return !!(

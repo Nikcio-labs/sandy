@@ -1,7 +1,7 @@
 /*
- * Settings → Sandbox settings: the CLI-true settings editor. Rows follow
- * the concept's two-column setting grid: description and metadata badges
- * on the left, typed control and apply/reset actions on the right.
+ * Settings → Sandbox settings: the CLI-true settings editor. Rows use a
+ * two-column setting grid: description and metadata badges on the left,
+ * typed control and apply/reset actions on the right.
  */
 
 .pane-section {
@@ -11,6 +11,20 @@
 .pane-toolbar {
   margin-bottom: 14px;
   flex-wrap: wrap;
+}
+
+/* The toolbar's search box is 35px tall (6px padding + a 21px input line);
+   .btn.small's 30px cap leaves it floating above the row's centerline, so
+   toolbar buttons stretch to match. */
+.pane-toolbar .btn.small {
+  min-height: 35px;
+}
+
+/* .search.wide's 16px bottom margin (a two-class rule that also out-ranks
+   the one-class .pane-search reset) shifts the search box up inside this
+   centered row; three classes win it back at any bundle order. */
+.pane-toolbar .search.wide {
+  margin: 0;
 }
 
 .pane-search {
@@ -68,14 +82,15 @@
 }
 
 /* The bool control: a real switch with a traveling knob and a violet on
-   state, as in the concept. */
+   state. The off track must clear the 3:1 non-text minimum against the
+   panel surface. */
 .switch {
   padding: 3px;
   border: 0;
   width: 38px;
   height: 22px;
   border-radius: 12px;
-  background: #c8cee0;
+  background: #8493b9;
   flex-shrink: 0;
 }
 
@@ -104,8 +119,8 @@
   flex-wrap: wrap;
 }
 
-/* Keep the control and its actions on one tidy baseline like the concept's
-   two-column grid; the actions never wrap under the input. */
+/* Keep the control and its actions on one tidy baseline; the actions
+   never wrap under the input. */
 .settingapply {
   flex-shrink: 0;
 }
@@ -115,15 +130,8 @@
 }
 
 .settingvalue {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--field-border);
-  border-radius: 7px;
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 14px;
+  /* The 2px-tighter vertical padding fits the denser settings row. */
   padding: 8px 10px;
-  font-weight: 400;
 }
 
 textarea.settingvalue {

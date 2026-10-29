@@ -9,7 +9,6 @@ import {
 } from "../../../lib/catalog";
 import {
   argumentsAreValid,
-  BUILTIN_AGENTS,
   hasKitMetadata,
   isCompatibleMixin,
   resolvedArguments,
@@ -196,8 +195,7 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
   };
 
   // Shared verification of a discovery result: drop kits without usable
-  // metadata, report them, and add the documented built-ins when the CLI did
-  // not report its own.
+  // metadata, report them, and keep the rest as the wizard's catalog.
   const verifiedFrom = (result: Catalog): { kits: KitOption[]; warnings: string[] } => {
     const seen = new Set<string>();
     const verified = result.kits.filter((kit) => {
@@ -206,21 +204,10 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
       return true;
     });
     const skipped = result.kits.length - verified.length;
-    const usedBuiltinFallback = !verified.some(
-      (kit) => kit.provider_id === "builtin" && kit.kind === "agent",
-    );
-    if (usedBuiltinFallback) {
-      verified.push(...BUILTIN_AGENTS);
-    }
     return {
       kits: verified,
       warnings: [
         ...result.warnings,
-        ...(usedBuiltinFallback
-          ? [
-              "Built-in agent shortcuts are from Docker’s documentation because the CLI did not report its available agents. These v2 shortcuts have not been verified against this installation.",
-            ]
-          : []),
         ...(skipped
           ? [
               `${skipped} entries with incomplete, unsupported, or duplicate kit metadata were excluded.`,
@@ -440,7 +427,6 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
   return {
     /** True when the wizard edits an existing template instead of creating one. */
     editing,
-    // Wizard position and shared feedback state.
     step,
     moveTo,
     busy,
@@ -448,18 +434,15 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     /** All selected kits (agent first); drives argument validity and the review. */
     selectedKits,
     values,
-    // Step 0: providers and discovery.
     providers,
     catalog,
     onProvidersChange,
     discover,
-    // Step 1: agent selection.
     agents,
     agent,
     agentSearch,
     setAgentSearch,
     selectAgent,
-    // Step 2: mixin selection and kit inputs.
     compatible,
     matchingMixins,
     mixinGroups,
@@ -472,7 +455,6 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     toggleMixin,
     removeMixin,
     changeArgument,
-    // Step 3: project details and review.
     inputValid,
     request,
     updateRequest,
@@ -486,7 +468,6 @@ export function useCreateFlow({ onBusyChange, templateId, onLaunched }: CreateFl
     setSavePath,
     submit,
     browse,
-    // Finished panel.
     saved,
     launched,
     launchOutput,

@@ -9,6 +9,7 @@
 //!   reuse of a confirmed daemon probe so one status read spawns one probe)
 //! - [`lifecycle`]: start/stop/restart/remove and connection info
 //! - [`listing`]: parsing `sbx ls` output
+//! - [`secrets`]: listing and storing `sbx secret` credentials
 //! - [`terminal`]: opening an interactive terminal into a sandbox
 //! - [`install`]: installing the CLI per platform
 
@@ -16,6 +17,7 @@ mod cli;
 mod install;
 mod lifecycle;
 mod listing;
+mod secrets;
 mod settings;
 mod status;
 mod terminal;
@@ -28,12 +30,14 @@ pub(crate) mod test_env;
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests;
 
+pub(crate) use cli::run_capture_stdin;
 pub use cli::{SSH_SETUP_COMMAND, is_sbx_installed, run_capture, run_capture_lines};
 pub use install::open_installer_terminal;
 pub use lifecycle::{
     ConnectionInfo, connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
 };
 pub use listing::{SandboxInfo, list_sandboxes};
+pub use secrets::{SecretList, list_secrets, remove_secret, set_secret};
 pub use settings::{SettingRecord, list_settings, set_setting, unset_setting};
 pub use status::{
     CheckExplanation, diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,

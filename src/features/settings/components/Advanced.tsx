@@ -12,7 +12,11 @@ function parseEntry(line: string): DebugLogEntry | null {
   if (!line.trim()) return null;
   try {
     const value = JSON.parse(line) as DebugLogEntry;
-    if (typeof value.timestamp === "string" && typeof value.summary === "string" && typeof value.kind === "string") {
+    if (
+      typeof value.timestamp === "string" &&
+      typeof value.summary === "string" &&
+      typeof value.kind === "string"
+    ) {
       return value;
     }
     return null;
@@ -72,7 +76,11 @@ export default function Advanced() {
   }, [refresh]);
 
   const entries = useMemo(
-    () => (log ?? "").split("\n").map(parseEntry).filter((entry): entry is DebugLogEntry => entry !== null),
+    () =>
+      (log ?? "")
+        .split("\n")
+        .map(parseEntry)
+        .filter((entry): entry is DebugLogEntry => entry !== null),
     [log],
   );
   const visible = useMemo(
@@ -81,13 +89,10 @@ export default function Advanced() {
   );
   // The log file is appended oldest first, so reverse for a newest-first view;
   // older entries are behind "Show older".
-  const rendered = useMemo(
-    () => {
-      const newestFirst = [...visible].reverse();
-      return showAll ? newestFirst : newestFirst.slice(0, RENDER_LIMIT);
-    },
-    [visible, showAll],
-  );
+  const rendered = useMemo(() => {
+    const newestFirst = [...visible].reverse();
+    return showAll ? newestFirst : newestFirst.slice(0, RENDER_LIMIT);
+  }, [visible, showAll]);
   const errorCount = useMemo(
     () => entries.filter((entry) => entry.outcome === "error").length,
     [entries],
@@ -150,13 +155,15 @@ export default function Advanced() {
           <h2 id="advanced-title">Advanced</h2>
           <p className="help intro">
             A running record of what Sandy does on your behalf: every sandbox CLI call, kit
-            discovery request, and error, with timestamps. Sandy keeps the newest entries when
-            the log reaches its 10 MB limit.
+            discovery request, and error, with timestamps. Sandy keeps the newest entries when the
+            log reaches its 10 MB limit.
           </p>
         </div>
         {entries.length > 0 && (
           <span className="badge pill">
-            {errorCount > 0 ? `${errorCount} error${errorCount === 1 ? "" : "s"}` : `${entries.length} entries`}
+            {errorCount > 0
+              ? `${errorCount} error${errorCount === 1 ? "" : "s"}`
+              : `${entries.length} entries`}
           </span>
         )}
       </div>
@@ -166,7 +173,11 @@ export default function Advanced() {
         </p>
       )}
       {error && (
-        <ErrorBanner title="The diagnostic log could not be read." actionLabel="Try again" onAction={() => void refresh()}>
+        <ErrorBanner
+          title="The diagnostic log could not be read."
+          actionLabel="Try again"
+          onAction={() => void refresh()}
+        >
           <p>{error}</p>
         </ErrorBanner>
       )}
@@ -181,7 +192,10 @@ export default function Advanced() {
               <div className="debug-log-toolbar">
                 <label className="debug-log-filter">
                   Show
-                  <select value={filter} onChange={(event) => setFilter(event.target.value as LevelFilter)}>
+                  <select
+                    value={filter}
+                    onChange={(event) => setFilter(event.target.value as LevelFilter)}
+                  >
                     <option value="all">All entries</option>
                     <option value="errors">Errors only</option>
                   </select>
@@ -196,7 +210,7 @@ export default function Advanced() {
                 {rendered.map((entry, index) => (
                   <details key={`${entry.timestamp}-${index}`} className="debug-log-entry">
                     <summary>
-                      <span className={`debug-log-kind debug-log-kind-${entry.kind}`}>
+                      <span className={`badge violet debug-log-kind debug-log-kind-${entry.kind}`}>
                         {KIND_LABELS[entry.kind] ?? entry.kind}
                       </span>
                       <span className={entry.outcome === "error" ? "debug-log-failed" : undefined}>
@@ -207,16 +221,10 @@ export default function Advanced() {
                     {entry.detail && <pre>{entry.detail}</pre>}
                   </details>
                 ))}
-                {visible.length === 0 && (
-                  <p className="note">No matching entries.</p>
-                )}
+                {visible.length === 0 && <p className="note">No matching entries.</p>}
                 {rendered.length < visible.length && (
                   <div className="debug-log-older">
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => setShowAll(true)}
-                    >
+                    <button type="button" className="btn" onClick={() => setShowAll(true)}>
                       Show older entries ({visible.length - rendered.length} hidden)
                     </button>
                   </div>
@@ -247,7 +255,6 @@ export default function Advanced() {
               className="btn"
               onClick={() => void copyLogDir()}
               disabled={loading}
-              aria-label="Copy the diagnostic log folder path"
             >
               <Icon name="clipboard" size={16} />
               {copiedDir ? "Copied" : "Copy log folder"}
@@ -257,12 +264,16 @@ export default function Advanced() {
               className="btn"
               onClick={() => void openLogDir()}
               disabled={loading}
-              aria-label="Open the diagnostic log folder in the file manager"
             >
               <Icon name="folder" size={16} />
               Open log folder
             </button>
-            <button type="button" className="btn" onClick={() => void clear()} disabled={loading || !entries.length}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => void clear()}
+              disabled={loading || !entries.length}
+            >
               <Icon name="trash" size={16} />
               Clear log
             </button>

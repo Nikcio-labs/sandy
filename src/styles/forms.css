@@ -1,7 +1,8 @@
 /*
- * Form primitives: .field (labeled input), .fields (two-column grid),
- * .check (checkbox row), .path-row (input + browse button), and
- * .fieldset (framed group with a notched legend).
+ * Form primitives: .field (labeled input), .fieldcontrol (bare input with
+ * the field chrome, for inputs outside a labeled .field), .fields
+ * (two-column grid), .check (checkbox row), .path-row (input + browse
+ * button), and .fieldset (framed group with a notched legend).
  */
 
 .field {
@@ -24,10 +25,16 @@
 .field input,
 .field select,
 .field textarea,
-.path-row > input {
+.path-row > input,
+/* Bare inputs outside a labeled .field opt in with .fieldcontrol. */
+.fieldcontrol {
   width: 100%;
   max-width: none;
   min-width: 0;
+  /* Selects arrive with a fixed 35px height from the base stylesheet; left
+     alone it would clamp the content box below this rule's vertical padding
+     and crop the option text, so fields size selects to their content. */
+  height: auto;
   padding: 9px 10px;
   font: inherit;
   font-weight: 400;
@@ -39,7 +46,8 @@
 
 .field input:disabled,
 .field select:disabled,
-.path-row input:disabled {
+.path-row input:disabled,
+.fieldcontrol:disabled {
   background: var(--field-disabled);
   color: var(--muted);
 }

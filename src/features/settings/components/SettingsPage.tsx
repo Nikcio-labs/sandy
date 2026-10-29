@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
+import { Pane } from "../../../common/components/Pane";
+import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Providers from "./Providers";
 import GithubToken from "./GithubToken";
 import Advanced from "./Advanced";
 import Updates from "./Updates";
 import SandboxSettings from "./SandboxSettings";
+import Secrets from "./Secrets";
 import { PageHead } from "../../../common/components/PageHead";
 import "./SettingsPage.css";
 
@@ -18,9 +21,9 @@ export interface SettingsPageProps {
   onCheckSetup: () => Promise<SetupStatus | null>;
 }
 
-type Pane = "providers" | "github" | "sandbox" | "advanced";
+type PaneId = "providers" | "github" | "secrets" | "sandbox" | "advanced";
 
-const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; description: string }[] = [
+const PANES: { id: PaneId; icon: "kit" | "key" | "settings" | "terminal"; label: string; description: string }[] = [
   {
     id: "providers",
     icon: "kit",
@@ -32,6 +35,12 @@ const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; d
     icon: "kit",
     label: "GitHub token",
     description: "Raise kit discovery's request limit with a personal access token",
+  },
+  {
+    id: "secrets",
+    icon: "key",
+    label: "Secrets",
+    description: "Stored credentials the sbx CLI hands to your sandboxes",
   },
   {
     id: "sandbox",
@@ -49,8 +58,8 @@ const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; d
 
 /**
  * The Settings area: updates and nested panes (home list → back-navigated
- * pane) matching the design study. First-run setup lives in its own window;
- * state orchestration stays in `App`.
+ * pane). First-run setup lives in its own window; state orchestration
+ * stays in `App`.
  */
 export default function SettingsPage({
   status,
@@ -59,30 +68,50 @@ export default function SettingsPage({
   active,
   onCheckSetup,
 }: SettingsPageProps) {
-  const [pane, setPane] = useState<Pane | null>(null);
+  const [pane, setPane] = useState<PaneId | null>(null);
+
+  // The page stays mounted while hidden; a leaked open pane would keep
+  // .main in its pane layout (clipping the visible page) after navigating
+  // away, so the pane closes whenever Settings stops being visible.
+  useEffect(() => {
+    if (!active) setPane(null);
+  }, [active]);
+
+  const paneMeta = PANES.find((item) => item.id === pane) ?? null;
 
   return (
-    <div className="settingshome">
-      {pane === null ? (
+    <div className={`settingshome ${paneMeta ? "pane-open" : ""}`}>
+      {paneMeta ? (
+        <Pane label={paneMeta.label} onBack={() => setPane(null)}>
+          {pane === "providers" && <Providers disabled={busy} />}
+          {pane === "github" && <GithubToken disabled={busy} />}
+          {pane === "secrets" && <Secrets />}
+          {pane === "sandbox" && <SandboxSettings />}
+          {pane === "advanced" && <Advanced />}
+        </Pane>
+      ) : (
         <>
           <PageHead title="Settings" />
           {statusError && (
-            <div className="banner error" role="alert">
-              <strong>We couldn’t check your setup.</strong>
+            <ErrorBanner
+              title="We couldn’t check your setup."
+              actionLabel="Try again"
+              disabled={busy}
+              onAction={() => void onCheckSetup()}
+            >
               <p>{statusError}</p>
-              <button className="btn small" disabled={busy} onClick={() => void onCheckSetup()}>
-                Try again
-              </button>
-            </div>
+            </ErrorBanner>
           )}
           {!!status?.issues?.length && (
-            <div className="banner error" role="status">
-              <strong>Some setup checks are temporarily unavailable.</strong>
+            <ErrorBanner
+              role="status"
+              title="Some setup checks are temporarily unavailable."
+              actionLabel="Check again"
+              disabled={busy}
+              onAction={() => void onCheckSetup()}
+            >
               <p>{status.issues.join("\n")}</p>
-              <button className="btn small" disabled={busy} onClick={() => void onCheckSetup()}>
-                Check again
-              </button>
-            </div>
+            </ErrorBanner>
           )}
           {active && (
             <div className="panel settings-stack">
@@ -92,7 +121,7 @@ export default function SettingsPage({
                   <button
                     key={item.id}
                     type="button"
-                    className="setlink"
+                    className="linkrow"
                     onClick={() => setPane(item.id)}
                   >
                     <Icon name={item.icon} size={20} />
@@ -107,26 +136,6 @@ export default function SettingsPage({
             </div>
           )}
         </>
-      ) : (
-        <section className="panel settingspane" data-pane={pane}>
-          <header className="panehead">
-            <button
-              type="button"
-              className="iconbtn"
-              aria-label="Back to settings"
-              onClick={() => setPane(null)}
-            >
-              <Icon name="back" size={18} />
-            </button>
-            <h2 tabIndex={-1}>{PANES.find((item) => item.id === pane)!.label}</h2>
-          </header>
-          <div className="panecontent">
-            {pane === "providers" && <Providers disabled={busy} />}
-            {pane === "github" && <GithubToken disabled={busy} />}
-            {pane === "sandbox" && <SandboxSettings />}
-            {pane === "advanced" && <Advanced />}
-          </div>
-        </section>
       )}
     </div>
   );

@@ -119,6 +119,12 @@ fn run_capture_inner(args: &[&str]) -> Result<String, String> {
     let output = sbx_command(args)?
         .output()
         .map_err(|e| format!("failed to run {}: {}", SBX_COMMAND, e))?;
+    finish_capture(args, output)
+}
+
+/// Interpret a finished child's output: stdout on success, stderr (or stdout)
+/// with the exit code on failure.
+fn finish_capture(args: &[&str], output: std::process::Output) -> Result<String, String> {
     let text = String::from_utf8_lossy(&output.stdout).to_string();
     if !output.status.success() {
         let mut msg = String::from_utf8_lossy(&output.stderr).to_string();
@@ -134,6 +140,31 @@ fn run_capture_inner(args: &[&str]) -> Result<String, String> {
         ));
     }
     Ok(text.trim().to_string())
+}
+
+/// Run `sbx` with args and `stdin` piped to the process, capturing stdout.
+/// Values that must not become CLI arguments (secret values) travel this way.
+pub(crate) fn run_capture_stdin(args: &[&str], stdin: &str) -> Result<String, String> {
+    use std::io::Write;
+    use std::process::Stdio;
+    let mut child = sbx_command(args)?
+        .stdin(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("failed to run {}: {}", SBX_COMMAND, e))?;
+    // Write fully before reading: sbx secret set reads stdin to EOF before
+    // producing output, so the pipe cannot deadlock.
+    child
+        .stdin
+        .take()
+        .ok_or_else(|| format!("{} produced no pipe handles", SBX_COMMAND))?
+        .write_all(stdin.as_bytes())
+        .map_err(|e| format!("failed to write {} input: {}", SBX_COMMAND, e))?;
+    let output = child
+        .wait_with_output()
+        .map_err(|e| format!("failed to wait for {}: {}", SBX_COMMAND, e))?;
+    let result = finish_capture(args, output);
+    crate::logging::cli_call(args, &result);
+    result
 }
 
 /// Run `sbx` with args, streaming each output line as it is printed to a

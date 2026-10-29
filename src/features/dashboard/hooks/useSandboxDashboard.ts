@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SandboxInfo } from "../../../lib/sandbox";
 import { listSandboxes } from "../../../lib/sandbox";
-import { stateKind } from "../../../common/lib/sandboxState";
 import { SandboxActions } from "../sandboxActions";
 import type { SandboxAction } from "../sandboxActions";
 
@@ -140,15 +139,3 @@ export function useSandboxDashboard({
   };
 }
 
-/** Derived summary counts shared by the list and the inspector. */
-export function summarize(sandboxes: SandboxInfo[]) {
-  const running = sandboxes.filter((sandbox) => stateKind(sandbox.state) === "running").length;
-  const stopped = sandboxes.filter((sandbox) => stateKind(sandbox.state) === "stopped").length;
-  const inactive = sandboxes.length - running - stopped;
-  return {
-    running,
-    stopped,
-    inactive,
-    summary: `${sandboxes.length} sandbox${sandboxes.length === 1 ? "" : "es"} · ${running} running · ${stopped} stopped${inactive ? ` · ${inactive} inactive` : ""}`,
-  };
-}

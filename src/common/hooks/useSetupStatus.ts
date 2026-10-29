@@ -21,7 +21,7 @@ export interface SetupStatusState {
  * The setup-status state machine: one setup check at startup decides whether
  * the main window can reveal (incomplete setup hands the screen to the
  * dedicated setup window), and later checks run only when setup-relevant
- * actions run — the connect dialog's SSH check, the Settings "check again"
+ * actions run — the setup wizard's steps and the Settings "check again"
  * buttons. Nothing polls: setup state only changes through setup actions,
  * and the sandbox list has its own `sbx ls` refresh.
  */
