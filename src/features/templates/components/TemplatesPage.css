@@ -1,98 +1,59 @@
 /*
- * The templates list: the list-plus-inspector grid and the saved-template
- * article rows. Owned by TemplatesPage (board) and TemplateInspector (pane);
- * the board mirrors the dashboard's .board layout.
+ * The templates list: settings-style link rows (icon, label, description,
+ * chevron) inside the panel card. Owned by TemplatesPage.
  */
 
-.templates-board {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 17px;
-  align-items: start;
+.templatehome {
+  max-width: 780px;
 }
 
-.templates-board.no-detail {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 1050px) and (max-width: 1230px) {
-  .templates-board {
-    grid-template-columns: minmax(0, 1fr) 260px;
-    gap: 12px;
-  }
-}
-
-@media (max-width: 1049px) {
-  .templates-board {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.template {
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--line);
-}
-
-.template:last-child {
-  border-bottom: 0;
-}
-
-.template.inspected {
-  background: #f4f2ff;
-  box-shadow: inset 3px 0 var(--brand);
+.templatelinks {
+  border-top: 1px solid var(--line);
 }
 
 .templateselect {
+  width: 100%;
   display: flex;
+  gap: 14px;
   align-items: center;
+  text-align: left;
+  padding: 20px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.templateselect:last-child {
+  border-bottom: 0;
+}
+
+.templateselect:hover {
+  background: var(--surface-soft);
+}
+
+.templateselect > span {
   flex: 1;
   min-width: 0;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  padding: 17px 0 13px 15px;
-  cursor: pointer;
 }
 
-.templateselect:active {
-  transform: none !important;
-}
-
-.templatename {
+.templateselect strong {
   display: block;
-  font: 600 19px var(--display);
-  letter-spacing: -0.3px;
+  font: 600 17px var(--display);
+  margin-bottom: 5px;
   overflow-wrap: anywhere;
 }
 
-.templateselectinfo {
-  flex: 1;
-  min-width: 0;
+.templateselect small {
+  color: var(--muted);
+  font-size: 14px;
 }
 
-.templatebadges {
-  margin-top: 6px;
-}
-
-.templaterowactions {
-  padding: 17px 15px 17px 0;
+.templateselect > svg:first-child {
+  color: var(--brand-dark);
 }
 
 @media (max-width: 720px) {
-  .template {
-    flex-wrap: wrap;
-  }
-
   .templateselect {
-    padding: 14px 5px 12px 12px;
-  }
-
-  .templatename {
-    font-size: 17px;
-  }
-
-  .templaterowactions {
-    padding: 0 12px 14px 12px;
+    padding: 15px;
   }
 }

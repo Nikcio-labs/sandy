@@ -1,37 +1,65 @@
+import type { RefObject } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
 import Icon from "../../../common/components/Icon";
-import { Avatar } from "../../../common/components/Avatar";
 import "./TemplateInspector.css";
 
 export function TemplateInspector({
   template,
-  onClose,
+  headRef,
+  onBack,
+  onEdit,
+  onDelete,
+  onLaunch,
   onCopyYaml,
 }: {
   template: SavedTemplate;
-  onClose: () => void;
+  /** Focus target for the pane's heading, focused on open like the Settings panes. */
+  headRef: RefObject<HTMLHeadingElement | null>;
+  onBack: () => void;
+  onEdit?: (templateId: string) => void;
+  /** The triggering button is passed back so focus can return to it if the template survives. */
+  onDelete: (template: SavedTemplate, trigger: HTMLButtonElement) => void;
+  onLaunch: (template: SavedTemplate) => void;
   onCopyYaml: () => void;
 }) {
   return (
-    <aside className="panel templateinspector" aria-label={`Details for ${template.name}`}>
-      <div className="templateinshead">
+    <section className="panel templatepane" aria-label={`Details for ${template.name}`}>
+      <header className="templatepanehead">
         <button
           type="button"
           className="iconbtn"
-          aria-label="Close template details"
-          onClick={onClose}
+          aria-label="Back to templates"
+          onClick={onBack}
         >
-          <Icon name="close" size={16} />
+          <Icon name="back" size={18} />
         </button>
-        <Avatar name={template.name} />
-        <h2>{template.name}</h2>
-        <div className="actions templateinsbadges">
+        <h2 tabIndex={-1} ref={headRef}>
+          {template.name}
+        </h2>
+      </header>
+      <div className="templatepanebody">
+        <div className="actions">
           <span className="badge">{template.agent}</span>
           <span className="badge violet">Kit v{template.kit_version}</span>
         </div>
-      </div>
-      <div className="templateinsbody">
-        <dl className="details templateins-details">
+        <div className="actions templatepaneactions">
+          <button type="button" className="btn primary" onClick={() => onLaunch(template)}>
+            <Icon name="create" size={16} /> Launch
+          </button>
+          {onEdit && (
+            <button type="button" className="btn" onClick={() => onEdit(template.id)}>
+              <Icon name="edit" size={14} /> Edit
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn danger"
+            onClick={(event) => onDelete(template, event.currentTarget)}
+          >
+            <Icon name="trash" size={14} /> Delete
+          </button>
+        </div>
+        <dl className="details">
           <dt>Workspace</dt>
           <dd>{template.workspace || "None (mountless)"}</dd>
           <dt>Template file</dt>
@@ -46,6 +74,6 @@ export function TemplateInspector({
           <Icon name="clipboard" size={13} /> Copy YAML
         </button>
       </div>
-    </aside>
+    </section>
   );
 }
