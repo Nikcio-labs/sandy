@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Ref } from "react";
 import Icon from "./Icon";
 import "./Combobox.css";
@@ -43,11 +43,14 @@ export function Combobox({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const show = renderOption ?? ((option: string) => option);
+  // The same value can arrive from several sources (a name stored in many
+  // scopes, a sandbox that already has secrets); the popup shows it once.
+  const unique = useMemo(() => [...new Set(options)], [options]);
 
   const needle = value.trim().toLowerCase();
   const matches = needle
-    ? options.filter((option) => option.toLowerCase().includes(needle))
-    : options;
+    ? unique.filter((option) => option.toLowerCase().includes(needle))
+    : unique;
 
   // Keep the highlight inside the shrinking (or empty) match list.
   useEffect(() => {

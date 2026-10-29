@@ -559,7 +559,7 @@ function AddSecretDialog({
   const mounted = useMountedRef();
   const actionLock = useRef(false);
   const first = useRef<HTMLInputElement>(null);
-  const [scopeChoice, setScopeChoice] = useState(GLOBAL_SCOPE);
+  const [scopeChoice, setScopeChoice] = useState("");
   const [customScope, setCustomScope] = useState("");
   const [nameChoice, setNameChoice] = useState("");
   const [customName, setCustomName] = useState("");
@@ -571,13 +571,7 @@ function AddSecretDialog({
   useEffect(() => {
     if (!dialog.current?.open) {
       dialog.current?.showModal();
-      // The scope select is the first control unless a custom-name input is
-      // already showing (remount after a failed add restores the choice).
-      if (scopeChoice !== CUSTOM_OPTION || nameChoice !== CUSTOM_OPTION) {
-        dialog.current?.querySelector<HTMLSelectElement>("select")?.focus();
-      } else {
-        first.current?.focus();
-      }
+      first.current?.focus();
     }
     // The sandbox list backs the scope suggestions; a failure just means
     // fewer suggestions, which the manual input already covers.
@@ -635,7 +629,7 @@ function AddSecretDialog({
         if (actionLock.current) event.preventDefault();
       }}
       onClose={() => {
-        setScopeChoice(GLOBAL_SCOPE);
+        setScopeChoice("");
         setCustomScope("");
         setNameChoice("");
         setCustomName("");
@@ -685,7 +679,7 @@ function AddSecretDialog({
           <span className="help" id={`${id}-scope-help`}>
             {scopeChoice === CUSTOM_OPTION && customScope
               ? (scopeError ?? "This secret applies to that sandbox once it exists.")
-              : "Global secrets are shared by every sandbox; the others apply to one sandbox."}
+              : "Pick “global” for every sandbox, or type one sandbox’s name."}
           </span>
         </label>
         <label className="field">
