@@ -58,16 +58,6 @@
   font-size: 12px;
 }
 
-/* "Optional" tag next to non-blocking setup step labels. */
-.step-optional {
-  display: block;
-  font-style: normal;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--faint);
-}
-
 .steps button.current .step-number {
   color: #fff;
   background: var(--brand);
