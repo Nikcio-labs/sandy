@@ -290,6 +290,27 @@ async fn discover_kits(
 }
 
 #[tauri::command]
+async fn get_catalog_settings(app: tauri::AppHandle) -> Result<catalog::CatalogSettings, String> {
+    logged("get_catalog_settings", async move {
+        let root = data_dir(&app)?;
+        blocking(move || catalog::get_catalog_settings(&root)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn save_catalog_settings(
+    app: tauri::AppHandle,
+    settings: catalog::CatalogSettings,
+) -> Result<catalog::CatalogSettings, String> {
+    logged("save_catalog_settings", async move {
+        let root = data_dir(&app)?;
+        blocking(move || catalog::save_catalog_settings(&root, settings)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn save_template(
     app: tauri::AppHandle,
     request: environments::SaveTemplateRequest,
@@ -458,6 +479,8 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         save_providers,
         provider_versions,
         discover_kits,
+        get_catalog_settings,
+        save_catalog_settings,
         save_template,
         list_templates,
         template_warnings,

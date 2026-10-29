@@ -1,7 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import type { Provider } from "../../../lib/catalog";
-import { getProviders, saveProviders } from "../../../lib/catalog";
+import type { CatalogSettings, Provider } from "../../../lib/catalog";
+import {
+  getCatalogSettings,
+  getProviders,
+  saveCatalogSettings,
+  saveProviders,
+} from "../../../lib/catalog";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { normalizeRepository, repositoryIsValid } from "../providerRepository";
 import { ProviderEditor } from "./ProviderEditor";
@@ -20,6 +25,8 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [reload, setReload] = useState(0);
+  const [gitProtocol, setGitProtocol] = useState<CatalogSettings | null>(null);
+  const [gitProtocolNotice, setGitProtocolNotice] = useState("");
   const callbacks = useRef({ onChange, onDirtyChange });
   callbacks.current = { onChange, onDirtyChange };
   const lock = useRef(false);
@@ -52,6 +59,22 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
       active = false;
     };
   }, [reload]);
+
+  useEffect(() => {
+    let active = true;
+    getCatalogSettings()
+      .then((settings) => {
+        if (active) setGitProtocol(settings);
+      })
+      .catch(() => {
+        // The toggle degrades to the backend default (on) rather than
+        // blocking the provider list on a settings read failure.
+        if (active) setGitProtocol(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     callbacks.current.onDirtyChange?.(loading || providers === null || dirty || incomplete);
@@ -99,6 +122,23 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
     }
   };
 
+  const toggleGitProtocol = async (useGitProtocol: boolean) => {
+    const previous = gitProtocol;
+    setGitProtocol({ discovery_use_git_protocol: useGitProtocol });
+    setGitProtocolNotice("");
+    try {
+      setGitProtocol(await saveCatalogSettings({ discovery_use_git_protocol: useGitProtocol }));
+      setGitProtocolNotice(
+        useGitProtocol
+          ? "Sandy will discover kits over the git protocol on the next refresh."
+          : "Sandy will discover kits over the GitHub API on the next refresh.",
+      );
+    } catch (failure) {
+      if (previous) setGitProtocol(previous);
+      setError(String(failure));
+    }
+  };
+
   return (
     <section className="group group-body" aria-labelledby={`${id}-title`} aria-busy={loading || saving}>
       <div className="sectionhead">
@@ -120,6 +160,21 @@ export default function Providers({ onChange, onDirtyChange, disabled = false }:
         <code>sbx kit.allowedSources</code> when you launch its kits. Existing policy entries are
         preserved. Managed policy restrictions are reported rather than overridden.
       </p>
+      <label className="catalog-check" htmlFor={`${id}-git-protocol`}>
+        <input
+          type="checkbox"
+          id={`${id}-git-protocol`}
+          disabled={disabled || gitProtocol === null}
+          checked={gitProtocol?.discovery_use_git_protocol ?? true}
+          onChange={(event) => void toggleGitProtocol(event.target.checked)}
+        />
+        Discover GitHub kits over the git protocol (uses fewer API requests)
+      </label>
+      {gitProtocolNotice && (
+        <p className="catalog-help" role="status">
+          {gitProtocolNotice}
+        </p>
+      )}
       {loading && (
         <p className="statusline" role="status">
           <span className="spinner" /> Loading saved providers…

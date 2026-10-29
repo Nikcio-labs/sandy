@@ -1,8 +1,13 @@
-//! Public provider discovery. GitHub uses HTTPS APIs, never a local git/curl install.
-//! Blocking entry points belong on Tauri's blocking worker pool.
+//! Public provider discovery. GitHub kit descriptors are fetched over plain
+//! HTTPS with no local git/curl install; when the git-protocol setting is on,
+//! refs and tags are read through the git smart-HTTP protocol spoken by the
+//! shared HTTP client (no `git` binary, no packfiles). Blocking entry points
+//! belong on Tauri's blocking worker pool.
 //!
 //! Verified public interfaces:
-//! - GitHub /repos/{owner}/{repo}/tags and /git/trees/{commit}?recursive=1.
+//! - GitHub /info/refs?service=git-upload-pack (git smart-HTTP v0, github.com)
+//!   when the git-protocol setting is on; /repos/{owner}/{repo}/tags (REST)
+//!   when off. The repository tree always uses /git/trees/{commit}?recursive=1.
 //! - V2 OCI artifactType is application/vnd.docker.sandbox.kit.v2, with a
 //!   application/vnd.docker.sandbox.kit.v2.spec+yaml config. V3 uses ordinary
 //!   image manifests with vnd.docker.sandbox.kit.descriptor annotations.
@@ -11,8 +16,10 @@
 
 mod cache;
 mod descriptor;
+mod git;
 mod github;
 mod http;
+mod settings;
 mod store;
 mod types;
 
@@ -21,6 +28,8 @@ mod types;
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests;
 
+pub(crate) use settings::get_discovery_use_git_protocol;
+pub use settings::{CatalogSettings, get_catalog_settings, save_catalog_settings};
 pub use store::{get_providers, save_providers};
 pub(crate) use store::{github_repository, unique_id, write_json};
 #[cfg(test)]
@@ -32,6 +41,24 @@ use std::path::Path;
 use self::github::discover_github;
 use self::http::Api;
 use self::store::validate_provider;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum GitMode {
+    /// Refs and tags via git smart-HTTP (github.com, lenient rate domain).
+    Git,
+    /// Refs and tags via the REST API (api.github.com, 60 req/hour anonymous).
+    Rest,
+}
+
+impl GitMode {
+    pub(crate) fn from_setting(use_git_protocol: bool) -> Self {
+        if use_git_protocol {
+            Self::Git
+        } else {
+            Self::Rest
+        }
+    }
+}
 
 /// The built-in agents as documented on
 /// <https://docs.docker.com/ai/sandboxes/agents/>.
@@ -62,19 +89,24 @@ pub fn provider_versions(
     if !refresh && let Some(values) = cache::read_versions(root, &provider) {
         return Ok(values);
     }
-    let values = versions_with(&Api::public()?, &provider)?;
+    let mode = GitMode::from_setting(get_discovery_use_git_protocol(root)?);
+    let values = versions_with(&Api::public()?, mode, &provider)?;
     cache::write_versions(root, &provider, &values);
     Ok(values)
 }
 
-fn versions_with(api: &Api, provider: &Provider) -> Result<Vec<String>, String> {
+fn versions_with(api: &Api, mode: GitMode, provider: &Provider) -> Result<Vec<String>, String> {
     validate_provider(provider)?;
     let repository = github_repository(&provider.repository)?;
-    let values = api.github_tags(&repository)?;
-    Ok(values
-        .iter()
-        .filter_map(|v| v["name"].as_str().map(String::from))
-        .collect())
+    let names = match mode {
+        GitMode::Git => api.git_refs(&repository)?.tag_names(),
+        GitMode::Rest => api
+            .github_tags(&repository)?
+            .iter()
+            .filter_map(|v| v["name"].as_str().map(String::from))
+            .collect(),
+    };
+    Ok(names)
 }
 
 /// Cache-first: when a discovery result is cached for this exact provider
@@ -94,7 +126,8 @@ pub fn discover_kits(
     if !refresh && let Some(cached) = cache::read_catalog(root, &providers) {
         return Ok(cached);
     }
-    let mut catalog = discover_with(&Api::public()?, &providers)?;
+    let mode = GitMode::from_setting(get_discovery_use_git_protocol(root)?);
+    let mut catalog = discover_with(&Api::public()?, mode, &providers)?;
     // The built-ins are documented v2 shortcuts, not guessed registry
     // repositories. They must be merged before caching: a cache hit has to
     // return the same catalog a fresh discovery would, otherwise the frontend
@@ -117,11 +150,11 @@ pub fn discover_kits(
     Ok(catalog)
 }
 
-fn discover_with(api: &Api, providers: &[Provider]) -> Result<Catalog, String> {
+fn discover_with(api: &Api, mode: GitMode, providers: &[Provider]) -> Result<Catalog, String> {
     let mut catalog = Catalog::default();
     for provider in providers.iter().filter(|p| p.enabled) {
         let result = validate_provider(provider).and_then(|_| match provider.kind.as_str() {
-            "github" => discover_github(api, provider),
+            "github" => discover_github(api, mode, provider),
             other => Err(format!("Unsupported provider kind: {other}")),
         });
         match result {
