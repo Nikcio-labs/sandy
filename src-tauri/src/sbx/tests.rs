@@ -3,7 +3,9 @@ use std::path::PathBuf;
 
 use crate::sbx::cli::{SSH_SETUP_COMMAND, first_executable, is_sbx_installed, run_capture};
 use crate::sbx::install::open_installer_terminal;
-use crate::sbx::lifecycle::{connection_info, restart_sandbox, start_sandbox, stop_sandbox};
+use crate::sbx::lifecycle::{
+    connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
+};
 use crate::sbx::listing::list_sandboxes;
 use crate::sbx::status::{
     diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,
@@ -848,10 +850,20 @@ fn untrusted_names_never_reach_cli_or_terminal() {
         assert!(start_sandbox(name).is_err(), "{name:?}");
         assert!(stop_sandbox(name).is_err(), "{name:?}");
         assert!(restart_sandbox(name).is_err(), "{name:?}");
+        assert!(remove_sandbox(name).is_err(), "{name:?}");
         assert!(open_terminal(name).is_err(), "{name:?}");
         assert!(connection_info(name).is_err(), "{name:?}");
     }
     assert!(mock.commands().is_empty());
+}
+
+#[test]
+#[cfg(unix)]
+fn remove_sandbox_runs_bare_rm() {
+    let _guard = env_lock();
+    let mock = MockCli::new();
+    assert_eq!(remove_sandbox("demo"), Ok(String::new()));
+    assert_eq!(mock.commands(), "rm --force demo\n");
 }
 
 #[test]

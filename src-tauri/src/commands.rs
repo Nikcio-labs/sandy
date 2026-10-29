@@ -168,6 +168,14 @@ async fn restart_sandbox(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn remove_sandbox(name: String) -> Result<String, String> {
+    logged("remove_sandbox", async move {
+        blocking(move || sbx::remove_sandbox(&name)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn list_settings() -> Result<Vec<sbx::SettingRecord>, String> {
     logged("list_settings", async move {
         blocking(sbx::list_settings).await
@@ -412,6 +420,7 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         start_sandbox,
         stop_sandbox,
         restart_sandbox,
+        remove_sandbox,
         list_settings,
         set_setting,
         unset_setting,

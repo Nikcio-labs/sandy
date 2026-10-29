@@ -13,6 +13,7 @@ export function SandboxInspector({
   installed,
   onAction,
   onOpen,
+  onRemove,
   onClose,
   actionLabels,
 }: {
@@ -22,6 +23,7 @@ export function SandboxInspector({
   installed: boolean;
   onAction: (action: SandboxAction) => void;
   onOpen: () => void;
+  onRemove: () => void;
   onClose: () => void;
   actionLabels: Record<SandboxAction, string>;
 }) {
@@ -70,6 +72,12 @@ export function SandboxInspector({
             <Icon name="refresh" size={14} />
             Restart
           </button>
+          {!running && (
+            <button className="btn danger" disabled={busy || !installed} onClick={onRemove}>
+              <Icon name="trash" size={14} />
+              Remove
+            </button>
+          )}
         </div>
         {pending && (
           <p className="help" role="status">
