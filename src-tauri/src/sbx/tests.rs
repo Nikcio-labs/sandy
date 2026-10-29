@@ -3,9 +3,7 @@ use std::path::PathBuf;
 
 use crate::sbx::cli::{SSH_SETUP_COMMAND, first_executable, is_sbx_installed, run_capture};
 use crate::sbx::install::open_installer_terminal;
-use crate::sbx::lifecycle::{
-    connection_info, remove_sandbox, restart_sandbox, start_sandbox, stop_sandbox,
-};
+use crate::sbx::lifecycle::{connection_info, restart_sandbox, start_sandbox, stop_sandbox};
 use crate::sbx::listing::list_sandboxes;
 use crate::sbx::status::{
     diagnose_setup_checks, get_setting, run_login, set_clipboard_image_paste,
@@ -264,7 +262,6 @@ fn cli_mock_success_paths() {
     assert_eq!(rows[0].state, "stopped");
     assert_eq!(rows[0].agent, "shell");
     assert_eq!(rows[0].workspace, "C:\\Dev\\MyProject");
-    assert_eq!(rows[0].raw, "11111111-2222-3333-4444-555555555555");
     assert_eq!(rows[1].name, "demo");
     assert_eq!(rows[1].state, "running");
     assert_eq!(rows[1].agent, "my-agent");
@@ -296,7 +293,6 @@ fn cli_mock_success_paths() {
     assert_eq!(rows[0].state, "");
     assert_eq!(rows[0].agent, "");
     assert_eq!(rows[0].workspace, "");
-    assert_eq!(rows[0].raw, "");
 
     // Unknown JSON fields are ignored by serde.
     crate::sbx::test_env::set_var("SBX_MOCK_JSON", "extra");
@@ -810,9 +806,6 @@ fn lifecycle_reuses_existing_sandbox_and_stops_before_restart() {
             .contains("does not exist")
     );
     assert_eq!(mock.commands(), "ls --json\n");
-    mock.clear_commands();
-    assert!(remove_sandbox("demo").is_ok());
-    assert_eq!(mock.commands(), "rm --force demo\n");
 }
 
 #[test]
@@ -855,7 +848,6 @@ fn untrusted_names_never_reach_cli_or_terminal() {
         assert!(start_sandbox(name).is_err(), "{name:?}");
         assert!(stop_sandbox(name).is_err(), "{name:?}");
         assert!(restart_sandbox(name).is_err(), "{name:?}");
-        assert!(remove_sandbox(name).is_err(), "{name:?}");
         assert!(open_terminal(name).is_err(), "{name:?}");
         assert!(connection_info(name).is_err(), "{name:?}");
     }

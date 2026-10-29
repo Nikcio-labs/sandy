@@ -168,14 +168,6 @@ async fn restart_sandbox(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn remove_sandbox(name: String) -> Result<String, String> {
-    logged("remove_sandbox", async move {
-        blocking(move || sbx::remove_sandbox(&name)).await
-    })
-    .await
-}
-
-#[tauri::command]
 async fn list_settings() -> Result<Vec<sbx::SettingRecord>, String> {
     logged("list_settings", async move {
         blocking(sbx::list_settings).await
@@ -350,15 +342,6 @@ async fn launch_template(
 }
 
 #[tauri::command]
-async fn allow_source(app: tauri::AppHandle, provider_id: String) -> Result<String, String> {
-    logged("allow_source", async move {
-        let root = data_dir(&app)?;
-        blocking(move || environments::allow_source(&root, &provider_id)).await
-    })
-    .await
-}
-
-#[tauri::command]
 async fn pick_workspace(app: tauri::AppHandle) -> Result<Option<String>, String> {
     logged("pick_workspace", async move {
         blocking(move || environments::pick_workspace(&app)).await
@@ -429,7 +412,6 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         start_sandbox,
         stop_sandbox,
         restart_sandbox,
-        remove_sandbox,
         list_settings,
         set_setting,
         unset_setting,
@@ -446,7 +428,6 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         update_template,
         delete_template,
         launch_template,
-        allow_source,
         pick_workspace,
         pick_template_path,
         read_debug_log,

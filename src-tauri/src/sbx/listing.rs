@@ -10,7 +10,6 @@ pub struct SandboxInfo {
     pub state: String,
     pub agent: String,
     pub workspace: String,
-    pub raw: String,
 }
 
 /// List local sandboxes from `sbx ls --json` (stable, machine-readable).
@@ -32,7 +31,6 @@ pub fn list_sandboxes() -> Result<Vec<SandboxInfo>, String> {
             state: s.status.unwrap_or_default(),
             agent: s.agent.unwrap_or_default(),
             workspace: s.workspaces.unwrap_or_default().join(", "),
-            raw: s.id.unwrap_or_default(),
         })
         .collect();
     // A non-empty payload where nothing deserializes means the CLI renamed
@@ -52,8 +50,6 @@ pub fn list_sandboxes() -> Result<Vec<SandboxInfo>, String> {
 #[derive(Debug, serde::Deserialize)]
 struct SandboxJson {
     name: String,
-    #[serde(default)]
-    id: Option<String>,
     #[serde(default)]
     agent: Option<String>,
     #[serde(default)]

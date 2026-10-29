@@ -24,13 +24,3 @@ export function PageHead({
     </header>
   );
 }
-
-/** A quiet icon-and-caption line closing a page's content. */
-export function ContextLine({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <p className="contextline">
-      {icon}
-      {children}
-    </p>
-  );
-}

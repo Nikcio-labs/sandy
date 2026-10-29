@@ -26,7 +26,6 @@ pub use library::{
     SaveTemplateRequest, SavedTemplate, TemplateDetails, UpdateTemplateRequest, delete_template,
     list_templates, read_template_details, save_template, template_warnings, update_template,
 };
-pub use source_policy::allow_source;
 
 use std::sync::Mutex;
 

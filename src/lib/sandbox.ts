@@ -27,7 +27,6 @@ export interface SandboxInfo {
   state: string;
   agent: string;
   workspace: string;
-  raw: string;
 }
 
 export interface ConnectionInfo {
