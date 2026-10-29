@@ -12,6 +12,10 @@
 }
 
 .option {
+  /* Anchor for the card's hidden input below: without it the input's
+     containing block is the nearest positioned ancestor (e.g. the dialog),
+     where focus scrolls that ancestor instead of the option list. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
