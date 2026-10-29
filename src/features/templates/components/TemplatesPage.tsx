@@ -10,6 +10,7 @@ import { SearchField } from "../../../common/components/SearchField";
 import { copyText } from "../../../common/lib/clipboard";
 import { LaunchDialog } from "./LaunchDialog";
 import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
+import { TemplateInspector } from "./TemplateInspector";
 import { PageHead } from "../../../common/components/PageHead";
 import "./TemplatesPage.css";
 
@@ -31,6 +32,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   const [warningsError, setWarningsError] = useState<string | null>(null);
   const [notice, setNotice] = useState<ToastNotice | null>(null);
   const [search, setSearch] = useState("");
+  const [inspected, setInspected] = useState<string | null>(null);
   const [selected, setSelected] = useState<SavedTemplate | null>(null);
   const [deleting, setDeleting] = useState<SavedTemplate | null>(null);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
@@ -84,6 +86,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
       .toLowerCase()
       .includes(search.trim().toLowerCase()),
   );
+  const detail = visible.find((template) => template.id === inspected) ?? null;
 
   const copyYaml = async (template: SavedTemplate) => {
     try {
@@ -105,106 +108,117 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           </button>
         }
       />
-      <section className="panel" aria-busy={loading}>
-        <div className="listhead">
-          <h2>Saved on this computer</h2>
-          {templates !== null && <span className="badge">{templates.length}</span>}
-          <SearchField
-            value={search}
-            onChange={setSearch}
-            placeholder="Search templates…"
-            label="Search templates"
-          />
-          <button
-            type="button"
-            className="iconbtn"
-            aria-label="Refresh templates"
-            disabled={loading}
-            onClick={() => void refresh()}
-          >
-            <Icon name="refresh" size={16} />
-          </button>
-        </div>
-        <div className="templatelist">
-          {error && (
-            <div className="panelnotice">
-              <ErrorBanner
-                title="Couldn’t load saved templates."
-                actionLabel="Try again"
-                disabled={loading}
-                onAction={() => void refresh()}
-              >
-                <p>{error}</p>
-              </ErrorBanner>
-            </div>
-          )}
-          {warningsError && (
-            <div className="panelnotice">
-              <ErrorBanner
-                title="Couldn’t check template file warnings."
-                actionLabel="Retry file check"
-                disabled={loading}
-                onAction={() => void refresh()}
-              >
-                <p>{warningsError}</p>
-              </ErrorBanner>
-            </div>
-          )}
-          {warnings.length > 0 && (
-            <details className="warnings" open>
-              <summary>Template file warnings ({warnings.length})</summary>
-              <p>Some saved files could not be read. Readable templates are still available below.</p>
-              <ul>
-                {warnings.map((warning, index) => (
-                  <li key={index}>{warning}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-          {loading && templates === null && (
-            <div className="empty" role="status">
-              <p className="help">
-                <span className="spinner" /> Loading saved templates…
-              </p>
-            </div>
-          )}
-          {templates !== null && templates.length === 0 && (
-            <div className="empty">
-              <span className="avatar">
-                <Icon name="kit" size={22} />
-              </span>
-              <h3>A starting point worth keeping</h3>
-              <p>Save an environment with an agent and compatible mixins, then reuse it here.</p>
-              <button type="button" className="btn primary" onClick={onCreate}>
-                Create template
-              </button>
-            </div>
-          )}
-          {!!templates?.length && (
-            <>
-              {!visible.length && (
-                <div className="empty">
-                  <span className="avatar sand">
-                    <Icon name="search" size={22} />
-                  </span>
-                  <h3>No matching templates</h3>
-                  <p>Try a name, agent, workspace, or file path.</p>
-                  <button type="button" className="btn" onClick={() => setSearch("")}>
-                    Clear search
-                  </button>
-                </div>
-              )}
-              {visible.map((template) => (
-                <article className="template" key={template.id}>
-                  <div className="split">
-                    <div>
-                      <h3>{template.name}</h3>
-                      <div className="actions templatebadges">
-                        <span className="badge">{template.agent}</span>
-                        <span className="badge violet">Kit v{template.kit_version}</span>
-                      </div>
-                    </div>
-                    <div className="actions">
+      <div className={`templates-board ${detail ? "" : "no-detail"}`}>
+        <section className="panel" aria-busy={loading}>
+          <div className="listhead">
+            <h2>Saved on this computer</h2>
+            {templates !== null && <span className="badge">{templates.length}</span>}
+            <SearchField
+              value={search}
+              onChange={setSearch}
+              placeholder="Search templates…"
+              label="Search templates"
+            />
+            <button
+              type="button"
+              className="iconbtn"
+              aria-label="Refresh templates"
+              disabled={loading}
+              onClick={() => void refresh()}
+            >
+              <Icon name="refresh" size={16} />
+            </button>
+          </div>
+          <div>
+            {error && (
+              <div className="panelnotice">
+                <ErrorBanner
+                  title="Couldn’t load saved templates."
+                  actionLabel="Try again"
+                  disabled={loading}
+                  onAction={() => void refresh()}
+                >
+                  <p>{error}</p>
+                </ErrorBanner>
+              </div>
+            )}
+            {warningsError && (
+              <div className="panelnotice">
+                <ErrorBanner
+                  title="Couldn’t check template file warnings."
+                  actionLabel="Retry file check"
+                  disabled={loading}
+                  onAction={() => void refresh()}
+                >
+                  <p>{warningsError}</p>
+                </ErrorBanner>
+              </div>
+            )}
+            {warnings.length > 0 && (
+              <details className="warnings" open>
+                <summary>Template file warnings ({warnings.length})</summary>
+                <p>Some saved files could not be read. Readable templates are still available below.</p>
+                <ul>
+                  {warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            {loading && templates === null && (
+              <div className="empty" role="status">
+                <p className="help">
+                  <span className="spinner" /> Loading saved templates…
+                </p>
+              </div>
+            )}
+            {templates !== null && templates.length === 0 && (
+              <div className="empty">
+                <span className="avatar">
+                  <Icon name="kit" size={22} />
+                </span>
+                <h3>A starting point worth keeping</h3>
+                <p>Save an environment with an agent and compatible mixins, then reuse it here.</p>
+                <button type="button" className="btn primary" onClick={onCreate}>
+                  Create template
+                </button>
+              </div>
+            )}
+            {!!templates?.length && (
+              <>
+                {!visible.length && (
+                  <div className="empty">
+                    <span className="avatar sand">
+                      <Icon name="search" size={22} />
+                    </span>
+                    <h3>No matching templates</h3>
+                    <p>Try a name, agent, workspace, or file path.</p>
+                    <button type="button" className="btn" onClick={() => setSearch("")}>
+                      Clear search
+                    </button>
+                  </div>
+                )}
+                {visible.map((template) => (
+                  <article
+                    className={`template ${inspected === template.id ? "inspected" : ""}`}
+                    key={template.id}
+                  >
+                    <button
+                      type="button"
+                      className="templateselect"
+                      aria-label={`Show details for ${template.name}`}
+                      aria-pressed={inspected === template.id}
+                      onClick={() => setInspected(inspected === template.id ? null : template.id)}
+                    >
+                      <span className="templateselectinfo">
+                        <span className="templatename">{template.name}</span>
+                        <span className="actions templatebadges">
+                          <span className="badge">{template.agent}</span>
+                          <span className="badge violet">Kit v{template.kit_version}</span>
+                        </span>
+                      </span>
+                    </button>
+                    <div className="actions templaterowactions">
                       {onEdit && (
                         <button
                           type="button"
@@ -235,39 +249,26 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                         Launch
                       </button>
                     </div>
-                  </div>
-                  <dl className="details template-details">
-                    <dt>Workspace</dt>
-                    <dd>{template.workspace || "None (mountless)"}</dd>
-                    <dt>Template file</dt>
-                    <dd>
-                      <code>{template.path}</code>
-                    </dd>
-                  </dl>
-                  <details className="template-output">
-                    <summary>Preview saved YAML</summary>
-                    <pre aria-label={`Saved YAML for ${template.name}`}>
-                      <code>{template.content}</code>
-                    </pre>
-                    <button
-                      type="button"
-                      className="textbtn"
-                      onClick={() => void copyYaml(template)}
-                    >
-                      <Icon name="clipboard" size={13} /> Copy YAML
-                    </button>
-                  </details>
-                </article>
-              ))}
-              {search && (
-                <p className="resultcount" role="status">
-                  Showing {visible.length} of {templates.length} templates
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      </section>
+                  </article>
+                ))}
+                {search && (
+                  <p className="resultcount" role="status">
+                    Showing {visible.length} of {templates.length} templates
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+        {detail && (
+          <TemplateInspector
+            key={detail.id}
+            template={detail}
+            onClose={() => setInspected(null)}
+            onCopyYaml={() => void copyYaml(detail)}
+          />
+        )}
+      </div>
       {selected && (
         <LaunchDialog
           key={selected.id}

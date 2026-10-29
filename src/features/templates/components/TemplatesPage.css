@@ -1,10 +1,36 @@
 /*
- * The templates list: saved-template articles and their inline preview,
- * owned by TemplatesPage.
+ * The templates list: the list-plus-inspector grid and the saved-template
+ * article rows. Owned by TemplatesPage (board) and TemplateInspector (pane);
+ * the board mirrors the dashboard's .board layout.
  */
 
+.templates-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 17px;
+  align-items: start;
+}
+
+.templates-board.no-detail {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1050px) and (max-width: 1230px) {
+  .templates-board {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 1049px) {
+  .templates-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .template {
-  padding: 19px 20px;
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--line);
 }
 
@@ -12,52 +38,61 @@
   border-bottom: 0;
 }
 
-.template h3 {
-  font-size: 19px;
-  margin-bottom: 7px;
+.template.inspected {
+  background: #f4f2ff;
+  box-shadow: inset 3px 0 var(--brand);
+}
+
+.templateselect {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 17px 0 13px 15px;
+  cursor: pointer;
+}
+
+.templateselect:active {
+  transform: none !important;
+}
+
+.templatename {
+  display: block;
+  font: 600 19px var(--display);
+  letter-spacing: -0.3px;
   overflow-wrap: anywhere;
 }
 
-.template-details {
-  grid-template-columns: 80px 1fr;
-  margin: 15px 0;
-}
-
-.template-output summary {
-  font-size: 14px;
-  color: var(--brand-dark);
-}
-
-.template-output pre {
-  max-height: 430px;
-  margin-top: 10px;
-  tab-size: 2;
-}
-
-.templatelist {
-  display: flex;
-  flex-direction: column;
+.templateselectinfo {
+  flex: 1;
+  min-width: 0;
 }
 
 .templatebadges {
   margin-top: 6px;
 }
 
+.templaterowactions {
+  padding: 17px 15px 17px 0;
+}
+
 @media (max-width: 720px) {
   .template {
-    padding: 16px 14px;
-  }
-
-  .template > .split {
     flex-wrap: wrap;
   }
 
-  .template-details {
-    grid-template-columns: 1fr;
-    gap: 4px;
+  .templateselect {
+    padding: 14px 5px 12px 12px;
   }
 
-  .template-details dd {
-    margin-bottom: 7px;
+  .templatename {
+    font-size: 17px;
+  }
+
+  .templaterowactions {
+    padding: 0 12px 14px 12px;
   }
 }
