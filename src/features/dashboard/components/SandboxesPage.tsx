@@ -4,6 +4,7 @@ import Icon from "../../../common/components/Icon";
 import { ToastHost } from "../../../common/components/Toast";
 import { SandboxList } from "./SandboxList";
 import { SandboxInspector } from "./SandboxInspector";
+import { RemoveSandboxDialog } from "./RemoveSandboxDialog";
 import type { SandboxAction } from "../sandboxActions";
 import { stateKind } from "../../../common/lib/sandboxState";
 import { useSandboxDashboard } from "../hooks/useSandboxDashboard";
@@ -36,6 +37,7 @@ export default function SandboxesPage({
 }: SandboxesPageProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [connecting, setConnecting] = useState<SandboxInfo | null>(null);
+  const [removing, setRemoving] = useState<SandboxInfo | null>(null);
   const [search, setSearch] = useState("");
   const installed = !!status?.sbx_installed;
   const {
@@ -79,6 +81,12 @@ export default function SandboxesPage({
     if (isActionInFlight(sandbox.name)) return;
     selectSandbox(sandbox.name);
     setConnecting(sandbox);
+  };
+
+  const openRemove = (sandbox: SandboxInfo) => {
+    if (isActionInFlight(sandbox.name)) return;
+    selectSandbox(sandbox.name);
+    setRemoving(sandbox);
   };
 
   const runPrimaryAction = (sandbox: SandboxInfo) => {
@@ -166,6 +174,7 @@ export default function SandboxesPage({
             installed={installed}
             onAction={(action) => void runAction(detail.name, action).catch(() => {})}
             onOpen={() => runPrimaryAction(detail)}
+            onRemove={() => openRemove(detail)}
             onClose={() => selectSandbox(null)}
             actionLabels={actionLabels}
           />
@@ -178,6 +187,14 @@ export default function SandboxesPage({
           sandbox={all.find((sandbox) => sandbox.name === connecting.name) ?? connecting}
           onOpenTerminal={() => runAction(connecting.name, "terminal")}
           onClose={() => setConnecting(null)}
+        />
+      )}
+      {removing && (
+        <RemoveSandboxDialog
+          key={removing.name}
+          sandbox={all.find((sandbox) => sandbox.name === removing.name) ?? removing}
+          onRemoved={() => selectSandbox(null)}
+          onClose={() => setRemoving(null)}
         />
       )}
     </div>

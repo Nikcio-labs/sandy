@@ -58,6 +58,7 @@ export const listSandboxes = shareInFlight(() => invoke<SandboxInfo[]>("sandboxe
 export const startSandbox = (name: string) => invoke<string>("start_sandbox", { name });
 export const stopSandbox = (name: string) => invoke<string>("stop_sandbox", { name });
 export const restartSandbox = (name: string) => invoke<string>("restart_sandbox", { name });
+export const removeSandbox = (name: string) => invoke<string>("remove_sandbox", { name });
 export const openTerminal = (name: string) => invoke<void>("open_terminal", { name });
 export const connectionInfo = (name: string) =>
   invoke<ConnectionInfo>("connection_info", { name });

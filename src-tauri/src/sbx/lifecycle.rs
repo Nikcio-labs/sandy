@@ -44,6 +44,14 @@ pub fn restart_sandbox(name: &str) -> Result<String, String> {
         .map_err(|e| format!("Sandbox {name} was stopped but could not be started:\n{e}"))
 }
 
+/// Delete a sandbox and its internal files. Whether `sbx rm` accepts a
+/// running sandbox is the CLI's call; its error is surfaced unchanged so the
+/// UI never assumes a state the CLI has not reported.
+pub fn remove_sandbox(name: &str) -> Result<String, String> {
+    validate_sandbox_name(name)?;
+    run_capture(&["rm", name])
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct ConnectionInfo {
     pub host: String,
