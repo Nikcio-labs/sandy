@@ -1,11 +1,15 @@
-import type { RefObject } from "react";
 import type { SavedTemplate } from "../../../lib/templates";
+import { Pane } from "../../../common/components/Pane";
 import Icon from "../../../common/components/Icon";
-import "./TemplateInspector.css";
 
+/**
+ * The template detail pane body, rendered inside the shared Pane chrome:
+ * badges, workspace and file details, and the saved YAML preview. The
+ * header actions (Launch/Edit/Delete) are passed to Pane so they sit
+ * beside the template name.
+ */
 export function TemplateInspector({
   template,
-  headRef,
   onBack,
   onEdit,
   onDelete,
@@ -13,8 +17,6 @@ export function TemplateInspector({
   onCopyYaml,
 }: {
   template: SavedTemplate;
-  /** Focus target for the pane's heading, focused on open like the Settings panes. */
-  headRef: RefObject<HTMLHeadingElement | null>;
   onBack: () => void;
   onEdit?: (templateId: string) => void;
   /** The triggering button is passed back so focus can return to it if the template survives. */
@@ -23,20 +25,11 @@ export function TemplateInspector({
   onCopyYaml: () => void;
 }) {
   return (
-    <section className="panel pane" aria-label={`Details for ${template.name}`}>
-      <header className="panehead">
-        <button
-          type="button"
-          className="iconbtn"
-          aria-label="Back to templates"
-          onClick={onBack}
-        >
-          <Icon name="back" size={18} />
-        </button>
-        <h2 tabIndex={-1} ref={headRef}>
-          {template.name}
-        </h2>
-        <div className="panehead-actions">
+    <Pane
+      label={template.name}
+      onBack={onBack}
+      actions={
+        <>
           <button type="button" className="btn primary" onClick={() => onLaunch(template)}>
             <Icon name="create" size={16} /> Launch
           </button>
@@ -52,28 +45,27 @@ export function TemplateInspector({
           >
             <Icon name="trash" size={14} /> Delete
           </button>
-        </div>
-      </header>
-      <div className="panecontent templatepanebody">
-        <div className="actions">
-          <span className="badge">{template.agent}</span>
-          <span className="badge violet">Kit v{template.kit_version}</span>
-        </div>
-        <dl className="details">
-          <dt>Workspace</dt>
-          <dd>{template.workspace || "None (mountless)"}</dd>
-          <dt>Template file</dt>
-          <dd>
-            <code>{template.path}</code>
-          </dd>
-        </dl>
-        <pre aria-label={`Saved YAML for ${template.name}`}>
-          <code>{template.content}</code>
-        </pre>
-        <button type="button" className="textbtn" onClick={onCopyYaml}>
-          <Icon name="clipboard" size={13} /> Copy YAML
-        </button>
+        </>
+      }
+    >
+      <div className="actions">
+        <span className="badge">{template.agent}</span>
+        <span className="badge violet">Kit v{template.kit_version}</span>
       </div>
-    </section>
+      <dl className="details">
+        <dt>Workspace</dt>
+        <dd>{template.workspace || "None (mountless)"}</dd>
+        <dt>Template file</dt>
+        <dd>
+          <code>{template.path}</code>
+        </dd>
+      </dl>
+      <pre aria-label={`Saved YAML for ${template.name}`}>
+        <code>{template.content}</code>
+      </pre>
+      <button type="button" className="textbtn" onClick={onCopyYaml}>
+        <Icon name="clipboard" size={13} /> Copy YAML
+      </button>
+    </Pane>
   );
 }

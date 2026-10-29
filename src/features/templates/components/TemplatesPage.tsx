@@ -36,7 +36,6 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   const [selected, setSelected] = useState<SavedTemplate | null>(null);
   const [deleting, setDeleting] = useState<SavedTemplate | null>(null);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
-  const paneHead = useRef<HTMLHeadingElement | null>(null);
   const loadingLock = useRef(false);
   const generation = useRef(0);
 
@@ -89,10 +88,6 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   );
   const detail = (templates ?? []).find((template) => template.id === inspected) ?? null;
 
-  useEffect(() => {
-    paneHead.current?.focus();
-  }, [inspected]);
-
   const copyYaml = async (template: SavedTemplate) => {
     try {
       await copyText(template.content);
@@ -105,19 +100,20 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
   return (
     <div className={`templatehome ${detail ? "pane-open" : ""}`}>
       {detail ? (
-        <TemplateInspector
-          key={detail.id}
-          template={detail}
-          headRef={paneHead}
-          onBack={() => setInspected(null)}
-          onEdit={onEdit}
-          onDelete={(template, trigger) => {
-            returnFocus.current = trigger;
-            setDeleting(template);
-          }}
-          onLaunch={setSelected}
-          onCopyYaml={() => void copyYaml(detail)}
-        />
+        <div className="templatepanebody">
+          <TemplateInspector
+            key={detail.id}
+            template={detail}
+            onBack={() => setInspected(null)}
+            onEdit={onEdit}
+            onDelete={(template, trigger) => {
+              returnFocus.current = trigger;
+              setDeleting(template);
+            }}
+            onLaunch={setSelected}
+            onCopyYaml={() => void copyYaml(detail)}
+          />
+        </div>
       ) : (
         <>
           <PageHead

@@ -1,7 +1,7 @@
 /*
- * The template pane body: content inside the shared .pane chrome
- * (header, actions, and window-filling layout live in the shared panel
- * styles). Owned by TemplateInspector.
+ * The template pane body: content inside the shared Pane chrome (header,
+ * actions, and window-filling layout are the shared pane styles in
+ * src/styles/panels.css). Owned by TemplateInspector.
  */
 
 .templatepanebody .details {

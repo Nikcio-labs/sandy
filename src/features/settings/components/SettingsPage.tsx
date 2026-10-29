@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
+import { Pane } from "../../../common/components/Pane";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Providers from "./Providers";
 import Advanced from "./Advanced";
@@ -18,9 +19,9 @@ export interface SettingsPageProps {
   onCheckSetup: () => Promise<SetupStatus | null>;
 }
 
-type Pane = "providers" | "sandbox" | "advanced";
+type PaneId = "providers" | "sandbox" | "advanced";
 
-const PANES: { id: Pane; icon: "kit" | "settings" | "terminal"; label: string; description: string }[] = [
+const PANES: { id: PaneId; icon: "kit" | "settings" | "terminal"; label: string; description: string }[] = [
   {
     id: "providers",
     icon: "kit",
@@ -53,31 +54,18 @@ export default function SettingsPage({
   active,
   onCheckSetup,
 }: SettingsPageProps) {
-  const [pane, setPane] = useState<Pane | null>(null);
+  const [pane, setPane] = useState<PaneId | null>(null);
 
   const paneMeta = pane !== null ? PANES.find((item) => item.id === pane) ?? null : null;
 
   return (
     <div className={`settingshome ${paneMeta ? "pane-open" : ""}`}>
       {paneMeta ? (
-        <section className="panel pane" data-pane={pane}>
-          <header className="panehead">
-            <button
-              type="button"
-              className="iconbtn"
-              aria-label="Back to settings"
-              onClick={() => setPane(null)}
-            >
-              <Icon name="back" size={18} />
-            </button>
-            <h2 tabIndex={-1}>{paneMeta.label}</h2>
-          </header>
-          <div className="panecontent">
-            {pane === "providers" && <Providers disabled={busy} />}
-            {pane === "sandbox" && <SandboxSettings />}
-            {pane === "advanced" && <Advanced />}
-          </div>
-        </section>
+        <Pane label={paneMeta.label} onBack={() => setPane(null)}>
+          {pane === "providers" && <Providers disabled={busy} />}
+          {pane === "sandbox" && <SandboxSettings />}
+          {pane === "advanced" && <Advanced />}
+        </Pane>
       ) : (
         <>
           <PageHead title="Settings" />
