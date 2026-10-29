@@ -11,6 +11,9 @@ import "./Secrets.css";
 /** The scope string the CLI uses for secrets every sandbox can use. */
 const GLOBAL_SCOPE = "global";
 
+/** Select sentinel for the "type it myself" branch of scope/name picks. */
+const CUSTOM_OPTION = "\u0000custom";
+
 /** The add dialog's scope input, lowercase before validation. */
 function normalizeScope(raw: string) {
   const trimmed = raw.trim();
@@ -547,8 +550,10 @@ function AddSecretDialog({
   const mounted = useMountedRef();
   const actionLock = useRef(false);
   const first = useRef<HTMLInputElement>(null);
-  const [scope, setScope] = useState("");
-  const [name, setName] = useState("");
+  const [scopeChoice, setScopeChoice] = useState(GLOBAL_SCOPE);
+  const [customScope, setCustomScope] = useState("");
+  const [nameChoice, setNameChoice] = useState("");
+  const [customName, setCustomName] = useState("");
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [scopeError, setScopeError] = useState<string | null>(null);
@@ -557,7 +562,13 @@ function AddSecretDialog({
   useEffect(() => {
     if (!dialog.current?.open) {
       dialog.current?.showModal();
-      first.current?.focus();
+      // The scope select is the first control unless a custom-name input is
+      // already showing (remount after a failed add restores the choice).
+      if (scopeChoice !== CUSTOM_OPTION || nameChoice !== CUSTOM_OPTION) {
+        dialog.current?.querySelector<HTMLSelectElement>("select")?.focus();
+      } else {
+        first.current?.focus();
+      }
     }
     // The sandbox list backs the scope suggestions; a failure just means
     // fewer suggestions, which the manual input already covers.
@@ -574,10 +585,12 @@ function AddSecretDialog({
   const scopeOptions = useMemo(() => {
     const options = new Set<string>(knownScopes);
     for (const sandbox of sandboxes ?? []) options.add(sandbox.name);
-    options.delete("global");
+    options.delete(GLOBAL_SCOPE);
     return [...options];
   }, [knownScopes, sandboxes]);
 
+  const scope = scopeChoice === CUSTOM_OPTION ? customScope : scopeChoice;
+  const name = nameChoice === CUSTOM_OPTION ? customName : nameChoice;
   const ready = Boolean(scope.trim() && name.trim() && value.trim());
 
   const add = async () => {
@@ -613,8 +626,10 @@ function AddSecretDialog({
         if (actionLock.current) event.preventDefault();
       }}
       onClose={() => {
-        setScope("");
-        setName("");
+        setScopeChoice(GLOBAL_SCOPE);
+        setCustomScope("");
+        setNameChoice("");
+        setCustomName("");
         setValue("");
         onClose();
       }}
@@ -638,47 +653,79 @@ function AddSecretDialog({
         </p>
         <label className="field">
           Scope
-          <input
-            ref={first}
-            list={`${id}-scopes`}
-            placeholder="global or a sandbox name"
-            autoComplete="off"
-            disabled={saving}
-            value={scope}
+          <select
             aria-describedby={`${id}-scope-help`}
+            disabled={saving}
+            value={scopeChoice}
             onChange={(event) => {
-              setScope(event.target.value);
+              setScopeChoice(event.target.value);
               setScopeError(null);
             }}
-          />
-          <datalist id={`${id}-scopes`}>
-            <option value="global">All sandboxes</option>
+          >
+            <option value={GLOBAL_SCOPE}>Global — every sandbox</option>
             {scopeOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
             ))}
-          </datalist>
+            <option value={CUSTOM_OPTION}>Custom sandbox name…</option>
+          </select>
           <span className="help" id={`${id}-scope-help`}>
-            {scopeError ?? "Use “global” for every sandbox, or pick or type one sandbox’s name."}
+            {scopeChoice === CUSTOM_OPTION
+              ? (scopeError ??
+                "Type a sandbox name; the secret applies once a sandbox with that name exists.")
+              : "Global secrets are shared by every sandbox; the others apply to one sandbox."}
           </span>
         </label>
+        {scopeChoice === CUSTOM_OPTION && (
+          <label className="field">
+            Sandbox name
+            <input
+              ref={first}
+              placeholder="e.g. my-sandbox"
+              autoComplete="off"
+              disabled={saving}
+              value={customScope}
+              onChange={(event) => {
+                setCustomScope(event.target.value);
+                setScopeError(null);
+              }}
+            />
+          </label>
+        )}
         <label className="field">
           Secret name
-          <input
-            list={`${id}-names`}
-            placeholder="e.g. github"
-            autoComplete="off"
+          <select
             disabled={saving}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-          <datalist id={`${id}-names`}>
-            {knownNames.map((option) => (
-              <option key={option} value={option} />
-            ))}
-          </datalist>
+            value={nameChoice}
+            onChange={(event) => setNameChoice(event.target.value)}
+          >
+            {!knownNames.length && nameChoice !== CUSTOM_OPTION ? (
+              <option value="">
+                Pick or type a name…
+              </option>
+            ) : (
+              knownNames.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))
+            )}
+            <option value={CUSTOM_OPTION}>Custom name…</option>
+          </select>
         </label>
+        {nameChoice === CUSTOM_OPTION && (
+          <label className="field">
+            Name
+            <input
+              placeholder="e.g. github"
+              autoComplete="off"
+              disabled={saving}
+              value={customName}
+              onChange={(event) => setCustomName(event.target.value)}
+            />
+          </label>
+        )}
         <label className="field">
           New value
           <input
