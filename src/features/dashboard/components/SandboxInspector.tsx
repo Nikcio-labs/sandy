@@ -2,6 +2,7 @@ import type { SandboxInfo } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { Avatar } from "../../../common/components/Avatar";
 import { StatePill } from "../../../common/components/StatePill";
+import { stateLabel } from "../../../common/lib/sandboxState";
 import type { SandboxAction } from "../sandboxActions";
 import "./SandboxInspector.css";
 
@@ -12,6 +13,7 @@ export function SandboxInspector({
   installed,
   onAction,
   onOpen,
+  onRemove,
   onClose,
   actionLabels,
 }: {
@@ -21,6 +23,7 @@ export function SandboxInspector({
   installed: boolean;
   onAction: (action: SandboxAction) => void;
   onOpen: () => void;
+  onRemove: () => void;
   onClose: () => void;
   actionLabels: Record<SandboxAction, string>;
 }) {
@@ -69,6 +72,12 @@ export function SandboxInspector({
             <Icon name="refresh" size={14} />
             Restart
           </button>
+          {!running && (
+            <button className="btn danger" disabled={busy || !installed} onClick={onRemove}>
+              <Icon name="trash" size={14} />
+              Remove
+            </button>
+          )}
         </div>
         {pending && (
           <p className="help" role="status">
@@ -83,7 +92,7 @@ export function SandboxInspector({
             <code>{detail.workspace || "None (mountless)"}</code>
           </dd>
           <dt>CLI state</dt>
-          <dd>{detail.state.replace(/^[•○]\s*/, "")}</dd>
+          <dd>{stateLabel(detail.state)}</dd>
         </dl>
       </div>
       <div className="boundary-note">

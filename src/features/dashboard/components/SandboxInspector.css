@@ -46,6 +46,12 @@
   grid-template-columns: 1fr 1fr;
 }
 
+/* Removal is destructive, so it stands alone on a full-width row. */
+.insbody .actions .btn.danger {
+  grid-column: 1 / -1;
+  margin-top: 9px;
+}
+
 .inspector-details {
   grid-template-columns: 1fr;
   gap: 4px;

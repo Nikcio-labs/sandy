@@ -1,109 +1,17 @@
 /*
- * The Settings page layout: the home column width and the nested pane
- * (home list → back-navigated pane) from the design study. Owned by
- * SettingsPage; pane contents own their internal styles.
+ * The Settings page layout: the settings link-row group separator and
+ * pane intro text. Rows, pane chrome, and scaffolding live in the shared
+ * styles (panels.css); pane contents own their internal styles.
  */
 
-.settingshome {
-  max-width: 780px;
-}
-
 /* Home → pane navigation. One card holds Updates and the link rows,
-   separated by the card's own hairlines as in the study. */
+   separated by the card's own hairlines. */
 .settingslinks {
   border-top: 1px solid var(--line);
-}
-
-.setlink {
-  width: 100%;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  text-align: left;
-  padding: 20px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.setlink:last-child {
-  border-bottom: 0;
-}
-
-.setlink:hover {
-  background: var(--surface-soft);
-}
-
-.setlink > span {
-  flex: 1;
-  min-width: 0;
-}
-
-.setlink strong {
-  display: block;
-  font: 600 17px var(--display);
-  margin-bottom: 5px;
-}
-
-.setlink small {
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.setlink > svg:first-child {
-  color: var(--brand-dark);
-}
-
-.settingspane {
-  animation: pane-in 220ms var(--out);
-}
-
-.panehead {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 15px 18px;
-  border-bottom: 1px solid var(--line);
-}
-
-.panehead h2 {
-  font-size: 20px;
-}
-
-.panehead h2:focus {
-  outline: none;
-}
-
-.panecontent {
-  padding: 20px;
 }
 
 .paneintro {
   font-size: 14px;
   color: var(--muted);
   margin-bottom: 18px;
-}
-
-@keyframes pane-in {
-  from {
-    opacity: 0.4;
-    transform: translateX(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .settingspane {
-    animation: none;
-  }
-}
-
-@media (max-width: 720px) {
-  .panecontent {
-    padding: 15px;
-  }
 }

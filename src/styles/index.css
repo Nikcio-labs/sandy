@@ -1,0 +1,23 @@
+/*
+ * The app's global stylesheets, in cascade order: design tokens, element
+ * baselines, then the shared component stylesheets.
+ *
+ * One import list for every window (main, splash, setup) and the browser
+ * test harness, so the cascade cannot drift between them.
+ */
+
+@import "./theme.css";
+@import "./base.css";
+@import "./buttons.css";
+@import "./badges.css";
+@import "./avatar.css";
+@import "./panels.css";
+@import "./layout.css";
+@import "./banner.css";
+@import "./forms.css";
+@import "./dialog.css";
+@import "./primitives.css";
+@import "./options.css";
+@import "./feedback.css";
+@import "./groups.css";
+@import "./steps.css";

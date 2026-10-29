@@ -12,6 +12,10 @@
 }
 
 .option {
+  /* Anchor for the card's hidden input below: without it the input's
+     containing block is the nearest positioned ancestor (e.g. the dialog),
+     where focus scrolls that ancestor instead of the option list. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -37,8 +41,10 @@
   box-shadow: inset 0 0 0 1px var(--brand);
 }
 
+/* The option ring keeps the app-wide focus vocabulary; --brand-soft would
+   be near-invisible against the white panel. */
 .option:focus-within {
-  outline: 2px solid var(--brand-soft);
+  outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
 
@@ -62,8 +68,10 @@
   opacity: 0;
   background: currentColor;
   color: var(--brand-dark);
-  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>') center / contain no-repeat;
-  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>') center / contain no-repeat;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>')
+    center / contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>')
+    center / contain no-repeat;
   transition: opacity 120ms ease;
 }
 

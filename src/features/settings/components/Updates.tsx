@@ -120,7 +120,7 @@ export default function Updates() {
             aria-valuemax={100}
             aria-valuenow={progress ?? undefined}
           >
-            <span style={{ width: `${progress ?? 0}%` }} />
+            <span style={{ transform: `scaleX(${(progress ?? 0) / 100})` }} />
           </div>
         </div>
       )}

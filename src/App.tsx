@@ -84,7 +84,6 @@ export default function App() {
                 pendingSelection={pendingSelection}
                 onPendingSelectionHandled={() => setPendingSelection(null)}
                 onCreate={() => setCreateDialog({})}
-                onCheckSetup={checkSetup}
                 onCount={setCount}
               />
             )}
@@ -99,7 +98,7 @@ export default function App() {
                 }}
               />
             )}
-            <div hidden={view !== "settings"}>
+            <div hidden={view !== "settings"} className="pagehost">
               <SettingsPage
                 status={status}
                 statusError={statusError}

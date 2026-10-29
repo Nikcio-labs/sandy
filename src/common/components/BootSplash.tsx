@@ -22,7 +22,7 @@ export default function BootSplash({ transparent = false }: { transparent?: bool
 
   return (
     <div className={transparent ? "loading loading-splash" : "loading"} role="status">
-      <div className={transparent ? "loading-card" : undefined}>
+      <div className="loading-card">
         <img src={logo} alt="" />
         <p className="loading-label">
           <span className="spinner" /> Getting Sandy ready…

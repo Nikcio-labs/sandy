@@ -144,7 +144,7 @@ export function ReviewStep({
         )}
         <div className="catalog-review">
           <h3>Review your environment</h3>
-          <dl className="catalog-review-grid">
+          <dl className="details catalog-review-grid">
             <dt>Agent</dt>
             <dd>{agent.name}</dd>
             <dt>Kit format</dt>

@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ConnectionInfo, SandboxInfo, SetupStatus } from "../../../lib/sandbox";
-import { connectionInfo, setupSsh } from "../../../lib/sandbox";
+import type { ConnectionInfo, SandboxInfo } from "../../../lib/sandbox";
+import { connectionInfo } from "../../../lib/sandbox";
 import { stateKind } from "../../../common/lib/sandboxState";
 import Icon from "../../../common/components/Icon";
 import { copyText } from "../../../common/lib/clipboard";
 import { ConnectionMethods } from "./ConnectionMethods";
-import { SshStatus } from "./SshStatus";
 import { EditorSteps } from "./EditorSteps";
 import { ServerInfo } from "./ServerInfo";
 import type { Method } from "./ConnectionMethods";
@@ -14,16 +13,12 @@ import "./ConnectDialog.css";
 
 export interface ConnectDialogProps {
   sandbox: SandboxInfo;
-  status: SetupStatus | null;
-  onCheckSetup: () => Promise<SetupStatus | null>;
   onOpenTerminal: () => Promise<void>;
   onClose: () => void;
 }
 
 export default function ConnectDialog({
   sandbox,
-  status,
-  onCheckSetup,
   onOpenTerminal,
   onClose,
 }: ConnectDialogProps) {
@@ -35,10 +30,8 @@ export default function ConnectDialog({
   const [info, setInfo] = useState<ConnectionInfo | null>(null);
   const [infoError, setInfoError] = useState<string | null>(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
-  const [busy, setBusy] = useState<"terminal" | "setup" | "check" | null>(null);
+  const [busy, setBusy] = useState<"terminal" | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [sshReady, setSshReady] = useState<boolean | null>(status?.ssh_set_up ?? null);
-  const sshWarning = status?.warnings?.[0] ?? null;
   const running = stateKind(sandbox.state) === "running";
 
   useEffect(() => {
@@ -48,8 +41,6 @@ export default function ConnectDialog({
     if (!terminalButton.current?.disabled) terminalButton.current?.focus();
     return () => node?.close();
   }, []);
-
-  useEffect(() => setSshReady(status?.ssh_set_up ?? null), [status?.ssh_set_up]);
 
   const loadInfo = useCallback(async () => {
     const request = ++infoRequest.current;
@@ -96,42 +87,6 @@ export default function ConnectDialog({
     }
   };
 
-  const checkSsh = async (configure: boolean) => {
-    if (operation.current) return;
-    operation.current = true;
-    setBusy(configure ? "setup" : "check");
-    setFeedback(null);
-    try {
-      if (configure) await setupSsh();
-      const next = await onCheckSetup();
-      const ready = next?.ssh_set_up ?? null;
-      setSshReady(ready);
-      if (ready === true) {
-        setFeedback({
-          kind: "success",
-          text: "SSH is ready. Follow the editor’s connection steps below.",
-        });
-        await loadInfo();
-      } else {
-        setFeedback({
-          kind: "error",
-          text:
-            ready === false
-              ? "SSH setup is still reported as incomplete. Set up SSH and check again."
-              : "Sandy couldn’t verify SSH setup. Check setup again to confirm it is ready.",
-        });
-      }
-    } catch (failure) {
-      setFeedback({
-        kind: "error",
-        text: `Couldn’t ${configure ? "set up" : "check"} SSH: ${String(failure)}`,
-      });
-    } finally {
-      operation.current = false;
-      setBusy(null);
-    }
-  };
-
   const copy = async (text: string, label: string) => {
     try {
       await copyText(text);
@@ -144,7 +99,7 @@ export default function ConnectDialog({
   return (
     <dialog
       ref={dialog}
-      className="connect-dialog"
+      className="appdialog connect-dialog"
       aria-labelledby="connect-title"
       aria-describedby="connect-description"
       onClose={(event) => {
@@ -189,7 +144,7 @@ export default function ConnectDialog({
       />
 
       {!running && (
-        <p className="connection-note">
+        <p className="banner">
           This sandbox is not running. Close this dialog and use <strong>Start</strong> in its
           details before connecting.
         </p>
@@ -226,14 +181,6 @@ export default function ConnectDialog({
             <h3 id="connection-method-title">
               Connect with {method === "opencode" ? "OpenCode Desktop" : "VS Code"}
             </h3>
-            <SshStatus
-              sshReady={sshReady}
-              warning={sshWarning}
-              busy={busy === "setup" ? "setup" : busy === "check" ? "check" : null}
-              sbxInstalled={!!status?.sbx_installed}
-              onSetup={() => void checkSsh(true)}
-              onCheck={() => void checkSsh(false)}
-            />
             <EditorSteps method={method} info={info} sandboxName={sandbox.name} />
           </>
         )}

@@ -10,15 +10,18 @@ export function ErrorBanner({
   actionLabel,
   onAction,
   disabled,
+  role = "alert",
 }: {
   title: string;
   children: ReactNode;
   actionLabel?: string;
   onAction?: () => void;
   disabled?: boolean;
+  /** Status banners announce politely; alerts (the default) interrupt. */
+  role?: "alert" | "status";
 }) {
   return (
-    <div className="banner error" role="alert">
+    <div className="banner error" role={role}>
       <strong>{title}</strong>
       {children}
       {actionLabel && onAction && (

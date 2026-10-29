@@ -200,6 +200,31 @@ async fn unset_setting(key: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn list_secrets() -> Result<sbx::SecretList, String> {
+    logged(
+        "list_secrets",
+        async move { blocking(sbx::list_secrets).await },
+    )
+    .await
+}
+
+#[tauri::command]
+async fn set_secret(scope: String, name: String, value: String) -> Result<String, String> {
+    logged("set_secret", async move {
+        blocking(move || sbx::set_secret(&scope, &name, &value)).await
+    })
+    .await
+}
+
+#[tauri::command]
+async fn remove_secret(scope: String, name: String) -> Result<String, String> {
+    logged("remove_secret", async move {
+        blocking(move || sbx::remove_secret(&scope, &name)).await
+    })
+    .await
+}
+
+#[tauri::command]
 async fn open_terminal(name: String) -> Result<(), String> {
     logged("open_terminal", async move {
         blocking(move || sbx::open_terminal(&name)).await
@@ -362,15 +387,6 @@ async fn launch_template(
 }
 
 #[tauri::command]
-async fn allow_source(app: tauri::AppHandle, provider_id: String) -> Result<String, String> {
-    logged("allow_source", async move {
-        let root = data_dir(&app)?;
-        blocking(move || environments::allow_source(&root, &provider_id)).await
-    })
-    .await
-}
-
-#[tauri::command]
 async fn pick_workspace(app: tauri::AppHandle) -> Result<Option<String>, String> {
     logged("pick_workspace", async move {
         blocking(move || environments::pick_workspace(&app)).await
@@ -453,6 +469,9 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         list_settings,
         set_setting,
         unset_setting,
+        list_secrets,
+        set_secret,
+        remove_secret,
         open_terminal,
         connection_info,
         get_providers,
@@ -467,7 +486,6 @@ pub(crate) fn handlers() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         update_template,
         delete_template,
         launch_template,
-        allow_source,
         pick_workspace,
         pick_template_path,
         pick_local_template,

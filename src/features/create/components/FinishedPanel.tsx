@@ -44,7 +44,7 @@ export function FinishedPanel({
               ? `${saved.name} was saved over its existing file. You can launch it now, or reuse it from Templates later.`
               : "You can launch this template now, or reuse it from Templates later."}
       </p>
-      <dl className="catalog-review-grid">
+      <dl className="details catalog-review-grid">
         <dt>Name</dt>
         <dd>{saved.name}</dd>
         <dt>File</dt>

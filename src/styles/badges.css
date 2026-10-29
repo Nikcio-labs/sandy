@@ -23,8 +23,7 @@
 }
 
 /* Rounded pill with a visible border, for counts and metadata that
-   should read as selectable-chip-like rather than plain labels. The
-   concept keeps version/metadata pills neutral. */
+   should read as selectable-chip-like rather than plain labels. */
 .badge.pill {
   padding: 4px 9px;
   border: 1px solid var(--line-strong);

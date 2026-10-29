@@ -38,8 +38,16 @@ function WindowControls() {
   // swallowed to avoid unhandled rejections, matching the splash close in
   // App.tsx.
   const controls: { label: string; action: () => void; icon: React.ReactNode }[] = [
-    { label: "Minimize window", action: () => window.minimize().catch(() => {}), icon: <span className="wincontrol-minimize" /> },
-    { label: "Maximize or restore window", action: () => window.toggleMaximize().catch(() => {}), icon: <span className="wincontrol-maximize" /> },
+    {
+      label: "Minimize window",
+      action: () => window.minimize().catch(() => {}),
+      icon: <span className="wincontrol-minimize" />,
+    },
+    {
+      label: "Maximize or restore window",
+      action: () => window.toggleMaximize().catch(() => {}),
+      icon: <span className="wincontrol-maximize" />,
+    },
     {
       label: "Close window",
       action: () => window.close().catch(() => {}),
@@ -105,18 +113,31 @@ export function Rail({
       <nav className="railnav">
         {navigation.map((item) => {
           const active = view === item.id;
+          // The name must contain the button's rendered text, count badge
+          // included — an accessible name that omits visible text is worse
+          // than none for speech-interaction users.
+          const name =
+            item.id === "sandboxes" && count !== null
+              ? `${item.label}, ${count} sandboxes`
+              : item.label;
           return (
             <button
               key={item.id}
               className={item.id === "settings" ? "navsettings" : undefined}
               aria-current={active ? "page" : undefined}
+              aria-label={name}
               disabled={busy}
               onClick={() => onNavigate(item.id)}
             >
               <Icon name={item.icon} />
               <span>{item.label}</span>
               {item.id === "sandboxes" && count !== null && (
-                <span className="badge railcount">{count}</span>
+                // Without the separating space the rendered text is
+                // "Sandboxes2", one token the accessible name cannot match.
+                <>
+                  {" "}
+                  <span className="badge railcount">{count}</span>
+                </>
               )}
             </button>
           );

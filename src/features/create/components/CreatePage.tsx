@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Providers from "../../settings/components/Providers";
@@ -35,6 +35,7 @@ export default function CreatePage({
 }: CreatePageProps) {
   const id = useId();
   const flow = useCreateFlow({ onBusyChange, templateId, onLaunched });
+  const sectionRef = useRef<HTMLElement>(null);
   const {
     editing,
     step,
@@ -82,8 +83,27 @@ export default function CreatePage({
     copy,
   } = flow;
 
+  // A step change swaps the whole panel below the shared heading, and the
+  // scroll position belongs to the page (or host dialog), not the step —
+  // otherwise a tall step leaves the next one opened mid-scroll. The scroller
+  // is the nearest scrollable ancestor (the dialog body in the dialog, .main
+  // on the page); the effect skips the first render, where the page is
+  // already at the top.
+  const stepRef = useRef(step);
+  useEffect(() => {
+    if (stepRef.current === step) return;
+    stepRef.current = step;
+    let scroller = sectionRef.current?.parentElement;
+    while (scroller) {
+      if (scroller.scrollHeight > scroller.clientHeight) break;
+      scroller = scroller.parentElement;
+    }
+    scroller?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   return (
     <section
+      ref={sectionRef}
       className={`catalog-page ${inDialog ? "catalog-page-dialog" : "standalone-page"}`}
       aria-labelledby={`${id}-title`}
       aria-busy={busy !== null}
