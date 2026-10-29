@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/Nikcio-labs/sandy/compare/v0.4.1...v0.5.0) (2026-10-29)
+
+
+### Features
+
+* add a secrets pane to settings ([#81](https://github.com/Nikcio-labs/sandy/issues/81)) ([1503152](https://github.com/Nikcio-labs/sandy/commit/15031526c63ae6cbe405617315891f8af2b00761))
+* delete a sandbox with a confirm dialog ([#80](https://github.com/Nikcio-labs/sandy/issues/80)) ([43a17c1](https://github.com/Nikcio-labs/sandy/commit/43a17c16d8d4b8ac1810877ba79ed4dee42f2c87))
+
 ## [0.4.1](https://github.com/Nikcio-labs/sandy/compare/v0.4.0...v0.4.1) (2026-10-29)
 
 
