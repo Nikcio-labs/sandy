@@ -3,6 +3,7 @@ import type { ServiceSecretRecord } from "../../../lib/secrets";
 import { listSecrets, removeSecret, setSecret } from "../../../lib/secrets";
 import { listSandboxes, type SandboxInfo } from "../../../lib/sandbox";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
+import { Combobox } from "../../../common/components/Combobox";
 import Icon from "../../../common/components/Icon";
 import { SearchField } from "../../../common/components/SearchField";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
@@ -65,7 +66,12 @@ export default function Secrets() {
   const [filter, setFilter] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   // Which dialog is open, if any: the union keeps set and remove exclusive.
-  const [dialog, setDialog] = useState<null | { kind: "set"; target: PendingSecret } | { kind: "remove"; target: PendingSecret } | { kind: "add" }>(null);
+  const [dialog, setDialog] = useState<
+    | null
+    | { kind: "set"; target: PendingSecret }
+    | { kind: "remove"; target: PendingSecret }
+    | { kind: "add" }
+  >(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -147,7 +153,12 @@ export default function Secrets() {
           >
             <Icon name="plus" size={14} /> Add secret
           </button>
-          <button type="button" className="btn small" onClick={() => void refresh()} disabled={loading}>
+          <button
+            type="button"
+            className="btn small"
+            onClick={() => void refresh()}
+            disabled={loading}
+          >
             <Icon name="refresh" size={14} /> Refresh
           </button>
         </div>
@@ -177,9 +188,7 @@ export default function Secrets() {
           <h3 className="secretscopehead">
             <Icon name={group.sandbox ? "box" : "globe"} size={15} />
             {scopeTitle(group)}
-            <span className="badge violet secretscopecount">
-              {group.secrets.length}
-            </span>
+            <span className="badge violet secretscopecount">{group.secrets.length}</span>
           </h3>
           <div className="secretlist">
             {group.secrets.map((secret) => {
@@ -653,79 +662,47 @@ function AddSecretDialog({
         </p>
         <label className="field">
           Scope
-          <select
-            aria-describedby={`${id}-scope-help`}
-            disabled={saving}
-            value={scopeChoice}
-            onChange={(event) => {
-              setScopeChoice(event.target.value);
+          <Combobox
+            inputRef={first}
+            value={scopeChoice === CUSTOM_OPTION ? customScope : scopeChoice}
+            onChange={(next) => {
+              if (next === GLOBAL_SCOPE) {
+                setScopeChoice(GLOBAL_SCOPE);
+              } else {
+                setScopeChoice(CUSTOM_OPTION);
+                setCustomScope(next);
+              }
               setScopeError(null);
             }}
-          >
-            <option value={GLOBAL_SCOPE}>Global — every sandbox</option>
-            {scopeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-            <option value={CUSTOM_OPTION}>Custom sandbox name…</option>
-          </select>
+            options={[GLOBAL_SCOPE, ...scopeOptions]}
+            renderOption={(option) => (option === GLOBAL_SCOPE ? "Global — every sandbox" : option)}
+            placeholder="global or a sandbox name"
+            label="Scope"
+            disabled={saving}
+            emptyHint="Type a sandbox name — the secret applies once it exists."
+            describedBy={`${id}-scope-help`}
+          />
           <span className="help" id={`${id}-scope-help`}>
-            {scopeChoice === CUSTOM_OPTION
-              ? (scopeError ??
-                "Type a sandbox name; the secret applies once a sandbox with that name exists.")
+            {scopeChoice === CUSTOM_OPTION && customScope
+              ? (scopeError ?? "This secret applies to that sandbox once it exists.")
               : "Global secrets are shared by every sandbox; the others apply to one sandbox."}
           </span>
         </label>
-        {scopeChoice === CUSTOM_OPTION && (
-          <label className="field">
-            Sandbox name
-            <input
-              ref={first}
-              placeholder="e.g. my-sandbox"
-              autoComplete="off"
-              disabled={saving}
-              value={customScope}
-              onChange={(event) => {
-                setCustomScope(event.target.value);
-                setScopeError(null);
-              }}
-            />
-          </label>
-        )}
         <label className="field">
           Secret name
-          <select
+          <Combobox
+            value={nameChoice === CUSTOM_OPTION ? customName : nameChoice}
+            onChange={(next) => {
+              setNameChoice(next === "" ? "" : CUSTOM_OPTION);
+              setCustomName(next);
+            }}
+            options={knownNames}
+            placeholder="e.g. github"
+            label="Secret name"
             disabled={saving}
-            value={nameChoice}
-            onChange={(event) => setNameChoice(event.target.value)}
-          >
-            {!knownNames.length && nameChoice !== CUSTOM_OPTION ? (
-              <option value="">
-                Pick or type a name…
-              </option>
-            ) : (
-              knownNames.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))
-            )}
-            <option value={CUSTOM_OPTION}>Custom name…</option>
-          </select>
+            emptyHint="Type any name — the CLI decides which services it knows."
+          />
         </label>
-        {nameChoice === CUSTOM_OPTION && (
-          <label className="field">
-            Name
-            <input
-              placeholder="e.g. github"
-              autoComplete="off"
-              disabled={saving}
-              value={customName}
-              onChange={(event) => setCustomName(event.target.value)}
-            />
-          </label>
-        )}
         <label className="field">
           New value
           <input
