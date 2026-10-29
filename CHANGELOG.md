@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0](https://github.com/Nikcio-labs/sandy/compare/v0.3.3...v0.4.0) (2026-10-29)
+
+
+### Features
+
+* move template details into a clickable detail pane ([#70](https://github.com/Nikcio-labs/sandy/issues/70)) ([b5e38bf](https://github.com/Nikcio-labs/sandy/commit/b5e38bf3045615a0ad7ef010b7b447fb307e98da))
+* refresh the app design with global styles and shared components ([#61](https://github.com/Nikcio-labs/sandy/issues/61)) ([1158b4d](https://github.com/Nikcio-labs/sandy/commit/1158b4df138df6d5cc319305516f55994091dda8))
+
+
+### Bug Fixes
+
+* cache the built-in agents with the discovery catalog ([#71](https://github.com/Nikcio-labs/sandy/issues/71)) ([35b5b8e](https://github.com/Nikcio-labs/sandy/commit/35b5b8ec254b893bc8ebb13e716f2f75c3feb66b))
+* center the logo on the main window boot screen ([#74](https://github.com/Nikcio-labs/sandy/issues/74)) ([86d12fa](https://github.com/Nikcio-labs/sandy/commit/86d12fa3938f4b6ed50a92507b1a408e93dc40e8))
+* highlight the whole search bar on focus ([#67](https://github.com/Nikcio-labs/sandy/issues/67)) ([1f192a0](https://github.com/Nikcio-labs/sandy/commit/1f192a0e44e33e84912623f244037799c574d118))
+* scroll to each create-wizard step and pin the close button clear of the scrollbar ([#63](https://github.com/Nikcio-labs/sandy/issues/63)) ([3c3e973](https://github.com/Nikcio-labs/sandy/commit/3c3e97391b1a38e2adacd3820828a660a928bedc))
+* simplify OpenCode SSH host step in connect dialog ([#77](https://github.com/Nikcio-labs/sandy/issues/77)) ([ee3dfe1](https://github.com/Nikcio-labs/sandy/commit/ee3dfe1a18bb2dd4b47ebffdce91bf8cb6930dcd))
+* stop field selects from cropping their option text ([#68](https://github.com/Nikcio-labs/sandy/issues/68)) ([b7ff9a3](https://github.com/Nikcio-labs/sandy/commit/b7ff9a30d14677b43ca8feb616234317ecb9aec8))
+* style inline code in the connect dialog steps ([#78](https://github.com/Nikcio-labs/sandy/issues/78)) ([bdc750d](https://github.com/Nikcio-labs/sandy/commit/bdc750dbff76b362fc5cf01d4d6b47890211e17c))
+
 ## [0.3.3](https://github.com/Nikcio-labs/sandy/compare/v0.3.2...v0.3.3) (2026-10-25)
 
 
