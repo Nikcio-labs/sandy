@@ -115,6 +115,15 @@
   margin-top: 9px;
 }
 
+/* Inline code chip: keeps hostnames readable against the muted step text,
+   matching the sunken surface used elsewhere in the dialog. */
+.connection-steps code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
 /* ---- Server information ---- */
 
 .connection-server {
