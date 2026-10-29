@@ -23,7 +23,12 @@ export interface TemplatesPageProps {
   onLaunched?: (sandbox: string) => void;
 }
 
-export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunched }: TemplatesPageProps) {
+export default function TemplatesPage({
+  onCreate,
+  onEdit,
+  onBusyChange,
+  onLaunched,
+}: TemplatesPageProps) {
   const mounted = useMountedRef();
   const [templates, setTemplates] = useState<SavedTemplate[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -171,7 +176,10 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
               {warnings.length > 0 && (
                 <details className="warnings" open>
                   <summary>Template file warnings ({warnings.length})</summary>
-                  <p>Some saved files could not be read. Readable templates are still available below.</p>
+                  <p>
+                    Some saved files could not be read. Readable templates are still available
+                    below.
+                  </p>
                   <ul>
                     {warnings.map((warning, index) => (
                       <li key={index}>{warning}</li>
@@ -192,7 +200,9 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                     <Icon name="kit" size={22} />
                   </span>
                   <h3>A starting point worth keeping</h3>
-                  <p>Save an environment with an agent and compatible mixins, then reuse it here.</p>
+                  <p>
+                    Save an environment with an agent and compatible mixins, then reuse it here.
+                  </p>
                   <button type="button" className="btn primary" onClick={onCreate}>
                     Create template
                   </button>
@@ -243,8 +253,10 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
         </>
       )}
       {selected && (
+        // The dialog is a sibling of the detail pane, which uses the same
+        // template id as its key; a distinct prefix keeps the two apart.
         <LaunchDialog
-          key={selected.id}
+          key={`launch-${selected.id}`}
           template={selected}
           onLaunched={(text, sandbox) => {
             setNotice({ kind: "success", text });
@@ -256,7 +268,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
       )}
       {deleting && (
         <DeleteTemplateDialog
-          key={deleting.id}
+          key={`delete-${deleting.id}`}
           template={deleting}
           onDeleted={() => {
             setInspected(null);
@@ -270,7 +282,9 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
               returnFocus.current.focus();
             } else {
               document
-                .querySelector<HTMLButtonElement>(`[data-template-row="${CSS.escape(deleting.id)}"]`)
+                .querySelector<HTMLButtonElement>(
+                  `[data-template-row="${CSS.escape(deleting.id)}"]`,
+                )
                 ?.focus();
             }
           }}
