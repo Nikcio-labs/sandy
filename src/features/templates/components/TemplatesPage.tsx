@@ -5,7 +5,8 @@ import Icon from "../../../common/components/Icon";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import { useBusyReporting } from "../../../common/hooks/useBusyReporting";
-import { Toast, type ToastNotice } from "../../../common/components/Toast";
+import { ToastHost, type ToastNotice } from "../../../common/components/Toast";
+import { SearchField } from "../../../common/components/SearchField";
 import { copyText } from "../../../common/lib/clipboard";
 import { LaunchDialog } from "./LaunchDialog";
 import { DeleteTemplateDialog } from "./DeleteTemplateDialog";
@@ -108,16 +109,12 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
         <div className="listhead">
           <h2>Saved on this computer</h2>
           {templates !== null && <span className="badge">{templates.length}</span>}
-          <label className="search">
-            <Icon name="search" size={14} />
-            <input
-              aria-label="Search templates"
-              type="search"
-              placeholder="Search templates…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
+          <SearchField
+            value={search}
+            onChange={setSearch}
+            placeholder="Search templates…"
+            label="Search templates"
+          />
           <button
             type="button"
             className="iconbtn"
@@ -294,9 +291,7 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           }}
         />
       )}
-      <div className="toasts" aria-live="polite" aria-atomic="true">
-        {notice && <Toast notice={notice} onDismiss={() => setNotice(null)} />}
-      </div>
+      <ToastHost notice={notice} onDismiss={() => setNotice(null)} />
     </div>
   );
 }

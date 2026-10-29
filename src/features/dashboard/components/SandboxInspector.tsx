@@ -2,6 +2,7 @@ import type { SandboxInfo } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { Avatar } from "../../../common/components/Avatar";
 import { StatePill } from "../../../common/components/StatePill";
+import { stateLabel } from "../../../common/lib/sandboxState";
 import type { SandboxAction } from "../sandboxActions";
 import "./SandboxInspector.css";
 
@@ -83,7 +84,7 @@ export function SandboxInspector({
             <code>{detail.workspace || "None (mountless)"}</code>
           </dd>
           <dt>CLI state</dt>
-          <dd>{detail.state.replace(/^[•○]\s*/, "")}</dd>
+          <dd>{stateLabel(detail.state)}</dd>
         </dl>
       </div>
       <div className="boundary-note">

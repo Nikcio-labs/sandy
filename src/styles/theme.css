@@ -1,5 +1,5 @@
 /*
- * Design tokens for Sandy, translated from design/design-concepts.html.
+ * Design tokens for Sandy.
  *
  * Every color, font, and shared motion value in the app resolves through
  * these custom properties so pages never hardcode palette values.

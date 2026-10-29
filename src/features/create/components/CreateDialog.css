@@ -7,7 +7,7 @@
    emit that rule after this file regardless of import order. */
 .appdialog.appdialog-wide {
   /* Sized relative to the app window (the dialog's containing viewport),
-     matching the study's dialog footprint, not the full browser window. */
+     not the full browser window. */
   width: min(1400px, calc(100vw - 80px));
   height: calc(100dvh - 90px);
   max-height: none;

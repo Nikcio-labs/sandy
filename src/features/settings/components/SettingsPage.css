@@ -1,7 +1,7 @@
 /*
  * The Settings page layout: the home column width and the nested pane
- * (home list → back-navigated pane) from the design study. Owned by
- * SettingsPage; pane contents own their internal styles.
+ * (home list → back-navigated pane). Owned by SettingsPage; pane contents
+ * own their internal styles.
  */
 
 .settingshome {
@@ -9,7 +9,7 @@
 }
 
 /* Home → pane navigation. One card holds Updates and the link rows,
-   separated by the card's own hairlines as in the study. */
+   separated by the card's own hairlines. */
 .settingslinks {
   border-top: 1px solid var(--line);
 }

@@ -22,7 +22,7 @@ export function ComingSoonDialog({
   return (
     <dialog
       ref={dialog}
-      className="feature-dialog"
+      className="appdialog feature-dialog"
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-description`}
       onClose={onClose}

@@ -196,7 +196,7 @@ export default function Advanced() {
                 {rendered.map((entry, index) => (
                   <details key={`${entry.timestamp}-${index}`} className="debug-log-entry">
                     <summary>
-                      <span className={`debug-log-kind debug-log-kind-${entry.kind}`}>
+                      <span className={`badge violet debug-log-kind debug-log-kind-${entry.kind}`}>
                         {KIND_LABELS[entry.kind] ?? entry.kind}
                       </span>
                       <span className={entry.outcome === "error" ? "debug-log-failed" : undefined}>

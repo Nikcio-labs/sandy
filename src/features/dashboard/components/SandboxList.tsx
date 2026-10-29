@@ -3,6 +3,7 @@ import Icon from "../../../common/components/Icon";
 import { Avatar } from "../../../common/components/Avatar";
 import { StatePill } from "../../../common/components/StatePill";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
+import { SearchField } from "../../../common/components/SearchField";
 import { stateKind } from "../../../common/lib/sandboxState";
 import type { SandboxAction } from "../sandboxActions";
 import "./SandboxList.css";
@@ -58,16 +59,12 @@ export function SandboxList({
       <div className="listhead">
         <h2>All sandboxes</h2>
         {sandboxes !== null && <span className="badge">{sandboxes.length}</span>}
-        <label className="search">
-          <Icon name="search" size={14} />
-          <input
-            aria-label="Search sandboxes"
-            placeholder="Search sandboxes…"
-            type="search"
-            value={search}
-            onChange={(event) => onSearch(event.target.value)}
-          />
-        </label>
+        <SearchField
+          value={search}
+          onChange={onSearch}
+          placeholder="Search sandboxes…"
+          label="Search sandboxes"
+        />
         <button
           className="iconbtn"
           aria-label="Refresh sandboxes"

@@ -2,8 +2,8 @@
  * Global element styles: typography, forms, focus, and motion defaults.
  *
  * These rules apply by element selector so page markup needs no utility
- * classes for baseline appearance. Component-level styles live in
- * components.css and feature stylesheets.
+ * classes for baseline appearance. Component-level styles live in the
+ * shared stylesheets next to this file and in feature stylesheets.
  */
 
 html {

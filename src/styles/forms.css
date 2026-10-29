@@ -1,7 +1,8 @@
 /*
- * Form primitives: .field (labeled input), .fields (two-column grid),
- * .check (checkbox row), .path-row (input + browse button), and
- * .fieldset (framed group with a notched legend).
+ * Form primitives: .field (labeled input), .fieldcontrol (bare input with
+ * the field chrome, for inputs outside a labeled .field), .fields
+ * (two-column grid), .check (checkbox row), .path-row (input + browse
+ * button), and .fieldset (framed group with a notched legend).
  */
 
 .field {
@@ -24,7 +25,9 @@
 .field input,
 .field select,
 .field textarea,
-.path-row > input {
+.path-row > input,
+/* Bare inputs outside a labeled .field opt in with .fieldcontrol. */
+.fieldcontrol {
   width: 100%;
   max-width: none;
   min-width: 0;
@@ -39,7 +42,8 @@
 
 .field input:disabled,
 .field select:disabled,
-.path-row input:disabled {
+.path-row input:disabled,
+.fieldcontrol:disabled {
   background: var(--field-disabled);
   color: var(--muted);
 }

@@ -48,7 +48,7 @@ export function ServerInfo({
       )}
       {info && (
         <>
-          <dl className="connection-info">
+          <dl className="details connection-info">
             <dt>Host</dt>
             <dd>
               <code>{info.host}</code>
