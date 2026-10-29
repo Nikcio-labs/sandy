@@ -1,6 +1,7 @@
 import type { SavedTemplate } from "../../../lib/templates";
 import { Pane } from "../../../common/components/Pane";
 import Icon from "../../../common/components/Icon";
+import "./TemplateInspector.css";
 
 /**
  * The template detail pane body, rendered inside the shared Pane chrome:
