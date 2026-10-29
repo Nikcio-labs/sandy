@@ -176,9 +176,9 @@
   scrollbar-gutter: stable;
 }
 
-/* A page wrapper that must reach the window edges (a full-window pane):
-   flex column so the pane host's flex: 1 and negative margins resolve
-   against the real window height, not a content-sized block. */
+/* A page wrapper that must fill the main area (a full-window pane):
+   flex column so the pane host's flex: 1 resolves against the real
+   window height, not a content-sized block. */
 .main:has(.pane-open),
 .pagehost {
   display: flex;
