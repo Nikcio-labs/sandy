@@ -21,8 +21,11 @@ Download the installer for your platform from the [releases page](https://github
 | Platform | File |
 | -------- | ---- |
 | macOS (Apple silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
 | Windows | `.msi` or `.exe` |
+| Windows (ARM) | `.msi` or `.exe` |
 | Linux | `.AppImage` or `.deb` |
+| Linux (ARM) | `.AppImage` or `.deb` |
 
 [Releases page](https://github.com/Nikcio-labs/sandy/releases)
 

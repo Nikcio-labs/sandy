@@ -33,6 +33,37 @@
   backdrop-filter: blur(3px);
 }
 
+/* Entrance matches the shared .appdialog vocabulary so every modal in the
+   app plays the same motion. */
+.connect-dialog[open] {
+  transition:
+    opacity 180ms var(--out),
+    transform 180ms var(--out),
+    overlay 180ms allow-discrete,
+    display 180ms allow-discrete;
+}
+
+@starting-style {
+  .connect-dialog[open] {
+    opacity: 0;
+    transform: scale(0.97) translateY(5px);
+  }
+}
+
+.connect-dialog[open]::backdrop {
+  transition:
+    background-color 180ms ease,
+    overlay 180ms allow-discrete,
+    display 180ms allow-discrete;
+}
+
+@starting-style {
+  .connect-dialog[open]::backdrop {
+    background: transparent;
+    backdrop-filter: blur(0);
+  }
+}
+
 .connect-dialog h2 {
   font-size: 25px;
   letter-spacing: -0.6px;
@@ -85,6 +116,9 @@
   background: transparent;
   font-size: 14px;
   font-weight: 600;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .segmented button[aria-pressed="true"] {
