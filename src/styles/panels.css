@@ -81,6 +81,56 @@
   overflow-y: auto;
 }
 
+/* Link rows for home lists (Settings sections, saved templates): a
+   full-width row button with a leading icon, a label plus description,
+   and a trailing chevron, separated by the card's hairlines. */
+.linkrow {
+  width: 100%;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  padding: 20px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.linkrow:last-child {
+  border-bottom: 0;
+}
+
+.linkrow:hover {
+  background: var(--surface-soft);
+}
+
+.linkrow > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.linkrow strong {
+  display: block;
+  font: 600 17px var(--display);
+  margin-bottom: 5px;
+  overflow-wrap: anywhere;
+}
+
+.linkrow small {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.linkrow > svg:first-child {
+  color: var(--brand-dark);
+}
+
+@media (max-width: 720px) {
+  .linkrow {
+    padding: 15px;
+  }
+}
+
 .listhead {
   display: flex;
   flex-wrap: wrap;

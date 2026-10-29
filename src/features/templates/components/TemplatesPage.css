@@ -1,55 +1,9 @@
 /*
- * The templates list: settings-style link rows (icon, label, description,
- * chevron) inside the panel card. Owned by TemplatesPage.
+ * The templates list: link rows (icon, label, description, chevron) in
+ * the shared .linkrow style, plus the list group's top hairline.
+ * Owned by TemplatesPage.
  */
 
 .templatelinks {
   border-top: 1px solid var(--line);
-}
-
-.templateselect {
-  width: 100%;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  text-align: left;
-  padding: 20px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.templateselect:last-child {
-  border-bottom: 0;
-}
-
-.templateselect:hover {
-  background: var(--surface-soft);
-}
-
-.templateselect > span {
-  flex: 1;
-  min-width: 0;
-}
-
-.templateselect strong {
-  display: block;
-  font: 600 17px var(--display);
-  margin-bottom: 5px;
-  overflow-wrap: anywhere;
-}
-
-.templateselect small {
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.templateselect > svg:first-child {
-  color: var(--brand-dark);
-}
-
-@media (max-width: 720px) {
-  .templateselect {
-    padding: 15px;
-  }
 }

@@ -38,7 +38,7 @@ export function Pane({
         <h2 tabIndex={-1} ref={heading}>
           {label}
         </h2>
-        {actions}
+        {actions && <div className="panehead-actions">{actions}</div>}
       </header>
       <div className="panecontent">{children}</div>
     </section>

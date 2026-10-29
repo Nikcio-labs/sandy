@@ -1,54 +1,13 @@
 /*
- * The Settings page layout: the home list and settings-specific pane bits
- * (pane contents own their internal styles). The pane chrome itself —
- * .pane, .panehead, .panecontent, .pane-open — is shared panel
- * scaffolding in src/styles/panels.css.
+ * The Settings page layout: the settings link-row group separator and
+ * pane intro text. Rows, pane chrome, and scaffolding live in the shared
+ * styles (panels.css); pane contents own their internal styles.
  */
 
 /* Home → pane navigation. One card holds Updates and the link rows,
    separated by the card's own hairlines. */
 .settingslinks {
   border-top: 1px solid var(--line);
-}
-
-.setlink {
-  width: 100%;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  text-align: left;
-  padding: 20px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.setlink:last-child {
-  border-bottom: 0;
-}
-
-.setlink:hover {
-  background: var(--surface-soft);
-}
-
-.setlink > span {
-  flex: 1;
-  min-width: 0;
-}
-
-.setlink strong {
-  display: block;
-  font: 600 17px var(--display);
-  margin-bottom: 5px;
-}
-
-.setlink small {
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.setlink > svg:first-child {
-  color: var(--brand-dark);
 }
 
 .paneintro {

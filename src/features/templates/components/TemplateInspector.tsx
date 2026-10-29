@@ -19,7 +19,7 @@ export function TemplateInspector({
   template: SavedTemplate;
   onBack: () => void;
   onEdit?: (templateId: string) => void;
-  /** The triggering button is passed back so focus can return to it if the template survives. */
+  /** The triggering button is passed back so focus can return to it after the dialog closes. */
   onDelete: (template: SavedTemplate, trigger: HTMLButtonElement) => void;
   onLaunch: (template: SavedTemplate) => void;
   onCopyYaml: () => void;

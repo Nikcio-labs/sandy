@@ -215,8 +215,9 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
                   {visible.map((template) => (
                     <button
                       type="button"
-                      className="templateselect"
+                      className="linkrow"
                       key={template.id}
+                      data-template-row={template.id}
                       onClick={() => setInspected(template.id)}
                     >
                       <Icon name="template" size={20} />
@@ -263,7 +264,15 @@ export default function TemplatesPage({ onCreate, onEdit, onBusyChange, onLaunch
           }}
           onClose={() => {
             setDeleting(null);
-            returnFocus.current?.focus();
+            // A delete from the pane unmounts its trigger button together
+            // with the pane; focus lands on the template's row instead.
+            if (returnFocus.current?.isConnected) {
+              returnFocus.current.focus();
+            } else {
+              document
+                .querySelector<HTMLButtonElement>(`[data-template-row="${CSS.escape(deleting.id)}"]`)
+                ?.focus();
+            }
           }}
         />
       )}

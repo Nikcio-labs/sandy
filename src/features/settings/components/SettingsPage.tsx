@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SetupStatus } from "../../../lib/sandbox";
 import Icon from "../../../common/components/Icon";
 import { Pane } from "../../../common/components/Pane";
@@ -56,7 +56,14 @@ export default function SettingsPage({
 }: SettingsPageProps) {
   const [pane, setPane] = useState<PaneId | null>(null);
 
-  const paneMeta = pane !== null ? PANES.find((item) => item.id === pane) ?? null : null;
+  // The page stays mounted while hidden; a leaked open pane would keep
+  // .main in its pane layout (clipping the visible page) after navigating
+  // away, so the pane closes whenever Settings stops being visible.
+  useEffect(() => {
+    if (!active) setPane(null);
+  }, [active]);
+
+  const paneMeta = PANES.find((item) => item.id === pane) ?? null;
 
   return (
     <div className={`settingshome ${paneMeta ? "pane-open" : ""}`}>
@@ -98,7 +105,7 @@ export default function SettingsPage({
                   <button
                     key={item.id}
                     type="button"
-                    className="setlink"
+                    className="linkrow"
                     onClick={() => setPane(item.id)}
                   >
                     <Icon name={item.icon} size={20} />
