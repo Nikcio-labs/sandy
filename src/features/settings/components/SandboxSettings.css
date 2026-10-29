@@ -13,6 +13,20 @@
   flex-wrap: wrap;
 }
 
+/* The toolbar's search box is 35px tall (6px padding + a 21px input line);
+   .btn.small's 30px cap leaves it floating above the row's centerline, so
+   toolbar buttons stretch to match. */
+.pane-toolbar .btn.small {
+  min-height: 35px;
+}
+
+/* .search.wide's 16px bottom margin (a two-class rule that also out-ranks
+   the one-class .pane-search reset) shifts the search box up inside this
+   centered row; three classes win it back at any bundle order. */
+.pane-toolbar .search.wide {
+  margin: 0;
+}
+
 .pane-search {
   flex: 1;
   min-width: 200px;
