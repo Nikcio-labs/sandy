@@ -1,11 +1,37 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ServiceSecretRecord } from "../../../lib/secrets";
 import { listSecrets, removeSecret, setSecret } from "../../../lib/secrets";
+import { listSandboxes, type SandboxInfo } from "../../../lib/sandbox";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 import { SearchField } from "../../../common/components/SearchField";
 import { useMountedRef } from "../../../common/hooks/useMountedRef";
 import "./Secrets.css";
+
+/** The scope string the CLI uses for secrets every sandbox can use. */
+const GLOBAL_SCOPE = "global";
+
+/** The add dialog's scope input, lowercase before validation. */
+function normalizeScope(raw: string) {
+  const trimmed = raw.trim();
+  return trimmed.toLowerCase() === GLOBAL_SCOPE ? GLOBAL_SCOPE : trimmed;
+}
+
+/**
+ * Mirrors the backend's sandbox-name rules: the name becomes a CLI flag and
+ * must survive that trip. Global is the one non-sandbox scope.
+ */
+function validateScope(scope: string): string | null {
+  if (scope === GLOBAL_SCOPE) return null;
+  if (!scope) return "Enter a sandbox name.";
+  if (
+    !/^[a-zA-Z0-9]/.test(scope) ||
+    ![...scope].every((character) => /[a-zA-Z0-9._-]/.test(character))
+  ) {
+    return "Sandbox names start with a letter or digit and use only letters, digits, '.', '_' and '-'.";
+  }
+  return null;
+}
 
 /** One scope group in the secrets pane. */
 interface ScopeGroup {
@@ -35,8 +61,10 @@ export default function Secrets() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  // The row the set-value or remove dialog acts on.
+  // The row the set-value or remove dialog acts on, and whether the
+  // add-secret dialog is open.
   const [pending, setPending] = useState<PendingSecret | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -109,9 +137,19 @@ export default function Secrets() {
           wide
           className="pane-search"
         />
-        <button type="button" className="btn small" onClick={() => void refresh()} disabled={loading}>
-          <Icon name="refresh" size={14} /> Refresh
-        </button>
+        <div className="actions">
+          <button
+            type="button"
+            className="btn small"
+            onClick={() => setAdding(true)}
+            disabled={loading}
+          >
+            <Icon name="plus" size={14} /> Add secret
+          </button>
+          <button type="button" className="btn small" onClick={() => void refresh()} disabled={loading}>
+            <Icon name="refresh" size={14} /> Refresh
+          </button>
+        </div>
       </div>
       {error && (
         <ErrorBanner
@@ -185,6 +223,18 @@ export default function Secrets() {
             ))}
           </div>
         </>
+      )}
+      {adding && (
+        <AddSecretDialog
+          knownNames={secrets.map((secret) => secret.name)}
+          knownScopes={groups.map((group) => group.scope)}
+          onClose={() => setAdding(false)}
+          onAdd={(scope, name, value) =>
+            run("add", async () => {
+              await setSecret(scope, name, value);
+            })
+          }
+        />
       )}
       {pending && (
         <SetSecretDialog
@@ -468,6 +518,198 @@ function RemoveSecretDialog({
               <>
                 <Icon name="trash" size={16} /> Remove secret
               </>
+            )}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+/**
+ * Creates a secret in any scope: pick a known sandbox scope, pick a running
+ * sandbox, or type a sandbox name that does not exist yet (sbx accepts
+ * secrets for sandboxes before their first launch). Names may be free-form
+ * — the CLI owns which service names it recognizes.
+ */
+function AddSecretDialog({
+  knownNames,
+  knownScopes,
+  onClose,
+  onAdd,
+}: {
+  knownNames: string[];
+  knownScopes: string[];
+  onClose: () => void;
+  /** Returns the outcome so the dialog can stay open on failure. */
+  onAdd: (scope: string, name: string, value: string) => Promise<void>;
+}) {
+  const id = useId();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const mounted = useMountedRef();
+  const actionLock = useRef(false);
+  const first = useRef<HTMLInputElement>(null);
+  const [scope, setScope] = useState("");
+  const [name, setName] = useState("");
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [scopeError, setScopeError] = useState<string | null>(null);
+  const [sandboxes, setSandboxes] = useState<SandboxInfo[] | null>(null);
+
+  useEffect(() => {
+    if (!dialog.current?.open) {
+      dialog.current?.showModal();
+      first.current?.focus();
+    }
+    // The sandbox list backs the scope suggestions; a failure just means
+    // fewer suggestions, which the manual input already covers.
+    listSandboxes()
+      .then(setSandboxes)
+      .catch(() => setSandboxes([]));
+  }, []);
+
+  const close = () => {
+    if (actionLock.current) return;
+    dialog.current?.close();
+  };
+
+  const scopeOptions = useMemo(() => {
+    const options = new Set<string>(knownScopes);
+    for (const sandbox of sandboxes ?? []) options.add(sandbox.name);
+    options.delete("global");
+    return [...options];
+  }, [knownScopes, sandboxes]);
+
+  const ready = Boolean(scope.trim() && name.trim() && value.trim());
+
+  const add = async () => {
+    const target = normalizeScope(scope);
+    const service = name.trim();
+    if (actionLock.current || !target || !service || !value.trim()) return;
+    const scopeProblem = validateScope(target);
+    if (scopeProblem) {
+      setScopeError(scopeProblem);
+      return;
+    }
+    actionLock.current = true;
+    setSaving(true);
+    try {
+      await onAdd(target, service, value.trim());
+      if (!mounted.current) return;
+      dialog.current?.close();
+    } catch {
+      // The pane's banner shows the failure; let the user retry or cancel.
+      if (mounted.current) {
+        actionLock.current = false;
+        setSaving(false);
+      }
+    }
+  };
+
+  return (
+    <dialog
+      ref={dialog}
+      className="appdialog"
+      aria-labelledby={`${id}-add-title`}
+      onCancel={(event) => {
+        if (actionLock.current) event.preventDefault();
+      }}
+      onClose={() => {
+        setScope("");
+        setName("");
+        setValue("");
+        onClose();
+      }}
+    >
+      <div aria-busy={saving}>
+        <div className="sectionhead">
+          <h2 id={`${id}-add-title`}>Add secret</h2>
+          <button
+            type="button"
+            className="iconbtn"
+            aria-label="Close add-secret dialog"
+            disabled={saving}
+            onClick={close}
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+        <p className="help intro">
+          Store a credential globally, for a running sandbox, or for a sandbox you plan to create.
+          The value is piped to the <code>sbx</code> CLI and never shown again.
+        </p>
+        <label className="field">
+          Scope
+          <input
+            ref={first}
+            list={`${id}-scopes`}
+            placeholder="global or a sandbox name"
+            autoComplete="off"
+            disabled={saving}
+            value={scope}
+            aria-describedby={`${id}-scope-help`}
+            onChange={(event) => {
+              setScope(event.target.value);
+              setScopeError(null);
+            }}
+          />
+          <datalist id={`${id}-scopes`}>
+            <option value="global">All sandboxes</option>
+            {scopeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </datalist>
+          <span className="help" id={`${id}-scope-help`}>
+            {scopeError ?? "Use “global” for every sandbox, or pick or type one sandbox’s name."}
+          </span>
+        </label>
+        <label className="field">
+          Secret name
+          <input
+            list={`${id}-names`}
+            placeholder="e.g. github"
+            autoComplete="off"
+            disabled={saving}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+          <datalist id={`${id}-names`}>
+            {knownNames.map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
+        </label>
+        <label className="field">
+          New value
+          <input
+            type="password"
+            autoComplete="off"
+            disabled={saving}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && ready) void add();
+            }}
+          />
+        </label>
+        <div className="actionbar end">
+          <button type="button" className="btn" onClick={close} disabled={saving}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn primary"
+            disabled={saving || !ready}
+            onClick={() => void add()}
+          >
+            {saving ? (
+              <>
+                <span className="spinner" /> Adding…
+              </>
+            ) : (
+              "Add secret"
             )}
           </button>
         </div>
