@@ -17,7 +17,6 @@ export interface SandboxesPageProps {
   pendingSelection?: string | null;
   onPendingSelectionHandled?: () => void;
   onCreate: () => void;
-  onCheckSetup: () => Promise<SetupStatus | null>;
   onCount: (count: number) => void;
 }
 
@@ -33,7 +32,6 @@ export default function SandboxesPage({
   pendingSelection,
   onPendingSelectionHandled,
   onCreate,
-  onCheckSetup,
   onCount,
 }: SandboxesPageProps) {
   const [selected, setSelected] = useState<string | null>(null);
@@ -178,8 +176,6 @@ export default function SandboxesPage({
         <ConnectDialog
           key={connecting.name}
           sandbox={all.find((sandbox) => sandbox.name === connecting.name) ?? connecting}
-          status={status}
-          onCheckSetup={onCheckSetup}
           onOpenTerminal={() => runAction(connecting.name, "terminal")}
           onClose={() => setConnecting(null)}
         />

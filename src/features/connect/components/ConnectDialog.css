@@ -1,8 +1,8 @@
 /*
- * The connect dialog and its parts: method option cards, SSH status, editor
- * steps, and SSH server information. Dialog chrome comes from the shared
- * .appdialog; this file owns the connect-specific layout (pinned footer
- * over a scrolling body) and detail panels.
+ * The connect dialog and its parts: method option cards, editor steps, and
+ * SSH server information. Dialog chrome comes from the shared .appdialog;
+ * this file owns the connect-specific layout (pinned footer over a scrolling
+ * body) and detail panels.
  */
 
 /* Two classes to out-rank the shared .appdialog chrome: bundling can emit
@@ -99,61 +99,6 @@
 
 .connection-method .connectguide h3 {
   margin-bottom: 8px;
-}
-
-/* ---- SSH status ---- */
-
-.connection-ssh {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 15px;
-  border-radius: 8px;
-  background: var(--surface-soft);
-  border: 1px solid var(--line);
-  margin: 14px 0;
-  font-size: 14px;
-}
-
-.connection-ssh > .icon {
-  color: var(--brand-dark);
-}
-
-.connection-ssh > div {
-  min-width: 0;
-}
-
-.connection-ssh p {
-  margin: 6px 0 0;
-}
-
-.connection-ssh-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  color: var(--sand);
-  font-size: 14px;
-}
-
-.connection-ssh-warning > .icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.connection-ssh.ready {
-  border-color: #cfeeda;
-  background: var(--green-soft);
-}
-
-.connection-ssh.ready > .icon {
-  color: var(--green);
-}
-
-.connection-setup-actions {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 13px;
 }
 
 /* ---- Editor steps ---- */
