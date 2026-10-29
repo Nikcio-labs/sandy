@@ -46,6 +46,16 @@ pnpm tauri dev    # run in development
 pnpm tauri build  # produce installers
 ```
 
+### Accessibility checks
+
+The UI is checked against WCAG 2.1 AA with [axe-core](https://github.com/dequelabs/axe-core). Checks run in a real Chromium (via Vitest browser mode), so color contrast and visible-text rules evaluate the actual rendered design:
+
+```bash
+pnpm test:a11y    # run the checks (installs Chromium on first run)
+```
+
+The suite lives in `src/test/`. Each test mounts a surface with the Tauri backend mocked and asserts axe reports zero violations; a failure prints every offending node per rule. When you add or change a UI surface, extend the suite so it stays covered.
+
 ### Windows: `link.exe` errors
 
 The VS Build Tools installer must include the **Desktop development with C++** workload (`winget install Microsoft.VisualStudio.BuildTools`).

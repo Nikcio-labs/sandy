@@ -38,8 +38,16 @@ function WindowControls() {
   // swallowed to avoid unhandled rejections, matching the splash close in
   // App.tsx.
   const controls: { label: string; action: () => void; icon: React.ReactNode }[] = [
-    { label: "Minimize window", action: () => window.minimize().catch(() => {}), icon: <span className="wincontrol-minimize" /> },
-    { label: "Maximize or restore window", action: () => window.toggleMaximize().catch(() => {}), icon: <span className="wincontrol-maximize" /> },
+    {
+      label: "Minimize window",
+      action: () => window.minimize().catch(() => {}),
+      icon: <span className="wincontrol-minimize" />,
+    },
+    {
+      label: "Maximize or restore window",
+      action: () => window.toggleMaximize().catch(() => {}),
+      icon: <span className="wincontrol-maximize" />,
+    },
     {
       label: "Close window",
       action: () => window.close().catch(() => {}),
@@ -105,18 +113,32 @@ export function Rail({
       <nav className="railnav">
         {navigation.map((item) => {
           const active = view === item.id;
+          // The visible label and count badge are the button's rendered text,
+          // so the accessible name must contain both (axe
+          // label-content-name-mismatch): "Sandboxes" alone would not match
+          // the visible "Sandboxes 2".
+          const name =
+            item.id === "sandboxes" && count !== null
+              ? `${item.label}, ${count} sandboxes`
+              : item.label;
           return (
             <button
               key={item.id}
               className={item.id === "settings" ? "navsettings" : undefined}
               aria-current={active ? "page" : undefined}
+              aria-label={name}
               disabled={busy}
               onClick={() => onNavigate(item.id)}
             >
               <Icon name={item.icon} />
               <span>{item.label}</span>
               {item.id === "sandboxes" && count !== null && (
-                <span className="badge railcount">{count}</span>
+                // The space keeps the rendered text tokenized ("Sandboxes 2",
+                // not "Sandboxes2"), which the accessible name must match.
+                <>
+                  {" "}
+                  <span className="badge railcount">{count}</span>
+                </>
               )}
             </button>
           );
