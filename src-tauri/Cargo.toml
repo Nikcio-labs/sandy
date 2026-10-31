@@ -38,7 +38,7 @@ tauri-plugin-log = "=2.10.1"
 time = { version = "0.3", features = ["formatting", "macros"] }
 tauri-plugin-updater = "2.14.0"
 tauri-plugin-process = "2.4.0"
-tauri-plugin-dialog = { version = "=2.8.3", default-features = false, features = [
+tauri-plugin-dialog = { version = "=2.8.4", default-features = false, features = [
   "xdg-portal",
 ] }
 tauri-plugin-opener = "=2.7.2"
