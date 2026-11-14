@@ -28,8 +28,8 @@ export function AgentStep({
     <div className="panel catalog-panel">
       <h2>Choose an agent or workload</h2>
       <p className="help intro">
-        Built-in agent shortcuts use kit v2. A v3 workload starts a v3-only environment. Remote kit
-        sources below come from discovered descriptors.
+        Built-in agents resolve to published v3 kits. A v3 workload starts a v3-only environment:
+        combine it only with v3 mixins. Remote kit sources below come from discovered descriptors.
       </p>
       <SearchField
         id={`${id}-agent-search`}

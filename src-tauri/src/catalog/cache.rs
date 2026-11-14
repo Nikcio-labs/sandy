@@ -29,10 +29,10 @@ fn versions_path(root: &Path) -> PathBuf {
 }
 
 /// Bumped whenever the shape or post-processing of a cached catalog changes,
-/// so entries written by older builds are never served. The built-in agents
-/// were once merged after the cache write, leaving cached catalogs without
-/// them; only a version bump makes those installs re-discover.
-const CATALOG_CACHE_VERSION: u32 = 2;
+/// so entries written by older builds are never served. v3 reflects sbx
+/// v0.51.0 resolving built-in agent names to published v3 kits: catalogs
+/// cached by older builds still describe the built-ins as v2 agents.
+const CATALOG_CACHE_VERSION: u32 = 3;
 
 /// A stable fingerprint of the provider configuration: the cache must only
 /// serve results that were produced by exactly this configuration.

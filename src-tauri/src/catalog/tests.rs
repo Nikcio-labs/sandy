@@ -218,11 +218,10 @@ fn discovery_merges_builtins_before_caching_so_hits_match_fresh_results() {
     }];
     let fresh = super::discover_kits(&root, providers.to_vec(), false).unwrap();
     assert!(
-        fresh
-            .kits
-            .iter()
-            .any(|kit| kit.provider_id == "builtin" && kit.kind == "agent"),
-        "a fresh discovery always reports the built-ins"
+        fresh.kits.iter().any(|kit| {
+            kit.provider_id == "builtin" && kit.kind == "workload" && kit.schema_version == 3
+        }),
+        "a fresh discovery always reports the built-ins as v3 workloads",
     );
     // The cache must hold the same catalog a fresh discovery produces; a
     // catalog cached without the built-ins made every later discovery fall

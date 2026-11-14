@@ -33,8 +33,10 @@ use self::github::discover_github;
 use self::http::Api;
 use self::store::validate_provider;
 
-/// The built-in agents as documented on
-/// <https://docs.docker.com/ai/sandboxes/agents/>.
+/// The built-in agents offered by the installed `sbx` CLI (`sbx run --help`;
+/// also listed on <https://docs.docker.com/ai/sandboxes/agents/>). The names
+/// resolve to published v3 kits since sbx v0.51.0. Gemini is retired in
+/// sbx v0.53.0 and must be dropped when the app requires that version.
 pub(crate) const BUILTIN_AGENTS: &[&str] = &[
     "claude",
     "codex",
@@ -95,19 +97,20 @@ pub fn discover_kits(
         return Ok(cached);
     }
     let mut catalog = discover_with(&Api::public()?, &providers)?;
-    // The built-ins are documented v2 shortcuts, not guessed registry
-    // repositories. They must be merged before caching: a cache hit has to
-    // return the same catalog a fresh discovery would, otherwise the frontend
-    // would keep flagging the built-ins as unverified on every discovery.
+    // Since sbx v0.51.0 the built-in agent names resolve to published v3 kits
+    // (docker.io/sbx/<name>:latest), so they must combine only with v3 mixins.
+    // They must also be merged before caching: a cache hit has to return the
+    // same catalog a fresh discovery would, otherwise the frontend would keep
+    // flagging the built-ins as unverified on every discovery.
     for name in BUILTIN_AGENTS {
-        let description = format!("Built-in {name} agent (v2)");
+        let description = format!("Built-in {name} agent (v3)");
         catalog.kits.push(KitOption {
             id: format!("builtin:{name}"),
             name: (*name).into(),
             description,
             source: (*name).into(),
-            schema_version: 2,
-            kind: "agent".into(),
+            schema_version: 3,
+            kind: "workload".into(),
             provider_id: "builtin".into(),
             required_agent: None,
             arguments: Vec::new(),

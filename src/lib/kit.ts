@@ -88,11 +88,13 @@ export function previewTemplate(request: SaveTemplateRequest): string {
   const quote = (value: string) => JSON.stringify(value);
   const escape = (value: string) => value.replace(/\$\{\{/g, () => "$${{");
   const { agent } = request;
+  // Built-in shortcuts are selected by the agent name alone; sbx resolves
+  // them to published v3 kits (v2 records predate sbx v0.51.0).
   const builtin =
-    agent.schema_version === 2 &&
-    agent.kind === "agent" &&
     agent.provider_id === "builtin" &&
-    agent.source === agent.name;
+    agent.source === agent.name &&
+    ((agent.schema_version === 3 && agent.kind === "workload") ||
+      (agent.schema_version === 2 && agent.kind === "agent"));
   const kits = [...(builtin ? [] : [agent]), ...request.mixins];
   const lines = [
     'schemaVersion: "1"',
