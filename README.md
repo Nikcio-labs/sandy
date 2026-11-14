@@ -33,7 +33,7 @@ Download the installer for your platform from the [releases page](https://github
 
 ## Building from source
 
-Requirements: Node.js 24+, [pnpm](https://pnpm.io) (`corepack enable`), Rust (stable), and the [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your platform. On Ubuntu:
+Requirements: Node.js 26+, [pnpm](https://pnpm.io) (`corepack enable`), Rust (stable), and the [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your platform. On Ubuntu:
 
 ```bash
 sudo apt install libwebkit2gtk-4.1-dev libssl-dev libgtk-3-dev \
