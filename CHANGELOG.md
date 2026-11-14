@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/Nikcio-labs/sandy/compare/v0.4.1...v0.5.0) (2026-11-14)
+
+
+### Features
+
+* add a secrets pane to settings ([#81](https://github.com/Nikcio-labs/sandy/issues/81)) ([1503152](https://github.com/Nikcio-labs/sandy/commit/15031526c63ae6cbe405617315891f8af2b00761))
+* delete a sandbox with a confirm dialog ([#80](https://github.com/Nikcio-labs/sandy/issues/80)) ([43a17c1](https://github.com/Nikcio-labs/sandy/commit/43a17c16d8d4b8ac1810877ba79ed4dee42f2c87))
+
+
+### Bug Fixes
+
+* align vite alias with vite-plus-core 1.6.0 ([#93](https://github.com/Nikcio-labs/sandy/issues/93)) ([e4b4d1d](https://github.com/Nikcio-labs/sandy/commit/e4b4d1d6dc1a2b242761fbae07bbb17219d034fa))
+
 ## [0.4.1](https://github.com/Nikcio-labs/sandy/compare/v0.4.0...v0.4.1) (2026-10-29)
 
 
