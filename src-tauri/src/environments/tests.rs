@@ -111,7 +111,7 @@ impl Fixture {
         SaveTemplateRequest {
             name: "example".into(),
             workspace: path_string(&self.workspace).unwrap(),
-            agent: kit("claude", "agent", 2, "builtin"),
+            agent: kit("claude", "workload", 3, "builtin"),
             mixins: vec![],
             arguments: BTreeMap::new(),
             save_path: None,
@@ -145,20 +145,20 @@ fn kit(name: &str, kind: &str, version: u8, provider: &str) -> KitOption {
 fn rejects_version_mixing_required_agent_and_duplicate_names() {
     let fixture = Fixture::new();
     let mut request = fixture.request();
-    request.mixins.push(kit("browser", "mixin", 3, "hub"));
+    request.mixins.push(kit("browser", "mixin", 2, "hub"));
     assert!(
         save_template(&fixture.root, request.clone())
             .unwrap_err()
             .contains("cannot be combined")
     );
-    request.mixins[0].schema_version = 2;
+    request.mixins[0].schema_version = 3;
     request.mixins[0].required_agent = Some("codex".into());
     assert!(
         save_template(&fixture.root, request.clone())
             .unwrap_err()
             .contains("requires agent codex")
     );
-    request.mixins[0] = kit("claude", "mixin", 2, "hub");
+    request.mixins[0] = kit("claude", "mixin", 3, "hub");
     assert!(
         save_template(&fixture.root, request)
             .unwrap_err()
@@ -392,7 +392,7 @@ fn create_failure_does_not_attempt_to_start() {
 fn update_template_rewrites_file_and_record_in_place() {
     let fixture = Fixture::new();
     let saved = save_template(&fixture.root, fixture.request()).unwrap();
-    let mut browser = kit("browser", "mixin", 2, "hub");
+    let mut browser = kit("browser", "mixin", 3, "hub");
     browser.arguments.push(KitArgument {
         name: "region".into(),
         description: String::new(),
@@ -431,19 +431,19 @@ fn update_template_rewrites_file_and_record_in_place() {
 }
 
 fn saved_agent() -> crate::catalog::KitOption {
-    kit("claude", "agent", 2, "builtin")
+    kit("claude", "workload", 3, "builtin")
 }
 
 #[test]
 fn update_template_validates_like_save_and_keeps_location_on_failure() {
     let fixture = Fixture::new();
     let saved = save_template(&fixture.root, fixture.request()).unwrap();
-    // A v2 agent cannot mix with a v3 mixin.
+    // A v3 agent cannot mix with a v2 mixin.
     let update = UpdateTemplateRequest {
         name: "renamed".into(),
         workspace: String::new(),
         agent: saved_agent(),
-        mixins: vec![kit("browser", "mixin", 3, "hub")],
+        mixins: vec![kit("browser", "mixin", 2, "hub")],
         arguments: BTreeMap::new(),
     };
     assert!(

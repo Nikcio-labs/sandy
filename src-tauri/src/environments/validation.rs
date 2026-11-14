@@ -63,13 +63,17 @@ pub(super) fn ensure_outside(path: &Path, workspace: &Path) -> Result<(), String
     Ok(())
 }
 
+/// A built-in shortcut selected by the environment file's `agent:` field alone,
+/// with no `kits:` entry. sbx v0.51.0 resolves built-in names to published v3
+/// kits, so new selections are v3 workloads; template records saved by older
+/// builds still carry v2 agent metadata and must keep launching.
 pub(super) fn builtin(agent: &KitOption) -> bool {
-    agent.schema_version == 2
-        && agent.kind == "agent"
-        && agent.provider_id == "builtin"
+    agent.provider_id == "builtin"
         && agent.source == agent.name
         && !agent.name.contains('/')
         && !agent.name.is_empty()
+        && ((agent.schema_version == 3 && agent.kind == "workload")
+            || (agent.schema_version == 2 && agent.kind == "agent"))
 }
 
 pub(super) fn selected<'a>(agent: &'a KitOption, mixins: &'a [KitOption]) -> Vec<&'a KitOption> {

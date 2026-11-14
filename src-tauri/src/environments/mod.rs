@@ -3,8 +3,9 @@
 //! `launch_template` creates when needed, then starts the sandbox without attaching.
 //!
 //! The environment schema remains "1" for both kit generations. Custom v2
-//! agents and v3 workloads register their name via kits; built-in v2 shortcuts
-//! need only agent=name. See Docker's configuration/environment-files reference.
+//! agents and v3 workloads register their name via kits; built-in shortcuts
+//! (published v3 kits since sbx v0.51.0) need only agent=name. See Docker's
+//! configuration/environment-files reference.
 //! `sbx env create --help` verifies --force, --name, and file PATH support;
 //! it explicitly directs callers to env run to attach afterward.
 //!
