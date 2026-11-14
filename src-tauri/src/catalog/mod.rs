@@ -103,7 +103,7 @@ pub fn discover_kits(
     // same catalog a fresh discovery would, otherwise the frontend would keep
     // flagging the built-ins as unverified on every discovery.
     for name in BUILTIN_AGENTS {
-        let description = format!("Built-in {name} agent (published v3 kit)");
+        let description = format!("Built-in {name} agent (v3)");
         catalog.kits.push(KitOption {
             id: format!("builtin:{name}"),
             name: (*name).into(),
