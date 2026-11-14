@@ -238,6 +238,27 @@ fn stale_template_does_not_hide_readable_library_entries() {
 }
 
 #[test]
+fn manually_edited_templates_stay_listed_without_warnings() {
+    let fixture = Fixture::new();
+    let saved = save_template(&fixture.root, fixture.request()).unwrap();
+    // Manual edits that keep the YAML a valid environment must not hide the
+    // template behind warnings: the list reflects the file as it is on disk,
+    // and launch or editing surface any drift from the recorded kits.
+    let edited = saved
+        .content
+        .replace("name: example", "name: My Template")
+        .replace("agent: claude", "agent: codex");
+    std::fs::write(&saved.path, edited).unwrap();
+
+    let templates = list_templates(&fixture.root).unwrap();
+    assert_eq!(templates.len(), 1);
+    assert_eq!(templates[0].id, saved.id);
+    assert_eq!(templates[0].name, "My Template");
+    assert_eq!(templates[0].agent, "codex");
+    assert!(template_warnings(&fixture.root).unwrap().is_empty());
+}
+
+#[test]
 fn delete_template_removes_record_file_and_empty_library_directory() {
     let fixture = Fixture::new();
     let library_owned = save_template(&fixture.root, fixture.request()).unwrap();
