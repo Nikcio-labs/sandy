@@ -120,4 +120,45 @@ describe("Settings panes", () => {
     await waitFor(() => document.querySelector(".pane") !== null);
     await expectNoViolations("settings advanced");
   }, 90_000);
+
+  it("update changelog dialog has no violations", async () => {
+    mounted?.unmount();
+    // An announced update carries its release notes as the manifest body,
+    // which the offer renders as markdown behind the "See changes" button.
+    tauri.handle("plugin:updater|check", () => ({
+      rid: 1,
+      currentVersion: "0.1.0",
+      version: "9.9.9",
+      body: "## Highlights\n\n- Faster startup\n\nSee the [release notes](https://example.com).",
+    }));
+    mounted = mountApp(<App />, tauri);
+    try {
+      await waitFor(() => document.querySelector(".rail button") !== null);
+      await clickButton("Settings");
+      // The card auto-checks once per app session: in a fresh page the offer
+      // appears on its own, in a warm one (earlier tests already checked) the
+      // manual check button drives the same flow.
+      await waitFor(
+        () =>
+          document.querySelector(".update-offer") !== null ||
+          [...document.querySelectorAll("button")].some((button) =>
+            button.textContent?.includes("Check for updates"),
+          ),
+      );
+      const manualCheck = [...document.querySelectorAll("button")].find((button) =>
+        button.textContent?.includes("Check for updates"),
+      );
+      if (manualCheck) {
+        await act(async () => {
+          manualCheck.click();
+          await settle();
+        });
+      }
+      await clickButton("See changes");
+      await waitFor(() => document.querySelector(".changelog-body h2") !== null);
+      await expectNoViolations("update changelog dialog");
+    } finally {
+      tauri.handle("plugin:updater|check", () => null);
+    }
+  }, 90_000);
 });
