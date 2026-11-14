@@ -185,13 +185,24 @@ fn summary(record: &TemplateRecord, environment: &Environment, content: String) 
     }
 }
 
-pub(super) fn read_template(
+/// Reads the saved file and decodes it without checking it against the
+/// recorded kits: the templates list must show manually edited files instead
+/// of hiding them as warnings. Launch and editing go through read_template,
+/// which validates the decoded environment strictly.
+pub(super) fn parse_template(
     record: &TemplateRecord,
 ) -> Result<(SavedTemplate, Environment), String> {
     let content =
         std::fs::read_to_string(&record.path).map_err(|e| format!("{}: {e}", record.path))?;
     let environment: Environment = serde_yaml_ng::from_str(&content)
         .map_err(|e| format!("{}: invalid environment YAML: {e}", record.path))?;
+    Ok((summary(record, &environment, content), environment))
+}
+
+pub(super) fn read_template(
+    record: &TemplateRecord,
+) -> Result<(SavedTemplate, Environment), String> {
+    let (template, environment) = parse_template(record)?;
     validate_selection(&record.agent, &record.mixins)?;
     validate_name(&environment.name)?;
     if environment.schema_version != "1" || environment.agent != record.agent.name {
@@ -215,7 +226,7 @@ pub(super) fn read_template(
     for (entry, kit) in environment.kits.iter().zip(expected) {
         validate_arguments(kit, &entry.arguments())?;
     }
-    Ok((summary(record, &environment, content), environment))
+    Ok((template, environment))
 }
 
 pub fn list_templates(root: &Path) -> Result<Vec<SavedTemplate>, String> {
@@ -224,8 +235,9 @@ pub fn list_templates(root: &Path) -> Result<Vec<SavedTemplate>, String> {
 
 /// Everything the edit wizard needs: the template's summary plus the exact
 /// kit metadata (arguments, descriptions, compatibility) recorded at save
-/// time, matched against the YAML's kit sources. Stale files surface the
-/// same read errors as the templates list.
+/// time, matched against the YAML's kit sources. Unlike the templates list,
+/// editing validates the file strictly: the wizard cannot prefill from a
+/// file whose kits no longer match the recorded metadata.
 pub fn read_template_details(root: &Path, id: &str) -> Result<TemplateDetails, String> {
     let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
     let library = records(root)?;
@@ -349,10 +361,12 @@ fn read_library(root: &Path) -> Result<(Vec<SavedTemplate>, Vec<String>), String
     let mut templates = Vec::new();
     let mut warnings = Vec::new();
     for record in records {
-        match read_template(&record) {
+        // Only a file that cannot be read or decoded is a warning. An edited
+        // but valid environment stays listed; launch and editing surface any
+        // drift from the recorded kits when the template is actually used.
+        match parse_template(&record) {
             Ok((template, _)) => templates.push(template),
-            Err(error) if error.starts_with(&record.path) => warnings.push(error),
-            Err(error) => warnings.push(format!("{}: {error}", record.path)),
+            Err(error) => warnings.push(error),
         }
     }
     Ok((templates, warnings))
