@@ -123,13 +123,24 @@ describe("Settings panes", () => {
 
   it("update changelog dialog has no violations", async () => {
     mounted?.unmount();
-    // An announced update carries its release notes as the manifest body,
-    // which the offer renders as markdown behind the "See changes" button.
+    // An announced update carries its release notes as the manifest body.
+    // The fixture mixes markdown the dialog must render with hostile markup
+    // the sanitizer must strip: the notes are unsigned manifest metadata, so
+    // this is the behavior the dialog's safety rests on.
     tauri.handle("plugin:updater|check", () => ({
       rid: 1,
       currentVersion: "0.1.0",
       version: "9.9.9",
-      body: "## Highlights\n\n- Faster startup\n\nSee the [release notes](https://example.com).",
+      body: [
+        "## Highlights",
+        "",
+        "<script>alert(1)</script>",
+        "",
+        "- Faster startup",
+        "",
+        'See the <img src=x alt="screenshot" onerror="window.__pwned = true"> and the',
+        "[release notes](https://example.com) or [not](javascript:alert(1)).",
+      ].join("\n"),
     }));
     mounted = mountApp(<App />, tauri);
     try {
@@ -156,6 +167,13 @@ describe("Settings panes", () => {
       }
       await clickButton("See changes");
       await waitFor(() => document.querySelector(".changelog-body h2") !== null);
+      // Real Chromium page, so this is the production sanitizer behavior:
+      // markdown renders, active content and script URIs do not survive.
+      const body = document.querySelector(".changelog-body")!;
+      expect(body.querySelector("script")).toBeNull();
+      expect(body.querySelector("img[onerror]")).toBeNull();
+      expect(body.querySelector("a[href^='javascript:']")).toBeNull();
+      expect(body.querySelector("a[href='https://example.com']")).not.toBeNull();
       await expectNoViolations("update changelog dialog");
     } finally {
       tauri.handle("plugin:updater|check", () => null);
