@@ -15,6 +15,7 @@
 
 import axe from "axe-core";
 import type { AxeResults, Result } from "axe-core";
+import { waitForEntrance } from "./wait";
 
 export type AxeViolation = {
   rule: string;
@@ -41,6 +42,9 @@ const configure = () => {
 /** Scan the current document and return the violations, sorted by impact. */
 export const runAxe = async (label = "page"): Promise<AxeViolation[]> => {
   configure();
+  // Entrance motion must be over before colors are judged: mid-fade the
+  // text is still blended with the backdrop (see waitForEntrance).
+  await waitForEntrance();
   const impactOrder = ["critical", "serious", "moderate", "minor"];
   const results: AxeResults = await axe.run(document.body, {
     runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },

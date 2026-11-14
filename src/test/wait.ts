@@ -28,3 +28,23 @@ export const settle = async (ms = 250) => {
     await tick(ms);
   });
 };
+
+/**
+ * Dialogs and panes fade in over 180ms; axe sampling mid-fade blends text
+ * with the backdrop and reports color-contrast failures the settled UI never
+ * shows. Yield one tick first so a starting-style transition has registered,
+ * then wait until no opacity transition is still running.
+ */
+export const waitForEntrance = async (budgetMs = 5_000) => {
+  const fading = () =>
+    document
+      .getAnimations()
+      .some(
+        (animation) =>
+          animation instanceof CSSTransition &&
+          animation.transitionProperty === "opacity" &&
+          animation.playState === "running",
+      );
+  await settle(50);
+  await waitFor(() => !fading(), budgetMs);
+};
