@@ -78,9 +78,8 @@ pub(super) fn builtin(agent: &KitOption) -> bool {
 
 /// Template records saved before sbx v0.51.0 describe built-in shortcuts as
 /// v2 agents. The names now resolve to published v3 kits, so every record is
-/// upgraded whenever the library is read. A saved selection that mixed a
-/// built-in agent with v2 mixins therefore becomes incompatible and is
-/// flagged in the templates list instead of launching a broken environment.
+/// upgraded whenever the library is read; a saved selection that mixed a
+/// built-in agent with v2 mixins therefore fails the usual version check.
 pub(super) fn upgrade_legacy_builtin(agent: &KitOption) -> KitOption {
     let legacy = agent.provider_id == "builtin"
         && agent.source == agent.name

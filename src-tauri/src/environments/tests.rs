@@ -502,41 +502,37 @@ fn write_library(root: &Path, records: &[TemplateRecord]) {
 }
 
 #[test]
-fn legacy_builtin_v2_records_upgrade_to_v3_and_flag_v2_mixins() {
+fn legacy_builtin_v2_records_upgrade_to_v3_on_read() {
     let fixture = Fixture::new();
-    // A record saved before built-in agents became v3 workloads: the built-in
-    // agent carries v2 agent metadata next to a v2 mixin, and the file lists
-    // only the mixin (built-ins never contributed a kit entry).
-    let environment = format!(
-        "schemaVersion: \"1\"\nname: example\nagent: claude\nworkspace: {}\nkits:\n  - docker.io/team/browser:1.0\n",
-        path_string(&fixture.workspace).unwrap()
-    );
-    let path = fixture.base.join("legacy.yaml");
-    std::fs::write(&path, &environment).unwrap();
+
+    // A record saved before built-in agents became v3 workloads: the
+    // built-in agent carries v2 agent metadata next to a v2 mixin, and the
+    // file lists only the mixin (built-ins never contributed a kit entry).
+    let mixed = fixture.base.join("mixed.yaml");
+    std::fs::write(
+        &mixed,
+        format!(
+            "schemaVersion: \"1\"\nname: example\nagent: claude\nworkspace: {}\nkits:\n  - docker.io/team/browser:1.0\n",
+            path_string(&fixture.workspace).unwrap()
+        ),
+    )
+    .unwrap();
     write_library(
         &fixture.root,
         &[TemplateRecord {
             id: "legacy".into(),
-            path: path_string(&path).unwrap(),
+            path: path_string(&mixed).unwrap(),
             agent: kit("claude", "agent", 2, "builtin"),
             mixins: vec![kit("browser", "mixin", 2, "hub")],
         }],
     );
 
     // The built-in agent reads back as the v3 workload sbx now resolves, so
-    // the saved v2 mixin no longer combines: the template is flagged.
+    // the saved v2 mixin no longer combines: launching is rejected before
+    // any sandbox work happens.
     let listed = list_templates(&fixture.root).unwrap();
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].kit_version, 3);
-    assert!(
-        listed[0]
-            .incompatible
-            .as_deref()
-            .unwrap()
-            .contains("cannot be combined")
-    );
-
-    // Launching is rejected before any sandbox work happens...
     let mut runtime = MockRuntime::default();
     let error = launch_with(
         &fixture.root,
@@ -550,27 +546,37 @@ fn legacy_builtin_v2_records_upgrade_to_v3_and_flag_v2_mixins() {
     assert!(error.contains("cannot be combined"));
     assert!(runtime.calls.is_empty());
 
-    // ...while the edit wizard still prefills from the file so the mixin
-    // selection can be fixed; saving re-validates the new selection.
-    let details = read_template_details(&fixture.root, "legacy").unwrap();
-    assert_eq!(details.agent.schema_version, 3);
-    assert_eq!(details.agent.kind, "workload");
-    assert_eq!(details.mixins.len(), 1);
-
     // Without mixins there is nothing to combine against: the upgraded
-    // record stays compatible and keeps launching.
+    // record keeps launching as the v3 workload it now is.
+    let alone = fixture.base.join("alone.yaml");
+    std::fs::write(
+        &alone,
+        format!(
+            "schemaVersion: \"1\"\nname: example\nagent: claude\nworkspace: {}\n",
+            path_string(&fixture.workspace).unwrap()
+        ),
+    )
+    .unwrap();
     write_library(
         &fixture.root,
         &[TemplateRecord {
             id: "legacy".into(),
-            path: path_string(&path).unwrap(),
+            path: path_string(&alone).unwrap(),
             agent: kit("claude", "agent", 2, "builtin"),
             mixins: vec![],
         }],
     );
-    let listed = list_templates(&fixture.root).unwrap();
-    assert_eq!(listed[0].kit_version, 3);
-    assert_eq!(listed[0].incompatible, None);
+    let mut runtime = MockRuntime::default();
+    let result = launch_with(
+        &fixture.root,
+        "legacy",
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert!(result.contains("Created and started sandbox example"));
 }
 
 #[test]

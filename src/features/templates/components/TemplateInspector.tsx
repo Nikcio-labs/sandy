@@ -31,12 +31,7 @@ export function TemplateInspector({
       onBack={onBack}
       actions={
         <>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={!!template.incompatible}
-            onClick={() => onLaunch(template)}
-          >
+          <button type="button" className="btn primary" onClick={() => onLaunch(template)}>
             <Icon name="create" size={16} /> Launch
           </button>
           {onEdit && (
@@ -58,14 +53,7 @@ export function TemplateInspector({
         <div className="actions">
           <span className="badge">{template.agent}</span>
           <span className="badge violet">Kit v{template.kit_version}</span>
-          {template.incompatible && <span className="badge">Incompatible</span>}
         </div>
-        {template.incompatible && (
-          <p className="help" role="note">
-            {template.incompatible} Edit the template to pick compatible kits, or delete it and
-            save a new one.
-          </p>
-        )}
         <dl className="details">
           <dt>Workspace</dt>
           <dd>{template.workspace || "None (mountless)"}</dd>
