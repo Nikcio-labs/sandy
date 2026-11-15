@@ -238,6 +238,11 @@ export default function TemplatesPage({
                           {template.workspace || "mountless"}
                         </small>
                       </span>
+                      {template.incompatible && (
+                        <span className="badge" title={template.incompatible}>
+                          Incompatible
+                        </span>
+                      )}
                       <Icon name="chevron-right" size={16} />
                     </button>
                   ))}

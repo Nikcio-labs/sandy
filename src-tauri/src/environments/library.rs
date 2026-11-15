@@ -12,8 +12,8 @@ use crate::catalog::{KitOption, unique_id, write_json};
 use super::LIBRARY;
 use super::schema::{Environment, KitEntry, Workspace, escape};
 use super::validation::{
-    builtin, canonicalize, ensure_outside, path_string, selected, validate_arguments,
-    validate_name, validate_selection, workspace_path,
+    builtin, canonicalize, ensure_outside, path_string, selected, upgrade_legacy_builtin,
+    validate_arguments, validate_name, validate_selection, workspace_path,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,6 +26,10 @@ pub struct SavedTemplate {
     pub workspace: String,
     pub kit_version: u8,
     pub content: String,
+    /// Why the recorded kits cannot be combined, when they cannot. Records
+    /// saved before built-in agents became v3 workloads can pin v2 mixins
+    /// that no longer combine with the upgraded agent.
+    pub incompatible: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,8 +85,17 @@ pub(super) struct TemplateRecord {
 pub(super) fn records(root: &Path) -> Result<Vec<TemplateRecord>, String> {
     let path = root.join("templates.json");
     match std::fs::read(&path) {
-        Ok(bytes) => serde_json::from_slice(&bytes)
-            .map_err(|e| format!("Cannot read template library {}: {e}", path.display())),
+        Ok(bytes) => {
+            let mut library: Vec<TemplateRecord> = serde_json::from_slice(&bytes)
+                .map_err(|e| format!("Cannot read template library {}: {e}", path.display()))?;
+            // The single read path upgrades pre-sbx-0.51.0 built-in records
+            // in memory: templates.json is left untouched, and the rest of
+            // the library only ever sees v3 built-ins.
+            for record in &mut library {
+                record.agent = upgrade_legacy_builtin(&record.agent);
+            }
+            Ok(library)
+        }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(e) => Err(format!(
             "Cannot read template library {}: {e}",
@@ -182,6 +195,9 @@ fn summary(record: &TemplateRecord, environment: &Environment, content: String) 
             .unwrap_or_default(),
         kit_version: record.agent.schema_version,
         content,
+        // The list shows readable templates even when their recorded kits no
+        // longer combine; the reason is surfaced instead of hiding the row.
+        incompatible: validate_selection(&record.agent, &record.mixins).err(),
     }
 }
 
@@ -204,6 +220,13 @@ pub(super) fn read_template(
 ) -> Result<(SavedTemplate, Environment), String> {
     let (template, environment) = parse_template(record)?;
     validate_selection(&record.agent, &record.mixins)?;
+    check_environment(record, &environment)?;
+    Ok((template, environment))
+}
+
+/// The file checks behind a strict read: the decoded environment must still
+/// match the recorded name, agent, kit sources, and pinned arguments.
+fn check_environment(record: &TemplateRecord, environment: &Environment) -> Result<(), String> {
     validate_name(&environment.name)?;
     if environment.schema_version != "1" || environment.agent != record.agent.name {
         return Err(format!(
@@ -226,7 +249,7 @@ pub(super) fn read_template(
     for (entry, kit) in environment.kits.iter().zip(expected) {
         validate_arguments(kit, &entry.arguments())?;
     }
-    Ok((template, environment))
+    Ok(())
 }
 
 pub fn list_templates(root: &Path) -> Result<Vec<SavedTemplate>, String> {
@@ -235,9 +258,13 @@ pub fn list_templates(root: &Path) -> Result<Vec<SavedTemplate>, String> {
 
 /// Everything the edit wizard needs: the template's summary plus the exact
 /// kit metadata (arguments, descriptions, compatibility) recorded at save
-/// time, matched against the YAML's kit sources. Unlike the templates list,
-/// editing validates the file strictly: the wizard cannot prefill from a
-/// file whose kits no longer match the recorded metadata.
+/// time, matched against the YAML's kit sources. The recorded kits' mutual
+/// compatibility is deliberately not enforced here: the wizard is how an
+/// incompatible template (an upgraded built-in agent, for example, next to
+/// saved v2 mixins) gets fixed, and saving re-validates the new selection.
+/// Unlike the templates list, editing still validates the file strictly:
+/// the wizard cannot prefill from a file whose kits no longer match the
+/// recorded metadata.
 pub fn read_template_details(root: &Path, id: &str) -> Result<TemplateDetails, String> {
     let _guard = LIBRARY.lock().map_err(|e| e.to_string())?;
     let library = records(root)?;
@@ -245,7 +272,8 @@ pub fn read_template_details(root: &Path, id: &str) -> Result<TemplateDetails, S
         .iter()
         .find(|record| record.id == id)
         .ok_or("Unknown saved template")?;
-    let (template, environment) = read_template(record)?;
+    let (template, environment) = parse_template(record)?;
+    check_environment(record, &environment)?;
     let expected = selected(&record.agent, &record.mixins);
     let mut arguments: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
     for (kit, entry) in expected.iter().zip(&environment.kits) {

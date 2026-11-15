@@ -22,6 +22,8 @@ export interface SavedTemplate {
   workspace: string;
   kit_version: number;
   content: string;
+  /** Why the recorded kits cannot be combined, when they cannot. */
+  incompatible: string | null;
 }
 
 export interface LaunchTemplateRequest {

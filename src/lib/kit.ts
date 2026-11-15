@@ -89,12 +89,12 @@ export function previewTemplate(request: SaveTemplateRequest): string {
   const escape = (value: string) => value.replace(/\$\{\{/g, () => "$${{");
   const { agent } = request;
   // Built-in shortcuts are selected by the agent name alone; sbx resolves
-  // them to published v3 kits (v2 records predate sbx v0.51.0).
+  // them to published v3 kits, so a v2 agent record is always a custom kit.
   const builtin =
     agent.provider_id === "builtin" &&
     agent.source === agent.name &&
-    ((agent.schema_version === 3 && agent.kind === "workload") ||
-      (agent.schema_version === 2 && agent.kind === "agent"));
+    agent.schema_version === 3 &&
+    agent.kind === "workload";
   const kits = [...(builtin ? [] : [agent]), ...request.mixins];
   const lines = [
     'schemaVersion: "1"',
