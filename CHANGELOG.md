@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/Nikcio-labs/sandy/compare/v0.5.0...v0.6.0) (2026-11-15)
+
+
+### Features
+
+* render the update changelog as markdown in a dialog ([#98](https://github.com/Nikcio-labs/sandy/issues/98)) ([615d7f5](https://github.com/Nikcio-labs/sandy/commit/615d7f5a83946f5f79a3b0f495637788b1993f62))
+* treat built-in agents as published v3 workloads (sbx v0.51.0) ([#94](https://github.com/Nikcio-labs/sandy/issues/94)) ([8d45717](https://github.com/Nikcio-labs/sandy/commit/8d45717d8a4579ad6e9f23f89a6d5540708099fa))
+
+
+### Bug Fixes
+
+* list manually edited templates instead of warning they are unreadable ([#96](https://github.com/Nikcio-labs/sandy/issues/96)) ([0db0306](https://github.com/Nikcio-labs/sandy/commit/0db03066902c943d569f67c1511114f6b8253e5a))
+
 ## [0.5.0](https://github.com/Nikcio-labs/sandy/compare/v0.4.1...v0.5.0) (2026-11-14)
 
 
