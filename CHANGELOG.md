@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Nikcio-labs/sandy/compare/v0.6.0...v0.7.0) (2026-11-15)
+
+
+### Features
+
+* upgrade built-in template records to v3 and flag incompatible templates ([#99](https://github.com/Nikcio-labs/sandy/issues/99)) ([ca38c2d](https://github.com/Nikcio-labs/sandy/commit/ca38c2d9fdc14df72913fa8bdbf5c1e9674026fb))
+
 ## [0.6.0](https://github.com/Nikcio-labs/sandy/compare/v0.5.0...v0.6.0) (2026-11-15)
 
 
