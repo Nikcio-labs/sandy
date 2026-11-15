@@ -1,13 +1,13 @@
 // Tests may unwrap/expect freely — a panic is exactly the failure mode we want.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::LIBRARY;
 use super::launch::launch_template;
 use super::launch::{SandboxRuntime, launch_with};
 use super::library::{
-    SaveTemplateRequest, UpdateTemplateRequest, delete_template, list_templates,
+    SaveTemplateRequest, TemplateRecord, UpdateTemplateRequest, delete_template, list_templates,
     read_template_details, save_template, template_warnings, update_template,
 };
 use super::schema::Environment;
@@ -489,6 +489,94 @@ fn update_template_validates_like_save_and_keeps_location_on_failure() {
         update_template(&fixture.root, "unknown-id", update).unwrap_err(),
         "Unknown saved template"
     );
+}
+
+/// Writes a template library record directly, simulating a file saved by an
+/// older app build whose serialized kit metadata differs from today's.
+fn write_library(root: &Path, records: &[TemplateRecord]) {
+    std::fs::write(
+        root.join("templates.json"),
+        serde_json::to_vec(records).unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
+fn legacy_builtin_v2_records_upgrade_to_v3_on_read() {
+    let fixture = Fixture::new();
+
+    // A record saved before built-in agents became v3 workloads: the
+    // built-in agent carries v2 agent metadata next to a v2 mixin, and the
+    // file lists only the mixin (built-ins never contributed a kit entry).
+    let mixed = fixture.base.join("mixed.yaml");
+    std::fs::write(
+        &mixed,
+        format!(
+            "schemaVersion: \"1\"\nname: example\nagent: claude\nworkspace: {}\nkits:\n  - docker.io/team/browser:1.0\n",
+            path_string(&fixture.workspace).unwrap()
+        ),
+    )
+    .unwrap();
+    write_library(
+        &fixture.root,
+        &[TemplateRecord {
+            id: "legacy".into(),
+            path: path_string(&mixed).unwrap(),
+            agent: kit("claude", "agent", 2, "builtin"),
+            mixins: vec![kit("browser", "mixin", 2, "hub")],
+        }],
+    );
+
+    // The built-in agent reads back as the v3 workload sbx now resolves, so
+    // the saved v2 mixin no longer combines: launching is rejected before
+    // any sandbox work happens.
+    let listed = list_templates(&fixture.root).unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].kit_version, 3);
+    let mut runtime = MockRuntime::default();
+    let error = launch_with(
+        &fixture.root,
+        "legacy",
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap_err();
+    assert!(error.contains("cannot be combined"));
+    assert!(runtime.calls.is_empty());
+
+    // Without mixins there is nothing to combine against: the upgraded
+    // record keeps launching as the v3 workload it now is.
+    let alone = fixture.base.join("alone.yaml");
+    std::fs::write(
+        &alone,
+        format!(
+            "schemaVersion: \"1\"\nname: example\nagent: claude\nworkspace: {}\n",
+            path_string(&fixture.workspace).unwrap()
+        ),
+    )
+    .unwrap();
+    write_library(
+        &fixture.root,
+        &[TemplateRecord {
+            id: "legacy".into(),
+            path: path_string(&alone).unwrap(),
+            agent: kit("claude", "agent", 2, "builtin"),
+            mixins: vec![],
+        }],
+    );
+    let mut runtime = MockRuntime::default();
+    let result = launch_with(
+        &fixture.root,
+        "legacy",
+        None,
+        None,
+        &mut runtime,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert!(result.contains("Created and started sandbox example"));
 }
 
 #[test]

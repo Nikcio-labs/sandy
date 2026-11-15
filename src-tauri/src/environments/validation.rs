@@ -65,15 +65,33 @@ pub(super) fn ensure_outside(path: &Path, workspace: &Path) -> Result<(), String
 
 /// A built-in shortcut selected by the environment file's `agent:` field alone,
 /// with no `kits:` entry. sbx v0.51.0 resolves built-in names to published v3
-/// kits, so new selections are v3 workloads; template records saved by older
-/// builds still carry v2 agent metadata and must keep launching.
+/// kits, so every built-in selection is a v3 workload; records carrying v2
+/// metadata are upgraded by [`upgrade_legacy_builtin`] before they get here.
 pub(super) fn builtin(agent: &KitOption) -> bool {
     agent.provider_id == "builtin"
         && agent.source == agent.name
         && !agent.name.contains('/')
         && !agent.name.is_empty()
-        && ((agent.schema_version == 3 && agent.kind == "workload")
-            || (agent.schema_version == 2 && agent.kind == "agent"))
+        && agent.schema_version == 3
+        && agent.kind == "workload"
+}
+
+/// Template records saved before sbx v0.51.0 describe built-in shortcuts as
+/// v2 agents. The names now resolve to published v3 kits, so every record is
+/// upgraded whenever the library is read; a saved selection that mixed a
+/// built-in agent with v2 mixins therefore fails the usual version check.
+pub(super) fn upgrade_legacy_builtin(agent: &KitOption) -> KitOption {
+    let legacy = agent.provider_id == "builtin"
+        && agent.source == agent.name
+        && agent.schema_version == 2
+        && agent.kind == "agent";
+    if !legacy {
+        return agent.clone();
+    }
+    let mut upgraded = agent.clone();
+    upgraded.schema_version = 3;
+    upgraded.kind = "workload".into();
+    upgraded
 }
 
 pub(super) fn selected<'a>(agent: &'a KitOption, mixins: &'a [KitOption]) -> Vec<&'a KitOption> {

@@ -12,8 +12,8 @@ use crate::catalog::{KitOption, unique_id, write_json};
 use super::LIBRARY;
 use super::schema::{Environment, KitEntry, Workspace, escape};
 use super::validation::{
-    builtin, canonicalize, ensure_outside, path_string, selected, validate_arguments,
-    validate_name, validate_selection, workspace_path,
+    builtin, canonicalize, ensure_outside, path_string, selected, upgrade_legacy_builtin,
+    validate_arguments, validate_name, validate_selection, workspace_path,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,8 +81,17 @@ pub(super) struct TemplateRecord {
 pub(super) fn records(root: &Path) -> Result<Vec<TemplateRecord>, String> {
     let path = root.join("templates.json");
     match std::fs::read(&path) {
-        Ok(bytes) => serde_json::from_slice(&bytes)
-            .map_err(|e| format!("Cannot read template library {}: {e}", path.display())),
+        Ok(bytes) => {
+            let mut library: Vec<TemplateRecord> = serde_json::from_slice(&bytes)
+                .map_err(|e| format!("Cannot read template library {}: {e}", path.display()))?;
+            // The single read path upgrades pre-sbx-0.51.0 built-in records
+            // in memory: templates.json is left untouched, and the rest of
+            // the library only ever sees v3 built-ins.
+            for record in &mut library {
+                record.agent = upgrade_legacy_builtin(&record.agent);
+            }
+            Ok(library)
+        }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(e) => Err(format!(
             "Cannot read template library {}: {e}",
