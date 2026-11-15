@@ -1,0 +1,99 @@
+/*
+ * Markdown body of the update changelog dialog. Release notes are authored
+ * as GitHub release markdown, so the renderer's output needs typography the
+ * app stylesheets don't provide inside .appdialog: headings, lists, code,
+ * and blockquotes.
+ */
+
+.changelog-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+
+.changelog-body > :first-child {
+  margin-top: 0;
+}
+
+.changelog-body h1,
+.changelog-body h2,
+.changelog-body h3,
+.changelog-body h4 {
+  font-family: var(--display);
+  line-height: 1.3;
+  margin: 20px 0 6px;
+}
+
+.changelog-body h1 {
+  font-size: 19px;
+}
+
+.changelog-body h2 {
+  font-size: 17px;
+}
+
+.changelog-body h3,
+.changelog-body h4 {
+  font-size: 15px;
+}
+
+.changelog-body p,
+.changelog-body ul,
+.changelog-body ol {
+  margin: 8px 0;
+}
+
+.changelog-body ul,
+.changelog-body ol {
+  padding-left: 22px;
+}
+
+.changelog-body li {
+  margin: 3px 0;
+}
+
+.changelog-body a {
+  color: var(--brand-dark);
+}
+
+.changelog-body code {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+.changelog-body pre {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+
+.changelog-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.changelog-body blockquote {
+  margin: 8px 0;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--line-strong);
+  color: var(--muted);
+}
+
+.changelog-body hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 16px 0;
+}
+
+.changelog-body img {
+  max-width: 100%;
+}

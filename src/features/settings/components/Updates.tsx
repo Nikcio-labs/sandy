@@ -3,6 +3,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { ErrorBanner } from "../../../common/components/ErrorBanner";
 import Icon from "../../../common/components/Icon";
 import { useUpdater } from "../../../common/hooks/useUpdater";
+import { ChangelogDialog } from "./ChangelogDialog";
 import "./Updates.css";
 
 // Settings mounts and unmounts this card on every navigation; the automatic
@@ -18,6 +19,7 @@ export default function Updates() {
   const id = useId();
   const { state, error, busy, check, dismiss } = useUpdater();
   const [version, setVersion] = useState<string | null>(null);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -95,17 +97,39 @@ export default function Updates() {
         <div className="update-offer">
           <p>
             <strong>Sandy {state.version}</strong> is available.
-            {state.notes && <span className="help"> {state.notes}</span>}
           </p>
           <div className="actionbar">
             <button type="button" className="btn primary" onClick={() => void state.download()}>
               Download update
             </button>
-            <button type="button" className="btn" onClick={dismiss}>
+            {state.notes && (
+              <button type="button" className="btn" onClick={() => setChangelogOpen(true)}>
+                See changes
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                // A stale open flag would pop the dialog over the next
+                // offer without a click, since the offer (and the dialog)
+                // unmount while the flag survives in this card.
+                setChangelogOpen(false);
+                dismiss();
+              }}
+            >
               Not now
             </button>
           </div>
         </div>
+      )}
+
+      {state.step === "available" && changelogOpen && state.notes && (
+        <ChangelogDialog
+          version={state.version}
+          notes={state.notes}
+          onClose={() => setChangelogOpen(false)}
+        />
       )}
 
       {state.step === "downloading" && (
